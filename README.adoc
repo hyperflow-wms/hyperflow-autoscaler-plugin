@@ -1,0 +1,14 @@
+= Scaler
+
+The first goal of this scaler is to observe cluster and scale it according to pod requests.
+
+== Requirements
+
+- typescript
+
+== Compilation
+
+[source,bash]
+----
+$ ./compile.sh
+----
