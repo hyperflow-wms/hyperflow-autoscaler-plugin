@@ -1,9 +1,13 @@
+import withTimeout from './helpers'
 import Loggers from './logger';
 import BaseProvider from './baseProvider';
 import Utils from "./utils";
 
 import * as child_process from 'child_process';
 import { V1Node } from '@kubernetes/client-node';
+
+const util = require('util');
+const execFile = util.promisify(require('child_process').execFile);
 
 const FAKE_CPU_FACTOR = 0.25;
 
@@ -120,17 +124,37 @@ class KindProvider extends BaseProvider {
     return promise;
   }
 
-  private uncordonNode(nodeName: string): void {
-    let result = child_process.exec('kubectl uncordon ' + nodeName);
-    Loggers.base.silly('Uncordon result: ' + result.toString());
-    this.nFirstWorkerNodesReady += 1;
+  /**
+   * Uncordons node.
+   */
+  private async uncordonNode(nodeName: string): Promise<void> {
+    // TODO: check if nodeName is in clusterState
+    let cmd = 'kubectl';
+    let args = ['uncordon', nodeName];
+    Loggers.base.debug("Executing " + cmd + " with following args: " + args.join(' '));
+    const { stdout, stderr } = await execFile(cmd, args); // exitCode is 0, otherwise exception is thrown
+    Loggers.base.debug("drain stdout: " + stdout);
+    Loggers.base.debug("drain stderr: " + stderr);
+
+    this.nFirstWorkerNodesReady += 1; // TODO: remove this line
+
     return;
   }
 
-  private drainNode(nodeName: string): void {
-    let result = child_process.exec('kubectl drain --ignore-daemonsets ' + nodeName);
-    Loggers.base.silly('Drain result: ' + result.toString());
-    this.nFirstWorkerNodesReady -= 1;
+  /**
+   * Drains node.
+   */
+  private async drainNode(nodeName: string): Promise<void> {
+    // TODO: check if nodeName is in clusterState
+    let cmd = 'kubectl';
+    let args = ['drain', '--ignore-daemonsets', nodeName];
+    Loggers.base.debug("Executing " + cmd + " with following args: " + args.join(' '));
+    const { stdout, stderr } = await execFile(cmd, args); // exitCode is 0, otherwise exception is thrown
+    Loggers.base.debug("drain stdout: " + stdout);
+    Loggers.base.debug("drain stderr: " + stderr);
+
+    this.nFirstWorkerNodesReady -= 1; // TODO: remove this line
+
     return;
   }
 }
