@@ -12,6 +12,6 @@ cd `dirname ${SCRIPT_PATH}` > /dev/null
 SCRIPT_PATH=`pwd`;
 popd  > /dev/null
 
-rm ${SCRIPT_PATH}/*.js
+rm ${SCRIPT_PATH}/*.js || true
 
-tsc --strictNullChecks --outDir ${SCRIPT_PATH} ${SCRIPT_PATH}/source/*.ts
+tsc -p ${SCRIPT_PATH}
