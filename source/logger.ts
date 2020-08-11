@@ -1,6 +1,9 @@
 import winston = require('winston');
+import path = require('path');
 import { format } from 'winston';
 let { combine, timestamp,  printf } = format;
+
+const logDir = path.join(__dirname, 'logs');
 
 const myBaseLogFormat = combine(
   timestamp(),
@@ -14,8 +17,8 @@ const baseLogger = winston.loggers.add('runtime', {
   format: myBaseLogFormat,
   defaultMeta: { service: 'user-service' },
   transports: [
-    new winston.transports.File({ filename: 'logs/error.log', options: {}, level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log', options: {} }),
+    new winston.transports.File({ filename: path.join(logDir, 'error.log'), options: {}, level: 'error' }),
+    new winston.transports.File({ filename: path.join(logDir, 'combined.log'), options: {} }),
     new winston.transports.Console(),
   ],
 });
@@ -35,7 +38,7 @@ const scalingLogger = winston.loggers.add('scaling', {
   format: scalingLogFormat,
   defaultMeta: { service: 'user-service' },
   transports: [
-    new winston.transports.File({ filename: 'logs/scaler.jsonl', options: {}}),
+    new winston.transports.File({ filename: path.join(logDir, 'scaler.jsonl'), options: {}}),
   ],
 });
 
