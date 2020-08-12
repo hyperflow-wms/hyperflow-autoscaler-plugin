@@ -2,11 +2,19 @@ import Loggers from './logger';
 import K8sClient from './k8sClient';
 import Utils from "./utils";
 
+import k8s = require('@kubernetes/client-node');
 
+interface ClusterState {
+  lastUpdate: Date;
+  workerNodes: k8s.V1NodeList;
+  pods: k8s.V1PodList;
+}
 abstract class BaseProvider {
   protected client: K8sClient;
+  protected clusterState: ClusterState;
 
   constructor() {
+    Loggers.base.silly("[BaseProvider] Constructor");
     this.client = new K8sClient();
   }
 
@@ -16,6 +24,27 @@ abstract class BaseProvider {
   public abstract resizeCluster(nodes: number): void | Error;
   public abstract getNumReadyWorkers(): number | Error;
   public abstract getNumAllWorkers(): number | Error;
+
+  /**
+   * Saves cluster state into internal structure.
+   */
+  public async updateClusterState(): Promise<void> {
+    Loggers.base.info("[BaseProvider] Updating cluster state");
+    let currentTime = new Date();
+    let promise1 = this.client.fetchWorkerNodes();
+    let promise2 = this.client.fetchPods();
+    let workerNodes;
+    let pods;
+    [workerNodes, pods] = await Promise.all([promise1, promise2]);
+    this.clusterState = {
+      lastUpdate: currentTime,
+      workerNodes: workerNodes,
+      pods: pods,
+    };
+    Loggers.base.info("[BaseProvider] Cluster state updated");
+
+    return;
+  }
 
   public async getSupply(): Promise<number[] | Error> {
     let nodeList = await this.client.fetchWorkerNodes();
