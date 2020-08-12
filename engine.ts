@@ -27,37 +27,37 @@ class Engine {
     this.reactLoop();
   }
 
-  private reactLoop(): void {
+  private async reactLoop(): Promise<void> {
     console.log("[AB asc] React loop started");
-    this.provider.getSupply().then((supply) => {
-      this.provider.getDemand().then((demand) => {
+    let supply = await this.provider.getSupply();
+    let demand = await this.provider.getDemand();
 
-        Loggers.base.info('Ready workers: ' + this.provider.getNumReadyWorkers()
-                    + '/' + this.provider.getNumAllWorkers())
-        Loggers.base.info('Demand: ' + demand);
-        Loggers.base.info('Supply: ' + supply);
+    Loggers.base.info('Ready workers: ' + this.provider.getNumReadyWorkers()
+                + '/' + this.provider.getNumAllWorkers())
+    Loggers.base.info('Demand: ' + demand);
+    Loggers.base.info('Supply: ' + supply);
 
-        let numWorkers = this.provider.getNumReadyWorkers();
-        if (numWorkers instanceof Error) {
-          console.error(numWorkers.message);
-          return;
-        }
-        if ((demand[0] / supply[0]) > SCALE_UP_UTILIZATION) {
-          Loggers.base.info("-> scale up (not enough CPU)");
-          this.provider.resizeCluster(numWorkers + 1);
-        } else if ((demand[1] / supply[1]) > SCALE_UP_UTILIZATION) {
-          Loggers.base.info("-> scale up (not enough RAM)");
-          this.provider.resizeCluster(numWorkers + 1);
-        } else if ((demand[0] / supply[0]) < SCALE_DOWN_UTILIZATION && (demand[1] / supply[1]) < SCALE_DOWN_UTILIZATION && numWorkers > 0) {
-          Loggers.base.info("-> scale down (too much CPU & RAM)\n");
-          this.provider.resizeCluster(numWorkers - 1);
-        } else {
-          Loggers.base.info("-> cluster is fine :)\n");
-        }
+    let numWorkers = this.provider.getNumReadyWorkers();
+    if (numWorkers instanceof Error) {
+      console.error(numWorkers.message);
+      return;
+    }
+    if ((demand[0] / supply[0]) > SCALE_UP_UTILIZATION) {
+      Loggers.base.info("-> scale up (not enough CPU)");
+      this.provider.resizeCluster(numWorkers + 1);
+    } else if ((demand[1] / supply[1]) > SCALE_UP_UTILIZATION) {
+      Loggers.base.info("-> scale up (not enough RAM)");
+      this.provider.resizeCluster(numWorkers + 1);
+    } else if ((demand[0] / supply[0]) < SCALE_DOWN_UTILIZATION && (demand[1] / supply[1]) < SCALE_DOWN_UTILIZATION && numWorkers > 0) {
+      Loggers.base.info("-> scale down (too much CPU & RAM)\n");
+      this.provider.resizeCluster(numWorkers - 1);
+    } else {
+      Loggers.base.info("-> cluster is fine :)\n");
+    }
 
-        setTimeout(() => { this.reactLoop(); }, REACT_INTERVAL);
-      });
-    });
+    setTimeout(() => { this.reactLoop(); }, REACT_INTERVAL);
+
+    return;
   }
 }
 

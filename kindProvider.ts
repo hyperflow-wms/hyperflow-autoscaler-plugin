@@ -97,31 +97,29 @@ class KindProvider extends BaseProvider {
     return this.nFirstWorkerNodesReady;
   }
 
-  public initializeCluster(): Promise<void | Error> {
-    let promise = this.client.getWorkerNodes().then((nodeList) => {
-      if (nodeList instanceof Error) {
-        return nodeList;
+  public async initializeCluster(): Promise<void | Error> {
+    let nodeList = await this.client.fetchWorkerNodes();
+    if (nodeList instanceof Error) {
+      return nodeList;
+    }
+    for (let node of nodeList) {
+      let name = node?.metadata?.name
+      if (name == undefined) {
+        return Error("Unable to get metadata.name from node");
       }
-      for (let node of nodeList) {
-        let name = node?.metadata?.name
-        if (name == undefined) {
-          return Error("Unable to get metadata.name from node");
-        }
-        this.workerNodesNames.push(name);
-      }
-      Loggers.base.debug('Found ' + this.workerNodesNames + 'workers')
+      this.workerNodesNames.push(name);
+    }
+    Loggers.base.debug('Found ' + this.workerNodesNames + 'workers')
 
-      for (let i = 0; i < this.workerNodesNames.length; i++) {
-        let nodeName = this.workerNodesNames[i];
-        this.uncordonNode(nodeName); // we want to be sure every woker node is schedulable
-      }
+    for (let i = 0; i < this.workerNodesNames.length; i++) {
+      let nodeName = this.workerNodesNames[i];
+      this.uncordonNode(nodeName); // we want to be sure every woker node is schedulable
+    }
 
-      this.initialized = true;
-      Loggers.base.debug("Cluster intitialized");
+    this.initialized = true;
+    Loggers.base.debug("Cluster intitialized");
 
-      return;
-    });
-    return promise;
+    return;
   }
 
   /**
