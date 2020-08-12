@@ -1,3 +1,5 @@
+import Loggers from './logger';
+
 /**
  * returns a new function which calls the input function and "races" the result against a promise that throws an error on timeout.
  *
@@ -20,6 +22,7 @@
  * ```
  */
 const withTimeout = <R, P extends any, T extends (...args: P[]) => Promise<R>>(logic: T, ms: number) => {
+  Loggers.base.silly('[Helpers] Running function with timeout ' + ms.toString() + 'ms');
   return (...args: Parameters<T>) => {
     // create a promise that rejects in <ms> milliseconds; https://italonascimento.github.io/applying-a-timeout-to-your-promises/
     const timeout = new Promise((resolve, reject) => {

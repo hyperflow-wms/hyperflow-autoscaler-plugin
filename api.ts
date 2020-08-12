@@ -1,3 +1,4 @@
+import Loggers from './logger';
 import { RedisClient } from 'redis';
 
 class API {
@@ -6,13 +7,18 @@ class API {
   private plugins: any[];
 
   constructor(rcl: RedisClient, wflib: object, plugins: any[]) {
+    Loggers.base.silly('[API] Constructor called');
     this.rcl = rcl;
     this.wflib = wflib;
     this.plugins = plugins;
   }
 
+  /**
+   * Test function.
+   * TODO: remove
+   */
   public addNumbers(a: number, b: number): number {
-    console.log('addNumbers', a, b);
+    Loggers.base.debug('[API] Adding ' + a.toString() + ' to ' + b.toString());
     return a + b;
   }
 }
