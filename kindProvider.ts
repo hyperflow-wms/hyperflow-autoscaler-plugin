@@ -1,60 +1,55 @@
-import withTimeout from './helpers'
 import Loggers from './logger';
 import BaseProvider from './baseProvider';
-import Utils from "./utils";
 
-import * as child_process from 'child_process';
-import { V1Node } from '@kubernetes/client-node';
+import k8s = require('@kubernetes/client-node');
 
 const util = require('util');
 const execFile = util.promisify(require('child_process').execFile);
 
-const FAKE_CPU_FACTOR = 0.25;
-
-
 class KindProvider extends BaseProvider {
-  private workerNodesNames: string[];
-  private nFirstWorkerNodesReady: number;
-  private initialized: boolean;
+
+  private drainedNodeNames: Set<string>;
 
   constructor()
   {
     super();
-
-    this.workerNodesNames = [];
-    this.nFirstWorkerNodesReady = 0;
-    this.initialized = false;
+    Loggers.base.silly("[KindProvider] Constructor");
+    this.drainedNodeNames = new Set();
   }
 
-  protected getNodeCpu(node) {
-    let allocatable = node.status.allocatable; // allocatable = capacity - reserved
-    let cpu = Utils.cpuStringToNum(allocatable.cpu);
-    if (cpu instanceof Error) {
-      return cpu;
+  /**
+   * In KinD we additionally filter out nodes that are drained (unschedulable).
+   */
+  protected filterClusterState(nodes: Array<k8s.V1Node>, pods: Array<k8s.V1Pod>) {
+    /* Filter unschedulable nodes. */
+    Loggers.base.debug("[KindProvider] Custom nodes filtering");
+    let uncordonedNodes: Array<k8s.V1Node> = [];
+    for (let node of nodes) {
+      let nodeName = node?.metadata?.name;
+      if (nodeName == undefined) {
+        return Error("Unable to get metadata.name from node");
+      }
+      let nodeSpec = node?.spec;
+      if (nodeSpec == undefined) {
+        return Error("Unable to get spec from node");
+      }
+      let unschedulableProp = nodeSpec.unschedulable;
+      if (unschedulableProp == true) {
+        Loggers.base.debug("[KindProvider] Unschedulable node " + nodeName);
+        this.drainedNodeNames.add(nodeName);
+        continue;
+      }
+      uncordonedNodes.push(node);
     }
-    // We are using quota/period to control cpu usage.
-    // Event though we have LXCFS, we are not using cpusets, so every
-    // node can see 12 cores. We have to use custom factor to simulate it.
-    let fixedCpu = cpu * FAKE_CPU_FACTOR;
-    return fixedCpu;
+    return super.filterClusterState(uncordonedNodes, pods);
   }
 
-  protected getNodeMemory(node) {
-    // LXCFS makes this working (cgroups are taken)
-    let allocatable = node.status.allocatable; // allocatable = capacity - reserved
-    let memory = Utils.memoryStringToBytes(allocatable.memory);
-    return memory;
-  }
-
+  /**
+   * Resizes cluster to given amount of nodes.
+   */
   public resizeCluster(workersNum) {
-    if (this.initialized != true) {
-      Loggers.base.error("You have to call initialize() first.");
-      return Error("Provider not initialized");
-    }
-
-    if (workersNum > this.workerNodesNames.length) {
-      Loggers.base.error("Too much workers requested.");
-      return Error("Too much workers requested");
+    if (this.clusterState === undefined) {
+      return Error("You have to fetch cluster state at first");
     }
 
     if (workersNum < 0) {
@@ -62,62 +57,36 @@ class KindProvider extends BaseProvider {
       return Error("Cluster size cannot be smaller than 0 worker");
     }
 
-    if (this.nFirstWorkerNodesReady == workersNum) {
+    let workerNodesNames = this.getWorkerNodesNames();
+    if (workerNodesNames instanceof Error) {
+      return Error("Unable to get worker node names: " + workerNodesNames.message);
+    }
+    let currentSize = workerNodesNames.length;
+    let availableNodes = this.drainedNodeNames.size;
+    if (workersNum > (currentSize + availableNodes)) {
+      return Error("Too much workers requested.");
+    }
+
+    if (currentSize == workersNum) {
       // perfect num of nodes
-      Loggers.base.debug("No action necessary.");
-    } else if (this.nFirstWorkerNodesReady < workersNum) {
+      Loggers.base.debug("[KindProvider] No action necessary.");
+    } else if (currentSize < workersNum) {
       // add more nodes
-      for (let i = this.nFirstWorkerNodesReady; i < workersNum; i++) {
-        let nodeName = this.workerNodesNames[i];
-        Loggers.base.debug("Uncordoning node.");
-        Loggers.scaling.info('{"event":"creatingNode", "value":"' + nodeName + '"}');
-        this.uncordonNode(nodeName);
-        Loggers.scaling.info('{"event":"nodeReady", "value":"' + nodeName + '"}');
-      }
+      let missingNodes = workersNum - currentSize;
+      this.drainedNodeNames.forEach(function(nodeName) {
+        if (missingNodes > 0) {
+          this.uncordonNode(nodeName);
+          missingNodes -= 1;
+        }
+      }, this);
     } else {
       // remove nodes
-      for (let i = workersNum; i < this.nFirstWorkerNodesReady; i++) {
-        let nodeName = this.workerNodesNames[i];
-        Loggers.base.debug("Draining node.");
-        Loggers.scaling.info('{"event":"destroyingNode", "value":"' + nodeName + '"}');
+      let overNodes = workerNodesNames.slice(workersNum - currentSize);
+      for (let nodeName of overNodes) {
         this.drainNode(nodeName);
-        Loggers.scaling.info('{"event":"nodeDeleted", "value":"' + nodeName + '"}');
       }
     }
-    Loggers.base.debug("Cluster resized to " + workersNum + " workers.");
-
-    return;
-  }
-
-  public getNumAllWorkers() {
-    return this.workerNodesNames.length;
-  }
-
-  public getNumReadyWorkers() {
-    return this.nFirstWorkerNodesReady;
-  }
-
-  public async initializeCluster(): Promise<void | Error> {
-    let nodeList = await this.client.fetchWorkerNodes();
-    if (nodeList instanceof Error) {
-      return nodeList;
-    }
-    for (let node of nodeList) {
-      let name = node?.metadata?.name
-      if (name == undefined) {
-        return Error("Unable to get metadata.name from node");
-      }
-      this.workerNodesNames.push(name);
-    }
-    Loggers.base.debug('Found ' + this.workerNodesNames + 'workers')
-
-    for (let i = 0; i < this.workerNodesNames.length; i++) {
-      let nodeName = this.workerNodesNames[i];
-      this.uncordonNode(nodeName); // we want to be sure every woker node is schedulable
-    }
-
-    this.initialized = true;
-    Loggers.base.debug("Cluster intitialized");
+    Loggers.base.debug("[KindProvider] Cluster resized to " + workersNum + " workers.");
 
     return;
   }
@@ -125,34 +94,43 @@ class KindProvider extends BaseProvider {
   /**
    * Uncordons node.
    */
-  private async uncordonNode(nodeName: string): Promise<void> {
-    // TODO: check if nodeName is in clusterState
+  private async uncordonNode(nodeName: string): Promise<void | Error> {
+    if (this.drainedNodeNames.has(nodeName) === false) {
+      return Error("Node " + nodeName + " is not recognized as drained one.");
+    }
+
     let cmd = 'kubectl';
     let args = ['uncordon', nodeName];
     Loggers.base.debug("Executing " + cmd + " with following args: " + args.join(' '));
+    Loggers.scaling.info('{"event":"creatingNode", "value":"' + nodeName + '"}');
     const { stdout, stderr } = await execFile(cmd, args); // exitCode is 0, otherwise exception is thrown
+    Loggers.scaling.info('{"event":"nodeReady", "value":"' + nodeName + '"}');
     Loggers.base.debug("drain stdout: " + stdout);
     Loggers.base.debug("drain stderr: " + stderr);
 
-    this.nFirstWorkerNodesReady += 1; // TODO: remove this line
-
+    this.drainedNodeNames.delete(nodeName);
     return;
   }
 
   /**
    * Drains node.
    */
-  private async drainNode(nodeName: string): Promise<void> {
-    // TODO: check if nodeName is in clusterState
+  private async drainNode(nodeName: string): Promise<void | Error> {
+
+    if (this.drainedNodeNames.has(nodeName) === true) {
+      return Error("Node " + nodeName + " is already recognized as drained.");
+    }
+
     let cmd = 'kubectl';
     let args = ['drain', '--ignore-daemonsets', nodeName];
     Loggers.base.debug("Executing " + cmd + " with following args: " + args.join(' '));
+    Loggers.scaling.info('{"event":"destroyingNode", "value":"' + nodeName + '"}');
     const { stdout, stderr } = await execFile(cmd, args); // exitCode is 0, otherwise exception is thrown
+    Loggers.scaling.info('{"event":"nodeDeleted", "value":"' + nodeName + '"}');
     Loggers.base.debug("drain stdout: " + stdout);
     Loggers.base.debug("drain stderr: " + stderr);
 
-    this.nFirstWorkerNodesReady -= 1; // TODO: remove this line
-
+    this.drainedNodeNames.add(nodeName);
     return;
   }
 }

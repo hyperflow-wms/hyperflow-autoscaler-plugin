@@ -52,7 +52,7 @@ abstract class BaseProvider {
   /**
    * Gets CPU/Memory supply of last-known cluster state.
    */
-  public async getSupply(): Promise<number[] | Error> {
+  public getSupply(): number[] | Error {
     if (this.clusterState === undefined) {
       return Error("You have to fetch cluster state at first");
     }
@@ -87,7 +87,7 @@ abstract class BaseProvider {
   /**
    * Gets CPU/Memory demand of last-known cluster pods.
    */
-  public async getDemand(): Promise<number[] | Error> {
+  public getDemand(): number[] | Error {
     if (this.clusterState === undefined) {
       return Error("You have to fetch cluster state at first");
     }
