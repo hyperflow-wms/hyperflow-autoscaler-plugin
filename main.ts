@@ -12,6 +12,6 @@ function runAutoscaler(rcl: RedisClient, wflib: object, plugins: any[]) {
   return;
 }
 
-export = {
+export default {
   run: runAutoscaler,
 };
