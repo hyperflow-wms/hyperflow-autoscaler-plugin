@@ -31,7 +31,7 @@ class Engine {
 
   private async reactLoop(): Promise<void | Error> {
     Loggers.base.verbose("[Engine] React loop started");
-    await withTimeout(this.provider.updateClusterState, 10000)();
+    await this.provider.updateClusterState();
     Loggers.base.verbose("[Engine] Cluster state updated");
 
     let numWorkers = this.provider.getNumNodeWorkers();

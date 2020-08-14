@@ -20,6 +20,9 @@ import Loggers from './logger';
  * const doSomethingAsyncWithTimeout = withTimeout(doSomethingAsync, 3000);
  * const result = await doSomethingAsyncWithTimeout(...args);
  * ```
+ *
+ * ### WARNING
+ * You will lose 'this' context, so this helpers seems to be not useful at all...
  */
 const withTimeout = <R, P extends any, T extends (...args: P[]) => Promise<R>>(logic: T, ms: number) => {
   Loggers.base.silly('[Helpers] Running function with timeout ' + ms.toString() + 'ms');
