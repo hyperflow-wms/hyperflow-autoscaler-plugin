@@ -18,6 +18,8 @@ abstract class BaseProvider {
     this.client = new K8sClient();
   }
 
+  public abstract async initialize(): Promise<void | Error>;
+
   public abstract resizeCluster(nodes: number): void | Error;
 
   protected filterClusterState(nodes: Array<k8s.V1Node>, pods: Array<k8s.V1Pod>) {

@@ -18,6 +18,13 @@ class KindProvider extends BaseProvider {
   }
 
   /**
+   * Provider initialization.
+   */
+  public async initialize(): Promise<void | Error> {
+    return;
+  }
+
+  /**
    * In KinD we additionally filter out nodes that are drained (unschedulable).
    */
   protected filterClusterState(nodes: Array<k8s.V1Node>, pods: Array<k8s.V1Pod>) {

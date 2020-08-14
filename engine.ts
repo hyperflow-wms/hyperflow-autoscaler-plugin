@@ -21,9 +21,10 @@ class Engine {
     this.rpc = new RPCChild(this);
   }
 
-  public run(): void {
+  public async run(): Promise<void> {
     this.rpc.init();
     this.rpc.call('test', [], (data) => { console.log('Got RPC response: ', data); });
+    await this.provider.initialize();
 
     this.reactLoop();
   }
