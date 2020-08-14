@@ -21,6 +21,7 @@ class KindProvider extends BaseProvider {
    * Provider initialization.
    */
   public async initialize(): Promise<void | Error> {
+    Loggers.base.debug("[KindProvider] Initialization");
     return;
   }
 
@@ -54,7 +55,8 @@ class KindProvider extends BaseProvider {
   /**
    * Resizes cluster to given amount of nodes.
    */
-  public resizeCluster(workersNum) {
+  public async resizeCluster(workersNum: number) {
+    Loggers.base.debug("[KindProvider] Resizing cluster to " + workersNum.toString() + " workers");
     if (this.clusterState === undefined) {
       return Error("You have to fetch cluster state at first");
     }
