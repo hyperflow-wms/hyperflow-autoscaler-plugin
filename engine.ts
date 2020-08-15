@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import Loggers from './logger';
 import BaseProvider from './baseProvider';
 import KindProvider from './kindProvider';
@@ -14,15 +15,22 @@ class Engine {
   private provider: BaseProvider;
   private rpc: RPCChild;
 
-  constructor() {
-    this.provider =
-      new KindProvider();
-      //new GCPProvider();
+  constructor(providerName: string) {
+    Loggers.base.info("[Engine] Trying to create provider " + providerName);
+    if (providerName == "gcp") {
+      this.provider = new GCPProvider();
+    } else if (providerName == "kind") {
+      this.provider = new KindProvider();
+    }
+    if (this.provider === undefined) {
+      throw Error("Provider " + providerName + " not found!");
+    }
     this.rpc = new RPCChild(this);
   }
 
   public async run(): Promise<void> {
     this.rpc.init();
+    //this.rpc.call('test', [], (data) => { console.log('Got RPC response: ', data); });
     await this.provider.initialize();
 
     this.reactLoop();
@@ -63,5 +71,10 @@ class Engine {
   }
 }
 
-let engine = new Engine();
+var args = process.argv.slice(2);
+if (args.length != 1) {
+  throw Error("ERROR: 1 argument expected, got " + args.length.toString());
+}
+let providerName = args[0];
+let engine = new Engine(providerName);
 engine.run();
