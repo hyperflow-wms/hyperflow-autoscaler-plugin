@@ -23,7 +23,6 @@ class Engine {
 
   public async run(): Promise<void> {
     this.rpc.init();
-    this.rpc.call('test', [], (data) => { console.log('Got RPC response: ', data); });
     await this.provider.initialize();
 
     this.reactLoop();
