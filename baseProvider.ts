@@ -59,8 +59,8 @@ abstract class BaseProvider {
       return Error("You have to fetch cluster state at first");
     }
 
-    let totalCpu = 0;
-    let totalMemory = 0;
+    let totalCpu = 0.0;
+    let totalMemory = 0.0;
 
     let nodes = this.clusterState.workerNodes;
     for (let node of nodes) {
@@ -94,8 +94,8 @@ abstract class BaseProvider {
       return Error("You have to fetch cluster state at first");
     }
 
-    let totalCpu = 0;
-    let totalMemory = 0;
+    let totalCpu = 0.0;
+    let totalMemory = 0.0;
 
     let pods = this.clusterState.pods;
     for (let pod of pods) {
@@ -115,7 +115,7 @@ abstract class BaseProvider {
         }
         if (requests != undefined) {
           if (requests.cpu != undefined) {
-            let cpu = Utils.cpuStringToNum(requests.cpu);
+            let cpu = Utils.cpuStringToMillis(requests.cpu);
             if (cpu instanceof Error) {
               return Error("Unable to convert CPU string:\n" + cpu.message)
             }
@@ -147,7 +147,7 @@ abstract class BaseProvider {
     if (allocatable === undefined) {
       return Error("Node has no status.allocatable details");
     }
-    let cpu = Utils.cpuStringToNum(allocatable.cpu);
+    let cpu = Utils.cpuStringToMillis(allocatable.cpu);
     return cpu;
   }
 

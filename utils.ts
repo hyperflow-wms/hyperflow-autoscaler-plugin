@@ -25,12 +25,12 @@ class Utils {
     return val * Math.pow(2, power);
   }
 
-  static cpuStringToNum(cpu: string): number | Error {
-    Loggers.base.silly('[Utils] cpuStringToNum(' + cpu + ')');
+  static cpuStringToMillis(cpu: string): number | Error {
+    Loggers.base.silly('[Utils] cpuStringToMillis(' + cpu + ')');
     let val: number = parseInt(cpu, 10);
     let suffix: string = cpu.substring(cpu.length - 1);
-    if (suffix == "m") {
-      val = parseInt(val.toFixed(3)) / 1000;
+    if (suffix !== "m") {
+      val = parseInt(val.toFixed(3)) * 1000;
     }
     return val;
   }
