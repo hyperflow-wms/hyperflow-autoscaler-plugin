@@ -110,12 +110,12 @@ class KindProvider extends BaseProvider {
 
     let cmd = 'kubectl';
     let args = ['uncordon', nodeName];
-    Loggers.base.debug("Executing " + cmd + " with following args: " + args.join(' '));
+    Loggers.base.debug("[KindProvider] Executing " + cmd + " with following args: " + args.join(' '));
     Loggers.scaling.info('{"event":"creatingNode", "value":"' + nodeName + '"}');
     const { stdout, stderr } = await execFile(cmd, args); // exitCode is 0, otherwise exception is thrown
     Loggers.scaling.info('{"event":"nodeReady", "value":"' + nodeName + '"}');
-    Loggers.base.debug("drain stdout: " + stdout);
-    Loggers.base.debug("drain stderr: " + stderr);
+    Loggers.base.debug("[KindProvider] drain stdout: " + stdout);
+    Loggers.base.debug("[KindProvider] drain stderr: " + stderr);
 
     this.drainedNodeNames.delete(nodeName);
     return;
@@ -132,12 +132,12 @@ class KindProvider extends BaseProvider {
 
     let cmd = 'kubectl';
     let args = ['drain', '--ignore-daemonsets', nodeName];
-    Loggers.base.debug("Executing " + cmd + " with following args: " + args.join(' '));
+    Loggers.base.debug("[KindProvider] Executing " + cmd + " with following args: " + args.join(' '));
     Loggers.scaling.info('{"event":"destroyingNode", "value":"' + nodeName + '"}');
     const { stdout, stderr } = await execFile(cmd, args); // exitCode is 0, otherwise exception is thrown
     Loggers.scaling.info('{"event":"nodeDeleted", "value":"' + nodeName + '"}');
-    Loggers.base.debug("drain stdout: " + stdout);
-    Loggers.base.debug("drain stderr: " + stderr);
+    Loggers.base.debug("[KindProvider] drain stdout: " + stdout);
+    Loggers.base.debug("[KindProvider] drain stderr: " + stderr);
 
     this.drainedNodeNames.add(nodeName);
     return;

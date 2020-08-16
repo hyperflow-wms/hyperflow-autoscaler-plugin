@@ -56,7 +56,7 @@ class Engine {
     let supply = this.provider.getSupply();
     let demand = this.provider.getDemand();
 
-    Loggers.base.verbose('[Engine] Worker Nodes: ' + numWorkers);
+    Loggers.base.verbose('[Engine] Number of HyperFlow workers: ' + numWorkers);
     Loggers.base.verbose('[Engine] Demand: ' + demand);
     Loggers.base.verbose('[Engine] Supply: ' + supply);
 

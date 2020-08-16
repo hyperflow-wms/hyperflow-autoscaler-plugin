@@ -2,7 +2,7 @@ import Loggers from './logger';
 
 class Utils {
   static memoryStringToBytes(mem: string): number | Error  {
-    Loggers.base.silly('Utils.memoryStringToBytes(' + mem + ')');
+    Loggers.base.silly('[Utils] memoryStringToBytes(' + mem + ')');
     let val: number = parseInt(mem, 10);
     let suffix: string = mem.substring(mem.length - 2);
     let power: number = 0;
@@ -26,7 +26,7 @@ class Utils {
   }
 
   static cpuStringToNum(cpu: string): number | Error {
-    Loggers.base.silly('Utils.cpuStringToNum(' + cpu + ')');
+    Loggers.base.silly('[Utils] cpuStringToNum(' + cpu + ')');
     let val: number = parseInt(cpu, 10);
     let suffix: string = cpu.substring(cpu.length - 1);
     if (suffix == "m") {

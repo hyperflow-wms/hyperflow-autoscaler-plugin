@@ -36,7 +36,7 @@ class K8sClient
     Loggers.base.verbose('[K8sClient] Fetching pods for namespace ' + namespace);
     let response = await this.coreApi.listNamespacedPod('default');
     let podList = response.body.items;
-    Loggers.base.debug('[K8sClient] Fetched ' + podList.length.toString() + '  podes');
+    Loggers.base.debug('[K8sClient] Fetched ' + podList.length.toString() + ' pods');
 
     return podList;
   }
@@ -61,7 +61,7 @@ class K8sClient
       }
       let workerLabel = labels[K8sClient.hfWorkerLabel];
       if (workerLabel === undefined) {
-        Loggers.base.silly('[K8sClient] Skipping node ' + nodeName + '(no worker label)');
+        Loggers.base.silly('[K8sClient] Skipping node ' + nodeName + ' (no worker label)');
         continue;
       }
       workerNodes.push(node);
@@ -71,18 +71,22 @@ class K8sClient
     /* Filtering pods. */
     let podsOnWorkers: Array<k8s.V1Pod> = [];
     for (let pod of pods) {
+      let podName = pod?.metadata?.name;
+      if (podName == undefined) {
+        return Error("Pod does not contain name");
+      }
       let nodeName = pod?.spec?.nodeName;
       if (nodeName == undefined) {
         return Error("Unable to get spec.nodeName from pod");
       }
       if (workerNodesNames.includes(nodeName) === false) {
-        Loggers.base.silly("[K8sClient] Skipping pod that is not placed on worker node");
+        Loggers.base.silly("[K8sClient] Skipping pod " + podName + " that is NOT placed on worker node");
         continue;
       }
       podsOnWorkers.push(pod);
     }
 
-    Loggers.base.debug('[K8sClient] Filtered out ' + workerNodes.length.toString() + ' hyperflow nodes and '
+    Loggers.base.debug('[K8sClient] Filtered out ' + workerNodes.length.toString() + ' hyperflow worker nodes and '
       + podsOnWorkers.length.toString() + ' total pods on them');
     return [workerNodes, podsOnWorkers];
   }

@@ -76,12 +76,12 @@ abstract class BaseProvider {
       if (nodeName == undefined) {
         return Error("Unable to get metadata.name from node");
       }
-      Loggers.base.debug('[BaseProvider] Extracted details of node ' + nodeName + ': CPU=' + cpu + 'B, RAM=' + memory + 'B');
+      Loggers.base.debug('[BaseProvider] Extracted details of node ' + nodeName + ': vCPU=' + cpu + 'm, RAM=' + memory + 'B');
 
       totalCpu += cpu;
       totalMemory += memory;
     }
-    Loggers.base.debug("[BaseProvider] Total supply of " + nodes.length.toString() + ': CPU=' + totalCpu + 'B, RAM=' + totalMemory + 'B');
+    Loggers.base.debug("[BaseProvider] Total supply of " + nodes.length.toString() + ' nodes: vCPU=' + totalCpu + 'm, RAM=' + totalMemory + 'B');
 
     return [totalCpu, totalMemory];
   }
@@ -133,7 +133,7 @@ abstract class BaseProvider {
         }
       }
     }
-    Loggers.base.debug("[BaseProvider] Total demand of " + pods.length.toString() + ': CPU=' + totalCpu + 'B, RAM=' + totalMemory + 'B');
+    Loggers.base.debug("[BaseProvider] Total demand of " + pods.length.toString() + ' pods: vCPU=' + totalCpu + 'm, RAM=' + totalMemory + 'B');
 
     return [totalCpu, totalMemory];
   }
