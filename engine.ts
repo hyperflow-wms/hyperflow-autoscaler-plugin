@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import Loggers from './logger';
 import BaseProvider from './baseProvider';
+import CooldownTracker from './cooldownTracker';
 import KindProvider from './kindProvider';
 import GCPProvider from './gcpProvider';
 import RPCChild from "./rpcChild";
@@ -10,10 +11,15 @@ const REACT_INTERVAL = 10000;
 const SCALE_UP_UTILIZATION = 0.9;
 const SCALE_DOWN_UTILIZATION = 0.5;
 
+const SCALE_UP_COOLDOWN_S = 3 * 60;
+const SCALE_DOWN_COOLDOWN_S = 3 * 60;
+
 class Engine {
 
   private provider: BaseProvider;
   private rpc: RPCChild;
+  private scaleUpCooldown: CooldownTracker;
+  private scaleDownCooldown: CooldownTracker;
 
   constructor(providerName: string) {
     Loggers.base.info("[Engine] Trying to create provider " + providerName);
@@ -25,6 +31,8 @@ class Engine {
     if (this.provider === undefined) {
       throw Error("Provider " + providerName + " not found!");
     }
+    this.scaleUpCooldown = new CooldownTracker();
+    this.scaleDownCooldown = new CooldownTracker();
     this.rpc = new RPCChild(this);
   }
 
@@ -53,14 +61,29 @@ class Engine {
     Loggers.base.verbose('[Engine] Supply: ' + supply);
 
     if ((demand[0] / supply[0]) > SCALE_UP_UTILIZATION) {
-      Loggers.base.info("[Engine] Scaling up - not enough CPU");
-      this.provider.resizeCluster(numWorkers + 1);
+      if (this.scaleUpCooldown.isExpired() === false) {
+        Loggers.base.info("[Engine] Not enough CPU - not scaling due to up-cooldown");
+      } else {
+        Loggers.base.info("[Engine] Scaling up - not enough CPU");
+        this.provider.resizeCluster(numWorkers + 1);
+        this.scaleUpCooldown.setNSeconds(SCALE_UP_COOLDOWN_S);
+      }
     } else if ((demand[1] / supply[1]) > SCALE_UP_UTILIZATION) {
-      Loggers.base.info("[Engine] Scaling up - not enough RAM");
-      this.provider.resizeCluster(numWorkers + 1);
+      if (this.scaleUpCooldown.isExpired() === false) {
+        Loggers.base.info("[Engine] Not enough RAM - not scaling due to up-cooldown");
+      } else {
+        Loggers.base.info("[Engine] Scaling up - not enough RAM");
+        this.provider.resizeCluster(numWorkers + 1);
+        this.scaleUpCooldown.setNSeconds(SCALE_UP_COOLDOWN_S);
+      }
     } else if ((demand[0] / supply[0]) < SCALE_DOWN_UTILIZATION && (demand[1] / supply[1]) < SCALE_DOWN_UTILIZATION && numWorkers > 0) {
-      Loggers.base.info("[Engine] Scaling down - too much CPU & RAM");
-      this.provider.resizeCluster(numWorkers - 1);
+      if (this.scaleDownCooldown.isExpired() === false) {
+        Loggers.base.info("[Engine] Too much CPU & RAM - not scaling due to down-cooldown");
+      } else {
+        Loggers.base.info("[Engine] Scaling down - too much CPU & RAM");
+        this.provider.resizeCluster(numWorkers - 1);
+        this.scaleDownCooldown.setNSeconds(SCALE_DOWN_COOLDOWN_S);
+      }
     } else {
       Loggers.base.info("[Engine] No action necessary");
     }
