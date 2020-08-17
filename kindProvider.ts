@@ -81,18 +81,30 @@ class KindProvider extends BaseProvider {
       Loggers.base.debug("[KindProvider] No action necessary.");
     } else if (currentSize < workersNum) {
       // add more nodes
+      let cordonPromises: Promise<void | Error>[] = [];
       let missingNodes = workersNum - currentSize;
       this.drainedNodeNames.forEach(function(nodeName) {
         if (missingNodes > 0) {
-          this.uncordonNode(nodeName);
+          let cordonPromise = this.uncordonNode(nodeName);
+          cordonPromises.push(cordonPromise);
           missingNodes -= 1;
         }
       }, this);
+      let cordonResult = await Promise.all(cordonPromises).catch((err) => { return Error("Unable to cordon: " + err.toString()) });
+      if (cordonResult instanceof Error) {
+        Loggers.base.error("[KindProvider] Error: " + cordonResult.message);
+      }
     } else {
       // remove nodes
+      let drainPromises: Promise<void | Error>[] = [];
       let overNodes = workerNodesNames.slice(workersNum - currentSize);
       for (let nodeName of overNodes) {
-        this.drainNode(nodeName);
+        let drainPromise = this.drainNode(nodeName);
+        drainPromises.push(drainPromise);
+      }
+      let drainResult = await Promise.all(drainPromises).catch((err) => { return Error("Unable to drain: " + err.toString()) });
+      if (drainResult instanceof Error) {
+        Loggers.base.error("[KindProvider] Error: " + drainResult.message);
       }
     }
     Loggers.base.debug("[KindProvider] Cluster resized to " + workersNum + " workers.");
