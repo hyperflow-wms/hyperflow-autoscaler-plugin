@@ -85,6 +85,7 @@ class GCPProvider extends BaseProvider {
       nodeCount: workersNum,
     };
     try {
+      Loggers.base.silly("[GCPProvider] Resize request " + JSON.stringify(request));
       let result = await this.clusterClient.setNodePoolSize(request);
       Loggers.base.silly("[GCPProvider] setNodePoolSize response" + JSON.stringify(result));
 
