@@ -1,12 +1,13 @@
 import Loggers from './logger';
+import { HFWflib, HFEngine } from "./types";
 import { RedisClient } from 'redis';
 
 class API {
   private rcl: RedisClient;
-  private wflib: object;
-  private engine: object;
+  private wflib: HFWflib;
+  private engine: HFEngine;
 
-  constructor(rcl: RedisClient, wflib: object, engine: object) {
+  constructor(rcl: RedisClient, wflib: HFWflib, engine: HFEngine) {
     Loggers.base.silly('[API] Constructor called');
     this.rcl = rcl;
     this.wflib = wflib;

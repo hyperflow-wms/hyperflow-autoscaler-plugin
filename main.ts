@@ -1,11 +1,12 @@
 import API from './api';
 import Loggers from './logger';
+import { HFWflib, HFEngine } from "./types";
 import RPCParent from "./rpcParent";
 
 import { RedisClient } from 'redis';
 import * as child_process from 'child_process';
 
-function runAutoscaler(providerName: string, rcl: RedisClient, wflib: object, engine: object) {
+function runAutoscaler(providerName: string, rcl: RedisClient, wflib: HFWflib, engine: HFEngine) {
   /* Skip autoscaler if specified 'none'. */
   if (providerName == "none") {
     Loggers.base.debug("[main] Not running autoscaler process, because 'none' provider is specified.");
