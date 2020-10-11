@@ -23,7 +23,12 @@ function runAutoscaler(providerName: string, rcl: RedisClient, wflib: HFWflib, e
   });
   let rpc = new RPCParent(engineProcess, api);
   rpc.init();
+
+  /* Assign RPC to API and listen to all HyperFlow's
+   * engine events. */
   api.assignRPC(rpc);
+  api.listenForEvents();
+
   return;
 }
 

@@ -38,6 +38,28 @@ class API {
 
     return;
   }
+
+  /**
+   * Binds to eventServer in engine to capture relevant data.
+   */
+  public listenForEvents() {
+    /* Below hacky-line could be uncommented to get more events. */
+    //this.engine.logProvenance = true;
+
+    /* Listen for engine events and pass them autoscaler. */
+    const cbBuilder = (name) => {
+      return (...values) => {
+        Loggers.base.debug('[API] Captured event from engine ' + name.toString() + ': ' + JSON.stringify(values));
+        // TODO: send event to autoscaler engine
+      };
+    };
+    for (let name of ["persist", "input", "read", "prov"]) {
+      this.engine.eventServer.on(name, cbBuilder(name));
+    }
+
+    return;
+  }
+
 }
 
 export default API;
