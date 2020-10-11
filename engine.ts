@@ -2,6 +2,7 @@
 import Loggers from './logger';
 import BaseProvider from './baseProvider';
 import CooldownTracker from './cooldownTracker';
+import DummyProvider from './dummyProvider';
 import KindProvider from './kindProvider';
 import GCPProvider from './gcpProvider';
 import RPCChild from "./rpcChild";
@@ -27,6 +28,8 @@ class Engine {
       this.provider = new GCPProvider();
     } else if (providerName == "kind") {
       this.provider = new KindProvider();
+    } else if (providerName == "dummy") {
+      this.provider = new DummyProvider();
     }
     if (this.provider === undefined) {
       throw Error("Provider " + providerName + " not found!");
