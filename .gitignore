@@ -1,5 +1,6 @@
 # ignore log directories, located anywhere
 logs
 
-# ignore all compiled js files
-/*.js
+# ignore all compiled js files + their maps
+*.js
+*.map
