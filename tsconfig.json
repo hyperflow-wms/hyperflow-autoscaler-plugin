@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "strictNullChecks": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "outDir": "./bin"
   }
 }
