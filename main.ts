@@ -13,10 +13,14 @@ function runAutoscaler(providerName: string, rcl: RedisClient, wflib: HFWflib, e
     return;
   }
 
-  /* Create API, engine process and bind it via RPC. */
+  /* Create API, engine process and bind it via RPC.
+   * Note: when parent dies, child is killed. */
   let api = new API(rcl, wflib, engine);
   Loggers.base.debug("[main] Running process with engine.js");
   let engineProcess = child_process.fork(__dirname + '/engine.js', [providerName], { detached: false });
+  process.on('exit', function () {
+    engineProcess.kill();
+  });
   let rpc = new RPCParent(engineProcess, api);
   rpc.init();
   return;
