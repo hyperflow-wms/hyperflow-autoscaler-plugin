@@ -4,13 +4,13 @@ import { RedisClient } from 'redis';
 class API {
   private rcl: RedisClient;
   private wflib: object;
-  private plugins: any[];
+  private engine: object;
 
-  constructor(rcl: RedisClient, wflib: object, plugins: any[]) {
+  constructor(rcl: RedisClient, wflib: object, engine: object) {
     Loggers.base.silly('[API] Constructor called');
     this.rcl = rcl;
     this.wflib = wflib;
-    this.plugins = plugins;
+    this.engine = engine;
   }
 
   /**
