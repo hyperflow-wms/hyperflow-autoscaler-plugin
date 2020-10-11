@@ -96,6 +96,18 @@ class Engine {
 
     return;
   }
+
+  /**
+   * This function should be invoked when HyperFlow event is emitted.
+   * @param name event name
+   * @param values event values
+   */
+  private onHFEngineEvent(name: String, values: any[]): void {
+    Loggers.base.debug("[Engine] Received HyperFlow's engine event " + name.toString() + ': ' + JSON.stringify(values));
+    // TODO use event for tracking workflow execution
+
+    return;
+  }
 }
 
 var args = process.argv.slice(2);

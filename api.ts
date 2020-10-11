@@ -50,7 +50,10 @@ class API {
     const cbBuilder = (name) => {
       return (...values) => {
         Loggers.base.debug('[API] Captured event from engine ' + name.toString() + ': ' + JSON.stringify(values));
-        // TODO: send event to autoscaler engine
+        if (this.rpc === undefined) {
+          throw Error("No RPC assigned to API");
+        }
+        this.rpc.callAsync("onHFEngineEvent", [name, values]);
       };
     };
     for (let name of ["persist", "input", "read", "prov"]) {
