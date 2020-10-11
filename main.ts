@@ -23,6 +23,7 @@ function runAutoscaler(providerName: string, rcl: RedisClient, wflib: HFWflib, e
   });
   let rpc = new RPCParent(engineProcess, api);
   rpc.init();
+  api.assignRPC(rpc);
   return;
 }
 
