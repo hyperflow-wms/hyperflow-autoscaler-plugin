@@ -15,8 +15,8 @@ class API {
   }
 
   /**
-   * Test function.
-   * TODO: remove
+   * Example API function.
+   * TODO: remove in future.
    */
   public addNumbers(a: number, b: number): number {
     Loggers.base.debug('[API] Adding ' + a.toString() + ' to ' + b.toString());
