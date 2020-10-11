@@ -42,6 +42,7 @@ class Engine {
   public async run(): Promise<void> {
     this.rpc.init();
     //this.rpc.call('addNumbers', [21, 15], (data) => { console.log('Got RPC response:', data); });
+    //let sum = await this.rpc.callAsync('addNumbers', [21, 15]);
     await this.provider.initialize();
 
     this.reactLoop();

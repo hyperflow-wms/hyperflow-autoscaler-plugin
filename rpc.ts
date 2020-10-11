@@ -100,6 +100,23 @@ abstract class RPC {
     return;
   }
 
+  /**
+   * Promisified version of 'call'.
+   */
+  public async callAsync(fn_name: string, args: Array<any>): Promise<any | Error> {
+    let promise = new Promise((resolve, reject) => {
+      try {
+        this.call(fn_name, args, (data) => {
+          resolve(data);
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+
+    return promise;
+  }
+
   public init(): void {
     process.on('message', (data) => {
       Loggers.base.debug('[RPC] Got message: ' + JSON.stringify(data));
