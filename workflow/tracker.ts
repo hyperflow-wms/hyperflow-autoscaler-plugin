@@ -31,22 +31,24 @@ class WorkflowTracker
 
   /**
    * Notifies tracker about execution start.
+   * @param time event time
    */
-  public notifyStart() {
-    this.executionStartTime = new Date();
+  public notifyStart(time: Date) {
+    this.executionStartTime = time;
   }
 
   /**
    * Notifies tracker about emitted input signal.
    * @param sigId signal ID
+   * @param time event time
    */
-  public notifyInitialSignal(sigId: number) {
+  public notifyInitialSignal(sigId: number, time: Date) {
     Loggers.base.debug("[WorkflowTracker] Notified about signal " + sigId.toString() + " emit");
     let signal = this.signalsMap.get(sigId);
     if (signal === undefined) {
       throw Error("Signal " + sigId.toString() + " not found");
     }
-    signal.markEmit(new Date());
+    signal.markEmit(time);
 
     /* Fire next processes. */
     let nextProcessIds = this.signalToNextProcess.get(sigId);
@@ -54,7 +56,7 @@ class WorkflowTracker
       throw Error("No mapping found - even empty array must be specified!");
     }
     for (let processId of nextProcessIds) {
-      this.startProcessIfReady(processId);
+      this.startProcessIfReady(processId, time);
     }
 
     return;
@@ -63,14 +65,16 @@ class WorkflowTracker
   /**
    * Notifies tracker about finished process.
    * @param procId process ID
+   * @param time event time
    */
-  public notifyProcessFinished(procId: number) {
+  public notifyProcessFinished(procId: number, time: Date) {
     Loggers.base.debug("[WorkflowTracker] Notified about process " + procId.toString() + " finish");
     let process = this.processesMap.get(procId);
     if (process === undefined) {
       throw Error("Process " + procId.toString() + " not found");
     }
     delete this.runningProcesses[procId];
+    process.markEnd(time);
 
     /* We have to fire next signals manually, because
      * without log provenance we can get only initial ones. */
@@ -79,7 +83,7 @@ class WorkflowTracker
       throw Error("No mapping found - even empty array must be specified!");
     }
     for (let signalId of nextSignalIds) {
-      this.notifyInitialSignal(signalId);
+      this.notifyInitialSignal(signalId, time);
     }
 
     return;
@@ -88,8 +92,9 @@ class WorkflowTracker
   /**
    * Starts process, only if all input signals are ready.
    * @param procId process ID
+   * @param time start time
    */
-  private startProcessIfReady(procId: number) {
+  private startProcessIfReady(procId: number, time: Date) {
     let process = this.processesMap.get(procId);
     if (process === undefined) {
       throw Error("Process " + procId.toString() + " not found");
@@ -102,7 +107,7 @@ class WorkflowTracker
     let notEmittedSignals = emitStates.filter(x => x == false).length;
     if (notEmittedSignals == 0) {
       Loggers.base.debug("[WorkflowTracker] Firing process " + procId.toString() + " - all ins are ready");
-      process.markStart(new Date());
+      process.markStart(time);
       this.runningProcesses[procId] = true;
     }
     return;
@@ -178,16 +183,16 @@ async function testMontage() {
     ws.printState();
   }, 500);
 
-  ws.notifyStart();
+  ws.notifyStart(new Date());
 
   for (let sigId of [1,4,5,8,11,14,17,20,23,26,29,32,33,68,70,92,94]) {
-    ws.notifyInitialSignal(sigId);
+    ws.notifyInitialSignal(sigId, new Date());
   }
 
   for (let procId of [1,2,3,4,5,6,7,8,9,10,11,12,14,16,13,17,19,21,20,22,23,15,18,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43]) {
     let randDelay = Math.floor(Math.random() * 500);
     await new Promise((res, rej) => { setTimeout(res, randDelay); });
-    ws.notifyProcessFinished(procId);
+    ws.notifyProcessFinished(procId, new Date());
   }
 
   // what about some wait?
