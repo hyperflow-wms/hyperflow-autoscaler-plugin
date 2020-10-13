@@ -48,6 +48,10 @@ class WorkflowTracker
     if (signal === undefined) {
       throw Error("Signal " + sigId.toString() + " not found");
     }
+    if (signal.wasEmitted() == true) {
+      Loggers.base.warn("[WorkflowTracker] Signal " + sigId.toString() + " was already emitted");
+      return;
+    }
     signal.markEmit(time);
 
     /* Fire next processes. */
