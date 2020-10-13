@@ -28,6 +28,18 @@ export interface HFEngine {
   // TODO
 }
 
+export interface HFProcessConfigExecutor {
+  executable: string;
+  args: string[];
+  cpuRequest?: string;
+  memRequest?: string;
+}
+
+export interface HFProcessConfig {
+  containername: string;
+  executor: HFProcessConfigExecutor;
+}
+
 export interface HFSignal {
   name: string;
 }
@@ -36,6 +48,7 @@ export interface HFProcess {
   name: string;
   ins: number[];
   outs: number[];
+  config: HFProcessConfig;
 }
 
 export interface HFWorkflow {
