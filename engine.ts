@@ -7,6 +7,8 @@ import KindProvider from './kindProvider';
 import GCPProvider from './gcpProvider';
 import RPCChild from "./rpcChild";
 import withTimeout from './helpers'
+import WorkflowTracker from './workflow/tracker';
+import logger from './logger';
 
 const REACT_INTERVAL = 10000;
 const SCALE_UP_UTILIZATION = 0.9;
@@ -21,6 +23,7 @@ class Engine {
   private rpc: RPCChild;
   private scaleUpCooldown: CooldownTracker;
   private scaleDownCooldown: CooldownTracker;
+  private workflowTracker: WorkflowTracker;
 
   constructor(providerName: string) {
     Loggers.base.info("[Engine] Trying to create provider " + providerName);
@@ -103,8 +106,52 @@ class Engine {
    * @param values event values
    */
   private onHFEngineEvent(name: String, values: any[]): void {
-    Loggers.base.debug("[Engine] Received HyperFlow's engine event " + name.toString() + ': ' + JSON.stringify(values));
-    // TODO use event for tracking workflow execution
+    Loggers.base.debug("[Engine] Received HyperFlow's engine event " + name + ': ' + JSON.stringify(values));
+    if (name != "persist") {
+      Loggers.base.warn("[Engine] Unknown event type: " + name);
+      return;
+    }
+    if (values.length != 2) {
+      Loggers.base.warn("[Engine] Incorrect event's values length: " + name);
+      return;
+    }
+    let eventTime = new Date(values[0]);
+    let details = values[1];
+
+    // A. Event send just before running WF
+    if (details[0] == "info") {
+      if (this.workflowTracker === undefined) {
+        let wfDir = details[1];
+        this.workflowTracker = new WorkflowTracker(wfDir);
+        let printInterval = setInterval(() => {
+          this.workflowTracker.printState();
+        }, 100);
+      } else {
+        throw Error("Received duplicate of start event info - tracker cannot be re-initialized");
+      }
+      this.workflowTracker.notifyStart(eventTime);
+    }
+    // B. Event sent on execution beginning (initial signals)
+    else if (details[0] == "input") {
+      let signalId = details[2]._id;
+      // signals coming from -s option (those all ins from workflow.json),
+      // are sent with ID as strings
+      signalId = parseInt(signalId);
+      if (isNaN(signalId)) {
+        throw Error("Received invalid input event, with signal " + details[1]._id.toString());
+      }
+      this.workflowTracker.notifyInitialSignal(signalId, eventTime);
+    }
+    // C. Event sent on execution beginning (initial signals)
+    else if (details[0] == "fired") {
+      let processId = details[2];
+      if (typeof processId !== "number") {
+        throw Error("Received invalid fired event, with process " + processId.toString());
+      }
+      this.workflowTracker.notifyProcessFinished(processId, eventTime);
+    } else {
+      Loggers.base.warn("[Engine] Unknown event details' type: " + details[0]);
+    }
 
     return;
   }
