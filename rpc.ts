@@ -69,7 +69,7 @@ abstract class RPC {
   protected handleMessage(data: object): void {
     Loggers.base.silly('[RPC] Handling message: ' + JSON.stringify(data));
     if (typeof data !== 'object') {
-      Loggers.base.warning('[RPC] No valid RPC message - skipping');
+      Loggers.base.warn('[RPC] No valid RPC message - skipping');
       return;
     }
     if (data['type'] === MESSAGE_TYPE_REQUEST) {
@@ -79,7 +79,7 @@ abstract class RPC {
       this.handleReply(data as RPCReply);
       return;
     }
-    Loggers.base.warning('[RPC] No valid RPC message - skipping');
+    Loggers.base.warn('[RPC] No valid RPC message - skipping');
     return;
   }
 
