@@ -11,7 +11,18 @@ export interface HFWflib {
   // TODO
 }
 
+export enum StringBoolean {
+  True = "true",
+  False = "false",
+}
+
+export interface HFConfig {
+  emulate: StringBoolean;
+  workdir: string;
+}
+
 export interface HFEngine {
+  config: HFConfig;
   eventServer: HFEventServer;
   logProvenance: boolean;
   // TODO
