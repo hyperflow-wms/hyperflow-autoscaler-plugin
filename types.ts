@@ -16,3 +16,23 @@ export interface HFEngine {
   logProvenance: boolean;
   // TODO
 }
+
+export interface HFSignal {
+  name: string;
+}
+
+export interface HFProcess {
+  name: string;
+  ins: number[];
+  outs: number[];
+}
+
+export interface HFWorkflow {
+  name: string;
+  data?: HFSignal[];
+  signals?: HFSignal[];
+  processes?: HFProcess[];
+  tasks?: HFProcess[];
+  ins: number[];
+  outs: number[];
+}
