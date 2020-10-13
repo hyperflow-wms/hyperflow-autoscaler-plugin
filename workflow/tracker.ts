@@ -176,31 +176,3 @@ class WorkflowTracker
 }
 
 export default WorkflowTracker;
-
-
-/**
- * TEST
- */
-async function testMontage() {
-  let ws = new WorkflowTracker('/home/andrew/Projects/master-thesis/workflows/montage_0.25');
-  let printInterval = setInterval(() => {
-    ws.printState();
-  }, 500);
-
-  ws.notifyStart(new Date());
-
-  for (let sigId of [1,4,5,8,11,14,17,20,23,26,29,32,33,68,70,92,94]) {
-    ws.notifyInitialSignal(sigId, new Date());
-  }
-
-  for (let procId of [1,2,3,4,5,6,7,8,9,10,11,12,14,16,13,17,19,21,20,22,23,15,18,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43]) {
-    let randDelay = Math.floor(Math.random() * 500);
-    await new Promise((res, rej) => { setTimeout(res, randDelay); });
-    ws.notifyProcessFinished(procId, new Date());
-  }
-
-  // what about some wait?
-  clearInterval(printInterval);
-}
-
-testMontage();
