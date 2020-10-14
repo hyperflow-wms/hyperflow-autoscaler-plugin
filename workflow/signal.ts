@@ -25,7 +25,7 @@ class Signal {
       this.id = id;
       this.name = signal.name;
       // data property is indicator of initial signal
-      if (signal.data === undefined) {
+      if (signal.data !== undefined) {
         this.initial = true;
       } else {
         this.initial = false;
