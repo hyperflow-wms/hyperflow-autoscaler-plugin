@@ -21,8 +21,16 @@ class Workflow {
     // NOTE: HyperFlow uses 1-based indexing, so we use the same format
     this.data = workflow.data?.map((sig, idx) => new Signal(sig, idx+1));
     this.signals = workflow.signals?.map((sig, idx) => new Signal(sig, idx+1));
-    this.processes = workflow.processes?.map((proc, idx) => new Process(proc, idx+1));
-    this.tasks = workflow.tasks?.map((proc, idx) => new Process(proc, idx+1));
+    this.processes = workflow.processes?.map((proc, idx) => {
+      proc.ins = proc.ins.map(x => x+1);
+      proc.outs = proc.outs.map(x => x+1);
+      return new Process(proc, idx+1)
+    });
+    this.tasks = workflow.tasks?.map((proc, idx) => {
+      proc.ins = proc.ins.map(x => x+1);
+      proc.outs = proc.outs.map(x => x+1);
+      return new Process(proc, idx+1)
+    });
   }
 
   public getSignals(): Signal[] {

@@ -161,15 +161,14 @@ class WorkflowTracker
       this.signalToPrevProcess.set(sig.id, []);
       this.signalToNextProcess.set(sig.id, []);
     });
-    // NOTE: HyperFlow uses 1-based indexing, so we use the same format
     processes.forEach((proc) => {
       (proc.ins||[]).forEach((insig) => {
-        this.processToPrevSignal.get(proc.id)?.push(insig+1);
-        this.signalToNextProcess.get(insig+1)?.push(proc.id);
+        this.processToPrevSignal.get(proc.id)?.push(insig);
+        this.signalToNextProcess.get(insig)?.push(proc.id);
       });
       (proc.outs||[]).forEach((outsig) => {
-        this.processToNextSignal.get(proc.id)?.push(outsig+1);
-        this.signalToPrevProcess.get(outsig+1)?.push(proc.id);
+        this.processToNextSignal.get(proc.id)?.push(outsig);
+        this.signalToPrevProcess.get(outsig)?.push(proc.id);
       });
     });
 
