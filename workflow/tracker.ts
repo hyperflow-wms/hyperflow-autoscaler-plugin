@@ -9,7 +9,7 @@ import * as pathtool from "path";
 
 class WorkflowTracker
 {
-  private executionStartTime: Date;
+  private executionStartTime?: Date;
 
   private processesMap: Map<number, Process> = new Map;
   private signalsMap: Map<number, Signal> = new Map;
@@ -22,11 +22,33 @@ class WorkflowTracker
 
   private runningProcesses: Set<number>;
 
-  constructor(directory: string) {
-    Loggers.base.silly("[WorkflowTracker] Constructor");
-    this.runningProcesses = new Set();
-    let wf = this.readHFFile(directory);
-    this.loadWorkflow(wf);
+  /**
+   * Constructor of WorkflowTracker - allows copying when passing class instance.
+   * @param directoryOrWT
+   */
+  constructor(directoryOrWT: string | WorkflowTracker) {
+    if (directoryOrWT instanceof WorkflowTracker) {
+      Loggers.base.silly("[WorkflowTracker] Copy constructor");
+      let oldWT = directoryOrWT;
+      this.executionStartTime = (oldWT.executionStartTime) ? new Date(oldWT.executionStartTime.getTime()) : undefined;
+      oldWT.processesMap.forEach((val, key) => {
+        this.processesMap.set(key, new Process(val));
+      });
+      oldWT.signalsMap.forEach((val, key) => {
+        this.signalsMap.set(key, new Signal(val));
+      });
+      this.processToPrevSignal = new Map(oldWT.processToPrevSignal);
+      this.processToNextSignal = new Map(oldWT.processToNextSignal);
+      this.signalToPrevProcess = new Map(oldWT.signalToPrevProcess);
+      this.signalToNextProcess = new Map(oldWT.signalToNextProcess);
+      this.runningProcesses = new Set(oldWT.runningProcesses);
+    } else {
+      Loggers.base.silly("[WorkflowTracker] Constructor");
+      let directory = directoryOrWT;
+      this.runningProcesses = new Set();
+      let wf = this.readHFFile(directory);
+      this.loadWorkflow(wf);
+    }
   }
 
   /**
