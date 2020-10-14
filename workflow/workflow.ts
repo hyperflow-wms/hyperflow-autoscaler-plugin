@@ -14,12 +14,15 @@ class Workflow {
 
   public constructor(workflow: HFWorkflow) {
     this.name = workflow.name;
-    this.data = workflow.data?.map(x => new Signal(x));
-    this.signals = workflow.signals?.map(x => new Signal(x));
-    this.processes = workflow.processes?.map(x => new Process(x));
-    this.tasks = workflow.tasks?.map(x => new Process(x));
+
     this.ins = workflow.ins;
     this.outs = workflow.outs;
+
+    // NOTE: HyperFlow uses 1-based indexing, so we use the same format
+    this.data = workflow.data?.map((sig, idx) => new Signal(sig, idx+1));
+    this.signals = workflow.signals?.map((sig, idx) => new Signal(sig, idx+1));
+    this.processes = workflow.processes?.map((proc, idx) => new Process(proc, idx+1));
+    this.tasks = workflow.tasks?.map((proc, idx) => new Process(proc, idx+1));
   }
 
   public getSignals(): Signal[] {

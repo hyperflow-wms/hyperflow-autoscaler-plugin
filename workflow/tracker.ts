@@ -151,25 +151,25 @@ class WorkflowTracker
     let signals = wf.getSignals();
     let processes = wf.getProcesses();
 
-    /* NOTE: HyperFlow uses 1-based indexing, so we use the same format. */
-    processes.forEach((proc, idx) => {
-      this.processesMap.set(idx+1, proc);
-      this.processToPrevSignal.set(idx+1, []);
-      this.processToNextSignal.set(idx+1, []);
+    processes.forEach((proc) => {
+      this.processesMap.set(proc.id, proc);
+      this.processToPrevSignal.set(proc.id, []);
+      this.processToNextSignal.set(proc.id, []);
     });
-    signals.forEach((sig, idx) => {
-      this.signalsMap.set(idx+1, sig);
-      this.signalToPrevProcess.set(idx+1, []);
-      this.signalToNextProcess.set(idx+1, []);
+    signals.forEach((sig) => {
+      this.signalsMap.set(sig.id, sig);
+      this.signalToPrevProcess.set(sig.id, []);
+      this.signalToNextProcess.set(sig.id, []);
     });
-    processes.forEach((proc, idx) => {
+    // NOTE: HyperFlow uses 1-based indexing, so we use the same format
+    processes.forEach((proc) => {
       (proc.ins||[]).forEach((insig) => {
-        this.processToPrevSignal.get(idx+1)?.push(insig+1);
-        this.signalToNextProcess.get(insig+1)?.push(idx+1);
+        this.processToPrevSignal.get(proc.id)?.push(insig+1);
+        this.signalToNextProcess.get(insig+1)?.push(proc.id);
       });
       (proc.outs||[]).forEach((outsig) => {
-        this.processToNextSignal.get(idx+1)?.push(outsig+1);
-        this.signalToPrevProcess.get(outsig+1)?.push(idx+1);
+        this.processToNextSignal.get(proc.id)?.push(outsig+1);
+        this.signalToPrevProcess.get(outsig+1)?.push(proc.id);
       });
     });
 

@@ -2,6 +2,7 @@ import { HFProcess } from "../types";
 
 class Process {
 
+  public readonly id: number;
   public readonly name: string;
   public readonly ins: number[];
   public readonly outs: number[];
@@ -12,7 +13,8 @@ class Process {
   private startTime?: Date;
   private endTime?: Date;
 
-  public constructor(process: HFProcess) {
+  public constructor(process: HFProcess, id: number) {
+    this.id = id;
     this.name = process.name;
     this.ins = process.ins;
     this.outs = process.outs;
