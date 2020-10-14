@@ -53,6 +53,24 @@ class Workflow {
     return [];
   }
 
+  /**
+   * Gets all initial signals - those with defined
+   * 'data' property.
+   */
+  public getInitialSigIds() {
+    let intitialSigs = this.getSignals().filter(sig => (sig.initial == true));
+    let sigIds = intitialSigs.map(x => x.id);
+    return sigIds;
+  }
+
+  /**
+   * Get all WF's input signals - those that are fired
+   * with '-s' option.
+   */
+  public getWfInsSigIds() {
+    return this.ins;
+  }
+
 }
 
 export default Workflow;
