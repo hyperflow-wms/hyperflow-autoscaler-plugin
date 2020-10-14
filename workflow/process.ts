@@ -27,6 +27,13 @@ class Process {
    *          otherwise we might get unexpected results.
    */
   private assignRequests(hfProcess: HFProcess) {
+    /* Use zeroes in case of last (exit) process without defined executor. */
+    if (hfProcess.function == "exit" && hfProcess?.config?.executor == undefined) {
+      this.cpuRequest = "0";
+      this.memRequest = "0";
+      return;
+    }
+
     let executor = hfProcess.config.executor;
     this.cpuRequest = executor.cpuRequest || process.env.HF_VAR_CPU_REQUEST || "0.5";
     this.memRequest = executor.memRequest || process.env.HF_VAR_MEM_REQUEST || "50Mi";

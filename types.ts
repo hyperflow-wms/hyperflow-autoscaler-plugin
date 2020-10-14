@@ -46,6 +46,7 @@ export interface HFSignal {
 
 export interface HFProcess {
   name: string;
+  function: string;
   ins: number[];
   outs: number[];
   config: HFProcessConfig;
