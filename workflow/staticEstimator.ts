@@ -26,3 +26,5 @@ class StaticEstimator implements EstimatorInterface {
     return estimation;
   }
 }
+
+export default StaticEstimator;
