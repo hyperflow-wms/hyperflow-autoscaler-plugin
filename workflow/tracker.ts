@@ -6,7 +6,6 @@ import Workflow from "./workflow";
 
 import * as fs from "fs";
 import * as pathtool from "path";
-import { Logger } from "log4js";
 
 class WorkflowTracker
 {
