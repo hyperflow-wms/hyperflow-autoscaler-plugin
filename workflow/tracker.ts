@@ -1,11 +1,7 @@
-import { HFWorkflow } from "../types";
 import Loggers from '../logger';
 import Process from "./process";
 import Signal from "./signal";
 import Workflow from "./workflow";
-
-import * as fs from "fs";
-import * as pathtool from "path";
 
 class WorkflowTracker
 {
@@ -24,12 +20,12 @@ class WorkflowTracker
 
   /**
    * Constructor of WorkflowTracker - allows copying when passing class instance.
-   * @param directoryOrWT
+   * @param wfOrTracker
    */
-  constructor(directoryOrWT: string | WorkflowTracker) {
-    if (directoryOrWT instanceof WorkflowTracker) {
+  constructor(wfOrTracker: Workflow | WorkflowTracker) {
+    if (wfOrTracker instanceof WorkflowTracker) {
       Loggers.base.silly("[WorkflowTracker] Copy constructor");
-      let oldWT = directoryOrWT;
+      let oldWT = wfOrTracker;
       this.executionStartTime = (oldWT.executionStartTime) ? new Date(oldWT.executionStartTime.getTime()) : undefined;
       oldWT.processesMap.forEach((val, key) => {
         this.processesMap.set(key, new Process(val));
@@ -44,9 +40,8 @@ class WorkflowTracker
       this.runningProcesses = new Set(oldWT.runningProcesses);
     } else {
       Loggers.base.silly("[WorkflowTracker] Constructor");
-      let directory = directoryOrWT;
+      let wf = wfOrTracker;
       this.runningProcesses = new Set();
-      let wf = this.readHFFile(directory);
       this.loadWorkflow(wf);
     }
   }
@@ -145,20 +140,6 @@ class WorkflowTracker
    */
   public printState() {
     Loggers.base.debug("[WorkflowTracker] Already running tasks: " + this.runningProcesses.size.toString());
-  }
-
-  /**
-   * Reads HyperFlow's workflow.json.
-   * @param directory Workflow root directory
-   */
-  private readHFFile(directory: string): Workflow {
-    Loggers.base.debug("[WorkflowTracker] Reading HF workflow from " + directory);
-    let wfFile = pathtool.join(directory, "workflow.json");
-    let wfFileContent = fs.readFileSync(wfFile, 'utf8');
-    let rawWf = JSON.parse(wfFileContent);
-    let wf = new Workflow(rawWf);
-
-    return wf;
   }
 
   /**

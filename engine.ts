@@ -9,6 +9,7 @@ import RPCChild from "./rpcChild";
 import withTimeout from './helpers'
 import WorkflowTracker from './workflow/tracker';
 import logger from './logger';
+import Workflow from './workflow/workflow';
 
 const REACT_INTERVAL = 10000;
 const SCALE_UP_UTILIZATION = 0.9;
@@ -23,6 +24,7 @@ class Engine {
   private rpc: RPCChild;
   private scaleUpCooldown: CooldownTracker;
   private scaleDownCooldown: CooldownTracker;
+  private workflow: Workflow;
   private workflowTracker: WorkflowTracker;
 
   constructor(providerName: string) {
@@ -122,7 +124,8 @@ class Engine {
     if (details[0] == "info") {
       if (this.workflowTracker === undefined) {
         let wfDir = details[1];
-        this.workflowTracker = new WorkflowTracker(wfDir);
+        this.workflow = Workflow.createFromFile(wfDir);
+        this.workflowTracker = new WorkflowTracker(this.workflow);
         let printInterval = setInterval(() => {
           this.workflowTracker.printState();
         }, 100);
