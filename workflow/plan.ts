@@ -93,3 +93,12 @@ class Plan
 
 export default Plan;
 
+async function test() {
+  let wfDir = '/home/andrew/Projects/master-thesis/hyperflow/source/examples/Test';
+  let workflow = Workflow.createFromFile(wfDir);
+  let tracker = new WorkflowTracker(workflow);
+  let plan = new Plan(workflow, tracker, 50000);
+  plan.run();
+}
+
+test();
