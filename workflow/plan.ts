@@ -1,6 +1,8 @@
 import Loggers from '../logger';
 import Workflow from "./workflow";
 import WorkflowTracker from "./tracker";
+import EstimatorInterface from './estimatorInterface';
+import StaticEstimator from './staticEstimator';
 
 class Plan
 {
@@ -8,7 +10,7 @@ class Plan
   private tracker: WorkflowTracker;
   private timeForwardMs: number;
 
-  constructor(wf: Workflow, tracker: WorkflowTracker, timeForwardMs: number) {
+  constructor(wf: Workflow, tracker: WorkflowTracker, timeForwardMs: number, estimator: EstimatorInterface) {
     Loggers.base.silly("[Plan] Constructor");
     this.wf = wf;
     this.tracker = tracker;
@@ -97,7 +99,8 @@ async function test() {
   let wfDir = '/home/andrew/Projects/master-thesis/hyperflow/source/examples/Test';
   let workflow = Workflow.createFromFile(wfDir);
   let tracker = new WorkflowTracker(workflow);
-  let plan = new Plan(workflow, tracker, 50000);
+  let estimator = new StaticEstimator();
+  let plan = new Plan(workflow, tracker, 50000, estimator);
   plan.run();
 }
 
