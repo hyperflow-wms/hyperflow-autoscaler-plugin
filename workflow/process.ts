@@ -82,6 +82,14 @@ class Process {
   public getMemRequest(): string {
     return this.memRequest;
   }
+
+  public getStartTime(): Date | undefined {
+    return this.startTime;
+  }
+
+  public getEndTime(): Date | undefined {
+    return this.endTime;
+  }
 }
 
 export default Process;

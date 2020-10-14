@@ -176,6 +176,18 @@ class WorkflowTracker
 
     return;
   }
+
+  public getExecutionStartTime(): Date | undefined {
+    return this.executionStartTime;
+  }
+
+  public getRunningProcessIds(): Set<number> {
+    return this.runningProcesses;
+  }
+
+  public getProcessById(processId: number): Process | undefined {
+    return this.processesMap.get(processId);
+  }
 }
 
 export default WorkflowTracker;
