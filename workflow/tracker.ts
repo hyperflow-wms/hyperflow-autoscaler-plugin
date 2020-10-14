@@ -2,6 +2,7 @@ import { HFWorkflow } from "../types";
 import Loggers from '../logger';
 import Process from "./process";
 import Signal from "./signal";
+import Workflow from "./workflow";
 
 import * as fs from "fs";
 import * as pathtool from "path";
@@ -26,7 +27,7 @@ class WorkflowTracker
     Loggers.base.silly("[WorkflowTracker] Constructor");
     this.runningProcesses = {};
     let wf = this.readHFFile(directory);
-    this.loadHFGraph(wf);
+    this.loadWorkflow(wf);
   }
 
   /**
@@ -129,11 +130,12 @@ class WorkflowTracker
    * Reads HyperFlow's workflow.json.
    * @param directory Workflow root directory
    */
-  private readHFFile(directory: string): HFWorkflow {
+  private readHFFile(directory: string): Workflow {
     Loggers.base.debug("[WorkflowTracker] Reading HF workflow from " + directory);
     let wfFile = pathtool.join(directory, "workflow.json");
     let wfFileContent = fs.readFileSync(wfFile, 'utf8');
-    let wf = JSON.parse(wfFileContent);
+    let rawWf = JSON.parse(wfFileContent);
+    let wf = new Workflow(rawWf);
 
     return wf;
   }
@@ -142,21 +144,21 @@ class WorkflowTracker
    * Loads HyperFlow's workflow into this instance.
    * @param wf workflow
    */
-  private loadHFGraph(wf: HFWorkflow): void {
+  private loadWorkflow(wf: Workflow): void {
 
-    Loggers.base.debug("[WorkflowTracker] Parsing HF workflow into graph");
+    Loggers.base.debug("[WorkflowTracker] Parsing workflow into graph");
 
-    let signals = (wf.data || wf.signals || []);
-    let processes = (wf.processes || wf.tasks || []);
+    let signals = wf.getSignals();
+    let processes = wf.getProcesses();
 
     /* NOTE: HyperFlow uses 1-based indexing, so we use the same format. */
     processes.forEach((proc, idx) => {
-      this.processesMap.set(idx+1, new Process(proc));
+      this.processesMap.set(idx+1, proc);
       this.processToPrevSignal.set(idx+1, []);
       this.processToNextSignal.set(idx+1, []);
     });
     signals.forEach((sig, idx) => {
-      this.signalsMap.set(idx+1, new Signal(sig));
+      this.signalsMap.set(idx+1, sig);
       this.signalToPrevProcess.set(idx+1, []);
       this.signalToNextProcess.set(idx+1, []);
     });
