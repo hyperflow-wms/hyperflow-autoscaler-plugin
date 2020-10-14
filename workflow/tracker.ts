@@ -20,11 +20,11 @@ class WorkflowTracker
   private signalToPrevProcess: Map<number, number[]> = new Map;
   private signalToNextProcess: Map<number, number[]> = new Map;
 
-  private runningProcesses: object; // TODO
+  private runningProcesses: Set<number>;
 
   constructor(directory: string) {
     Loggers.base.silly("[WorkflowTracker] Constructor");
-    this.runningProcesses = {};
+    this.runningProcesses = new Set();
     let wf = this.readHFFile(directory);
     this.loadWorkflow(wf);
   }
@@ -77,7 +77,7 @@ class WorkflowTracker
     if (process === undefined) {
       throw Error("Process " + procId.toString() + " not found");
     }
-    delete this.runningProcesses[procId];
+    this.runningProcesses.delete(procId);
     process.markEnd(time);
 
     /* We have to fire next signals manually, because
@@ -112,7 +112,7 @@ class WorkflowTracker
     if (notEmittedSignals == 0) {
       Loggers.base.debug("[WorkflowTracker] Firing process " + procId.toString() + " - all ins are ready");
       process.markStart(time);
-      this.runningProcesses[procId] = true;
+      this.runningProcesses.add(procId);
     }
     return;
   }
@@ -122,7 +122,7 @@ class WorkflowTracker
    * TODO: remove.
    */
   public printState() {
-    Loggers.base.debug("[WorkflowTracker] Already running tasks: " + Object.keys(this.runningProcesses).length.toString());
+    Loggers.base.debug("[WorkflowTracker] Already running tasks: " + this.runningProcesses.size.toString());
   }
 
   /**
