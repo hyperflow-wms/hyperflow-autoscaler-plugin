@@ -42,6 +42,7 @@ export interface HFProcessConfig {
 
 export interface HFSignal {
   name: string;
+  data?: any;
 }
 
 export interface HFProcess {
