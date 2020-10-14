@@ -9,14 +9,27 @@ class Signal {
 
   private emitTime?: Date;
 
-  public constructor(process: HFSignal, id: number) {
-    this.id = id;
-    this.name = process.name;
-    // data property is indicator of initial signal
-    if (process.data === undefined) {
-      this.initial = true;
+  /**
+   * Constructor - it also allows copying object .
+   */
+  public constructor(signal: HFSignal | Signal, id?: number) {
+    if (signal instanceof Signal) {
+      this.id = signal.id;
+      this.initial = signal.initial;
+      this.name = signal.name;
+      this.emitTime = (signal.emitTime) ? new Date(signal.emitTime.getTime()) : undefined;
     } else {
-      this.initial = false;
+      if (id === undefined) {
+        throw Error("ID is required for Signal");
+      }
+      this.id = id;
+      this.name = signal.name;
+      // data property is indicator of initial signal
+      if (signal.data === undefined) {
+        this.initial = true;
+      } else {
+        this.initial = false;
+      }
     }
   }
 

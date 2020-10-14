@@ -13,12 +13,29 @@ class Process {
   private startTime?: Date;
   private endTime?: Date;
 
-  public constructor(process: HFProcess, id: number) {
-    this.id = id;
-    this.name = process.name;
-    this.ins = process.ins;
-    this.outs = process.outs;
-    this.assignRequests(process);
+  /**
+   * Constructor - it also allows copying object .
+   */
+  public constructor(process: HFProcess | Process, id?: number) {
+    if (process instanceof Process) {
+      this.id = process.id;
+      this.name = process.name;
+      this.ins = [...process.ins];
+      this.outs = [...process.outs];
+      this.cpuRequest = process.cpuRequest;
+      this.memRequest = process.memRequest;
+      this.startTime = (process.startTime) ? new Date(process.startTime.getTime()) : undefined;
+      this.endTime = (process.endTime) ? new Date(process.endTime.getTime()) : undefined;
+    } else {
+      if (id === undefined) {
+        throw Error("ID is required for Process");
+      }
+      this.id = id;
+      this.name = process.name;
+      this.ins = process.ins;
+      this.outs = process.outs;
+      this.assignRequests(process);
+    }
   }
 
   /**
