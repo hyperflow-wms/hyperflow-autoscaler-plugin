@@ -5,7 +5,7 @@ import EstimatorInterface from './estimatorInterface';
 import StaticEstimator from './staticEstimator';
 import Utils from '../utils';
 
-interface Demand {
+export interface Demand {
   cpuMillis: number;
   memBytes: number;
 }
