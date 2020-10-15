@@ -4,31 +4,31 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
-    //{
-    //  "type": "pwa-node",
-    //  "request": "launch",
-    //  "name": "Launch Program",
-    //  "skipFiles": [
-    //    "<node_internals>/**"
-    //  ],
-    //  "program": "${workspaceFolder}/bin/hflow",
-    //  "args": [
-    //    "run",
-    //    "--with-autoscaler=dummy",
-    //    "./examples/Test",
-    //  ],
-    //  "env": {
-    //    "HF_VAR_function": "k8sCommand"
-    //  },
-    //  "preLaunchTask": "compileAutoscaler",
-    //  "console": "internalConsole",
-    //  "internalConsoleOptions": "openOnSessionStart",
-    //  "resolveSourceMapLocations": [
-    //    "${workspaceFolder}/**",
-    //    "!**/node_modules/**"
-    //  ],
-    //  "outputCapture": "std"
-    //},
+    {
+      "type": "pwa-node",
+      "request": "launch",
+      "name": "Launch Program",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "program": "${workspaceFolder}/../source/bin/hflow",
+      "args": [
+        "run",
+        "${workspaceFolder}/assets/wf_example",
+      ],
+      "env": {
+        "HF_VAR_function": "k8sCommand"
+      },
+      "preLaunchTask": "compileAutoscaler",
+      "console": "internalConsole",
+      "internalConsoleOptions": "openOnSessionStart",
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "outputCapture": "std",
+      "stopOnEntry": true
+    },
     {
       "type": "pwa-node",
       "request": "launch",
