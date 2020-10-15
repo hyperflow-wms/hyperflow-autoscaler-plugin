@@ -140,15 +140,36 @@ class Plan
   }
 
   /**
-   * Return execution history, sorted by time.
+   * Return change history (start/end of process), sorted by time.
+   * Start of process is positive number, end is the negative one.
    */
-  public getSortedHistory() {
+  public getChangeHistory() {
     let procHistorySorted: Map<number, Set<number>> = new Map();
     let sortedKeys = Array.from(this.procHistory.keys()).sort();
     sortedKeys.forEach((timeKeyMs) => {
       procHistorySorted.set(timeKeyMs, this.procHistory.get(timeKeyMs) || new Set());
     });
     return procHistorySorted;
+  }
+
+  /**
+   * Returns state history - time frames and corresponding running
+   * process ids.
+   * It's sorted by default.
+   */
+  public getStateHistory(): Map<number, Set<number>> {
+    let states = new Map<number, Set<number>>();
+    let workingSet = new Set<number>();
+    let history = this.getChangeHistory();
+    history.forEach((procIds, timeKey) => {
+      /* We have to process 'start process' before 'end process',
+      * in one key, we might get both start and end. */
+      let procIdsArr = Array.from(procIds);
+      procIdsArr.filter(x => x > 0).forEach((procId) => workingSet.add(procId));
+      procIdsArr.filter(x => x < 0).forEach((procId) => workingSet.delete(procId*(-1)));
+      states.set(timeKey, new Set(workingSet));
+    });
+    return states;
   }
 
 }
@@ -162,7 +183,9 @@ async function test() {
   let estimator = new StaticEstimator();
   let plan = new Plan(workflow, tracker, 50000, estimator);
   plan.run();
-  console.log(plan.getSortedHistory());
+
+  console.log('Process prediction:');
+  console.log(plan.getStateHistory());
 }
 
 test();
