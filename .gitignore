@@ -4,3 +4,6 @@ logs
 # ignore all compiled js files + their maps
 *.js
 *.map
+
+# dependencies
+/node_modules
