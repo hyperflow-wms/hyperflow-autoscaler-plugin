@@ -15,9 +15,11 @@
       "args": [
         "run",
         "${workspaceFolder}/assets/wf_example",
+        "-p", "${workspaceFolder}/dist/main.js",
       ],
       "env": {
-        "HF_VAR_function": "k8sCommand"
+        "HF_VAR_function": "k8sCommand",
+        "HF_VAR_autoscalerProvider": "dummy"
       },
       "preLaunchTask": "compileAutoscaler",
       "console": "internalConsole",
