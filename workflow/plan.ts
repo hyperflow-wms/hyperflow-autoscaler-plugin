@@ -49,7 +49,7 @@ class Plan
     try {
       while (true) {
         /* Predict end time of each process. */
-        let endedProcessesMap = new Map<Date, number[]>();
+        let endedProcessesMap = new Map<number, number[]>();
         let processIds = this.tracker.getRunningProcessIds();
         if (processIds.size == 0) {
           Loggers.base.debug("[Plan] No more processes - stopping analyze");
@@ -78,11 +78,11 @@ class Plan
 
           /* Calculate estimated end time and update map. */
           let estimatedMs = this.estimator.getEstimationMs(process);
-          let expectedEndTime = new Date(processStartTime.getTime() + estimatedMs);
-          if (endedProcessesMap.has(expectedEndTime) == false) {
-            endedProcessesMap.set(expectedEndTime, []);
+          let expectedEndTimeMs = processStartTime.getTime() + estimatedMs;
+          if (endedProcessesMap.has(expectedEndTimeMs) == false) {
+            endedProcessesMap.set(expectedEndTimeMs, []);
           }
-          endedProcessesMap.get(expectedEndTime)?.push(processId);
+          endedProcessesMap.get(expectedEndTimeMs)?.push(processId);
         });
 
         /* Notify tracker about finished process(es),
@@ -90,11 +90,12 @@ class Plan
         * so we sort them by end time and pick only
         * those with first end time. */
         let sortedKeys = Array.from(endedProcessesMap.keys()).sort();
-        let endTimeKey = sortedKeys[0];
-        let procIdArr = endedProcessesMap.get(endTimeKey);
+        let endTimeMsKey = sortedKeys[0];
+        let procIdArr = endedProcessesMap.get(endTimeMsKey);
         procIdArr?.forEach((procId) => {
-          Loggers.base.debug("[Plan] Notifying about expected process " + procId.toString() + " finish at " + endTimeKey.toString());
-          this.tracker.notifyProcessFinished(procId, endTimeKey);
+          let endTime = new Date(endTimeMsKey);
+          Loggers.base.debug("[Plan] Notifying about expected process " + procId.toString() + " finish at " + endTime.toString());
+          this.tracker.notifyProcessFinished(procId, endTime);
         });
       }
     } catch (e) {
