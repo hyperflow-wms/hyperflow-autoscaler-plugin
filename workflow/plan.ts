@@ -77,6 +77,7 @@ class Plan
           if (processStartTime === undefined) {
             throw Error("Running process must have 'start time'");
           }
+          Loggers.base.debug("[Plan] Saving start of " + processId.toString() + " " + processStartTime);
           this.saveProcessStartEvent(processId, processStartTime);
 
           /* Stop if we go further in time than it was allowed. */
@@ -110,6 +111,7 @@ class Plan
           Loggers.base.debug("[Plan] Notifying about expected process " + procId.toString() + " finish at " + endTime.toString());
           this.tracker.notifyProcessFinished(procId, endTime);
           this.saveProcessEndEvent(procId, endTime);
+          Loggers.base.debug("[Plan] Saving end of " + procId.toString() + " " + endTime);
         });
       }
     } catch (e) {
