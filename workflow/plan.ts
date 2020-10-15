@@ -3,6 +3,12 @@ import Workflow from "./workflow";
 import WorkflowTracker from "./tracker";
 import EstimatorInterface from './estimatorInterface';
 import StaticEstimator from './staticEstimator';
+import Utils from '../utils';
+
+interface Demand {
+  cpuMillis: number;
+  memBytes: number;
+}
 
 class Plan
 {
@@ -172,6 +178,36 @@ class Plan
     return states;
   }
 
+  public getDemandFrames(): Map<number, Demand> {
+    let frames = new Map<number, Demand>();
+
+    let stateHistory = this.getStateHistory();
+    stateHistory.forEach((procIds, timeKeyMs) => {
+      let totalCpuMillis = 0;
+      let totalMemBytes = 0;
+
+      procIds.forEach((procId) => {
+        let process = this.tracker.getProcessById(procId);
+        if (process == undefined) {
+          throw Error("Process " + procId.toString() + " not found");
+        }
+        let cpuRequest = Utils.cpuStringToMillis(process.getCpuRequest());
+        if (cpuRequest instanceof Error) {
+          throw cpuRequest;
+        }
+        let memRequest = Utils.memoryStringToBytes(process.getMemRequest());
+        if (memRequest instanceof Error) {
+          throw memRequest;
+        }
+        totalCpuMillis += cpuRequest;
+        totalMemBytes += memRequest;
+      });
+
+      frames.set(timeKeyMs, {"cpuMillis": totalCpuMillis, "memBytes": totalMemBytes});
+    });
+
+    return frames;
+  }
 }
 
 export default Plan;
@@ -186,6 +222,8 @@ async function test() {
 
   console.log('Process prediction:');
   console.log(plan.getStateHistory());
+  console.log('Demand prediction:');
+  console.log(plan.getDemandFrames());
 }
 
 test();
