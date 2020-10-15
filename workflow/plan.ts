@@ -23,11 +23,8 @@ class Plan
    */
   public run(sendAllInputs: boolean = false): void {
 
-    let planningStartTime = new Date();
-
     /* If execution not started, then start it and send input signals. */
-    let executionStartTime = this.tracker.getExecutionStartTime();
-    if (executionStartTime == undefined) {
+    if (this.tracker.getExecutionStartTime() == undefined) {
       Loggers.base.debug("[Plan] Simulating workflow start");
       let intitialSigIds = this.wf.getInitialSigIds();
       if (sendAllInputs == true) {
@@ -39,56 +36,72 @@ class Plan
       intitialSigIds.forEach(el => this.tracker.notifyInitialSignal(el, timeNow));
     }
 
-    /* Cyclic: grab running processes and fast-forward them with estimations. */
-    while (true) {
-      /* Stop if we go further in time than it was allowed. */
-      let timeNow = new Date();
-      let totalPlanningTime = timeNow.getTime() - planningStartTime.getTime();
-      if (totalPlanningTime > this.timeForwardMs) {
-        Loggers.base.debug("[Plan] Stopping analyze - we reached " + totalPlanningTime.toString() + " ms");
-        break;
-      }
-
-      /* Predict end time of each process. */
-      let endedProcessesMap = new Map<Date, number[]>();
-      let processIds = this.tracker.getRunningProcessIds();
-      if (processIds.size == 0) {
-        Loggers.base.debug("[Plan] No more processes - stopping analyze");
-        break;
-      }
-      Loggers.base.debug("[Plan] Looking for first expected execution among processes " + Array.from(processIds.values()).join(","));
-      processIds.forEach((processId) => {
-        let process = this.tracker.getProcessById(processId);
-        if (process === undefined) {
-          throw Error("Process " + processId.toString() + " not found");
-        }
-        let processName = process.name;
-        let processStartTime = process.getStartTime();
-        if (processStartTime === undefined) {
-          throw Error("Running process must have 'start time'");
-        }
-
-        // TODO use estimator instead of 3000 ms.
-        let expectedEndTime = new Date(processStartTime.getTime() + 3000);
-
-        if (endedProcessesMap.has(expectedEndTime) == false) {
-          endedProcessesMap.set(expectedEndTime, []);
-        }
-        endedProcessesMap.get(expectedEndTime)?.push(processId);
-      });
-
-      /* Notify tracker about finished process(es),
-       * we want to preserve order of fired signals,
-       * so we sort them by end time and pick only
-       * those with first end time. */
-      let sortedKeys = Array.from(endedProcessesMap.keys()).sort();
-      let endTimeKey = sortedKeys[0];
-      let procIdArr = endedProcessesMap.get(endTimeKey);
-      procIdArr?.forEach((procId) => {
-        Loggers.base.debug("[Plan] Notifying about expected process " + procId.toString() + " finish at " + endTimeKey.toString());
-        this.tracker.notifyProcessFinished(procId, endTimeKey);
-      });
+    /* Get execution start. */
+    let executionStartTime = this.tracker.getExecutionStartTime();
+    if (executionStartTime === undefined) {
+      throw Error("After notyfing start, the execution start should be already set!");
     }
+
+    /* Cyclic: grab running processes and fast-forward them with estimations. */
+    const BreakException = {};
+    try {
+      while (true) {
+        /* Predict end time of each process. */
+        let endedProcessesMap = new Map<Date, number[]>();
+        let processIds = this.tracker.getRunningProcessIds();
+        if (processIds.size == 0) {
+          Loggers.base.debug("[Plan] No more processes - stopping analyze");
+          break;
+        }
+        Loggers.base.debug("[Plan] Looking for first expected execution among processes " + Array.from(processIds.values()).join(","));
+        processIds.forEach((processId) => {
+          let process = this.tracker.getProcessById(processId);
+          if (process === undefined) {
+            throw Error("Process " + processId.toString() + " not found");
+          }
+          let processName = process.name;
+          let processStartTime = process.getStartTime();
+          if (processStartTime === undefined) {
+            throw Error("Running process must have 'start time'");
+          }
+          
+          /* Stop if we go further in time than it was allowed. */
+          if (executionStartTime == undefined) {
+            throw Error("Fatal error - no execution start time defined");
+          }
+          let totalPlanningTime = processStartTime.getTime() - executionStartTime.getTime();
+          if (totalPlanningTime > this.timeForwardMs) {
+            Loggers.base.debug("[Plan] Stopping analyze - we reached " + totalPlanningTime.toString() + " ms");
+            throw BreakException;
+          }
+
+          // TODO use estimator instead of 3000 ms.
+          let expectedEndTime = new Date(processStartTime.getTime() + 3000);
+
+          if (endedProcessesMap.has(expectedEndTime) == false) {
+            endedProcessesMap.set(expectedEndTime, []);
+          }
+          endedProcessesMap.get(expectedEndTime)?.push(processId);
+        });
+
+        /* Notify tracker about finished process(es),
+        * we want to preserve order of fired signals,
+        * so we sort them by end time and pick only
+        * those with first end time. */
+        let sortedKeys = Array.from(endedProcessesMap.keys()).sort();
+        let endTimeKey = sortedKeys[0];
+        let procIdArr = endedProcessesMap.get(endTimeKey);
+        procIdArr?.forEach((procId) => {
+          Loggers.base.debug("[Plan] Notifying about expected process " + procId.toString() + " finish at " + endTimeKey.toString());
+          this.tracker.notifyProcessFinished(procId, endTimeKey);
+        });
+      }
+    } catch (e) {
+      if (e !== BreakException) {
+        throw e;
+      }
+    }
+
     return;
   }
 }
