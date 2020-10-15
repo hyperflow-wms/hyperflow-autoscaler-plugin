@@ -11,12 +11,15 @@ class Plan
   private timeForwardMs: number;
   private estimator: EstimatorInterface;
 
+  private procHistory: Map<number, Set<number>>;
+
   constructor(wf: Workflow, tracker: WorkflowTracker, timeForwardMs: number, estimator: EstimatorInterface) {
     Loggers.base.silly("[Plan] Constructor");
     this.wf = wf;
     this.tracker = tracker;
     this.timeForwardMs = timeForwardMs;
     this.estimator = estimator;
+    this.procHistory = new Map();
   }
 
   /**
@@ -24,6 +27,9 @@ class Plan
    * @param sendAllInputs whether '-s' options is present
    */
   public run(sendAllInputs: boolean = false): void {
+
+    /* Reset procHistory - allow to execute 'run' many times. */
+    this.procHistory = new Map();
 
     /* If execution not started, then start it and send input signals. */
     if (this.tracker.getExecutionStartTime() == undefined) {
@@ -65,7 +71,8 @@ class Plan
           if (processStartTime === undefined) {
             throw Error("Running process must have 'start time'");
           }
-          
+          this.saveProcessStartEvent(processId, processStartTime);
+
           /* Stop if we go further in time than it was allowed. */
           if (executionStartTime == undefined) {
             throw Error("Fatal error - no execution start time defined");
@@ -96,6 +103,7 @@ class Plan
           let endTime = new Date(endTimeMsKey);
           Loggers.base.debug("[Plan] Notifying about expected process " + procId.toString() + " finish at " + endTime.toString());
           this.tracker.notifyProcessFinished(procId, endTime);
+          this.saveProcessEndEvent(procId, endTime);
         });
       }
     } catch (e) {
@@ -105,6 +113,34 @@ class Plan
     }
 
     return;
+  }
+
+  /**
+   * Stores process start time as positive number.
+   */
+  private saveProcessStartEvent(processId: number, processStartTime: Date) {
+    let timeMs = processStartTime.getTime();
+    if (this.procHistory.has(timeMs) == false) {
+      this.procHistory.set(timeMs, new Set());
+    }
+    this.procHistory.get(timeMs)?.add(processId);
+    return;
+  }
+
+  /**
+   * Stores process end time as negative number (mulitplied with -1).
+   */
+  private saveProcessEndEvent(processId: number, processEndTime: Date) {
+    let timeMs = processEndTime.getTime();
+    if (this.procHistory.has(timeMs) == false) {
+      this.procHistory.set(timeMs, new Set());
+    }
+    this.procHistory.get(timeMs)?.add(processId * -1);
+    return;
+  }
+
+  public getHistory() {
+    return this.procHistory;
   }
 }
 
@@ -117,6 +153,7 @@ async function test() {
   let estimator = new StaticEstimator();
   let plan = new Plan(workflow, tracker, 50000, estimator);
   plan.run();
+  console.log(plan.getHistory());
 }
 
 test();
