@@ -14,6 +14,8 @@ let lut = {
   "Done": 0,
 }
 
+const DELAYS_OVERHEAD = 2000;
+
 class StaticEstimator implements EstimatorInterface {
   public getName() {
     return "Static";
@@ -24,6 +26,15 @@ class StaticEstimator implements EstimatorInterface {
       throw Error("No estimates known for process " + p.name);
     }
     let estimation = lut[p.name];
+
+    /* There are multiple additional delays for each task:
+     * - time for container start/stop (pulling, executor overhead)
+     * - time for passing messages via Redis
+     * - time for propagating signals via HyperFlow
+     * Some start/stop delays are compensated with 'job buffering',
+     * Overall I add some extra time for each task. */
+    estimation += DELAYS_OVERHEAD;
+
     return estimation;
   }
 }
