@@ -56,7 +56,7 @@ class Plan
         Loggers.base.debug("[Plan] No more processes - stopping analyze");
         break;
       }
-      Loggers.base.debug("[Plan] Forwarding execution of processes " + Array.from(processIds.values()).join(","));
+      Loggers.base.debug("[Plan] Looking for first expected execution among processes " + Array.from(processIds.values()).join(","));
       processIds.forEach((processId) => {
         let process = this.tracker.getProcessById(processId);
         if (process === undefined) {
@@ -77,16 +77,16 @@ class Plan
         endedProcessesMap.get(expectedEndTime)?.push(processId);
       });
 
-      /* Notify tracker about finished process,
+      /* Notify tracker about finished process(es),
        * we want to preserve order of fired signals,
-       * so we sort them by end time. */
+       * so we sort them by end time and pick only
+       * those with first end time. */
       let sortedKeys = Array.from(endedProcessesMap.keys()).sort();
-      sortedKeys.forEach((endTime) => {
-        let procIdArr = endedProcessesMap.get(endTime);
-        procIdArr?.forEach((procId) => {
-          Loggers.base.debug("[Plan] Notifying about expected process " + procId.toString() + " finish at " + endTime.toString());
-          this.tracker.notifyProcessFinished(procId, endTime);
-        });
+      let endTimeKey = sortedKeys[0];
+      let procIdArr = endedProcessesMap.get(endTimeKey);
+      procIdArr?.forEach((procId) => {
+        Loggers.base.debug("[Plan] Notifying about expected process " + procId.toString() + " finish at " + endTimeKey.toString());
+        this.tracker.notifyProcessFinished(procId, endTimeKey);
       });
     }
     return;
