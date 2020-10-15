@@ -9,12 +9,14 @@ class Plan
   private wf: Workflow;
   private tracker: WorkflowTracker;
   private timeForwardMs: number;
+  private estimator: EstimatorInterface;
 
   constructor(wf: Workflow, tracker: WorkflowTracker, timeForwardMs: number, estimator: EstimatorInterface) {
     Loggers.base.silly("[Plan] Constructor");
     this.wf = wf;
     this.tracker = tracker;
     this.timeForwardMs = timeForwardMs;
+    this.estimator = estimator;
   }
 
   /**
@@ -59,7 +61,6 @@ class Plan
           if (process === undefined) {
             throw Error("Process " + processId.toString() + " not found");
           }
-          let processName = process.name;
           let processStartTime = process.getStartTime();
           if (processStartTime === undefined) {
             throw Error("Running process must have 'start time'");
@@ -75,9 +76,9 @@ class Plan
             throw BreakException;
           }
 
-          // TODO use estimator instead of 3000 ms.
-          let expectedEndTime = new Date(processStartTime.getTime() + 3000);
-
+          /* Calculate estimated end time and update map. */
+          let estimatedMs = this.estimator.getEstimationMs(process);
+          let expectedEndTime = new Date(processStartTime.getTime() + estimatedMs);
           if (endedProcessesMap.has(expectedEndTime) == false) {
             endedProcessesMap.set(expectedEndTime, []);
           }

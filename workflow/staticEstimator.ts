@@ -11,6 +11,7 @@ let lut = {
   "mShrink": 200,
   "mImgtbl": 300,
   "mAdd": 500,
+  "Done": 0,
 }
 
 class StaticEstimator implements EstimatorInterface {
