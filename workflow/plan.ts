@@ -139,9 +139,18 @@ class Plan
     return;
   }
 
-  public getHistory() {
-    return this.procHistory;
+  /**
+   * Return execution history, sorted by time.
+   */
+  public getSortedHistory() {
+    let procHistorySorted: Map<number, Set<number>> = new Map();
+    let sortedKeys = Array.from(this.procHistory.keys()).sort();
+    sortedKeys.forEach((timeKeyMs) => {
+      procHistorySorted.set(timeKeyMs, this.procHistory.get(timeKeyMs) || new Set());
+    });
+    return procHistorySorted;
   }
+
 }
 
 export default Plan;
@@ -153,7 +162,7 @@ async function test() {
   let estimator = new StaticEstimator();
   let plan = new Plan(workflow, tracker, 50000, estimator);
   plan.run();
-  console.log(plan.getHistory());
+  console.log(plan.getSortedHistory());
 }
 
 test();
