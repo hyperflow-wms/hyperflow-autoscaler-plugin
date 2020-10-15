@@ -98,12 +98,33 @@ class Utils {
 
   static cpuStringToMillis(cpu: string): number | Error {
     Loggers.base.silly('[Utils] cpuStringToMillis(' + cpu + ')');
-    let val: number = parseInt(cpu, 10);
-    let suffix: string = cpu.substring(cpu.length - 1);
-    if (suffix !== "m") {
-      val = parseInt(val.toFixed(3)) * 1000;
+    let format1 = cpu.match(/^(?<num>\d+)m$/);
+    if (format1 != null) {
+      let numPart = format1?.groups?.num;
+      if (numPart == undefined) {
+        throw Error('Fatal error');
+      }
+      let val: number = parseInt(numPart, 10);
+      return val;
     }
-    return val;
+
+    let format2 = cpu.match(/^(?<base>\d+)(\.(?<fraction>\d+))?$/);
+    if (format2 != null) {
+      let basePart = format2?.groups?.base;
+      let fractionPart = format2?.groups?.fraction;
+      if (basePart == undefined) {
+        throw Error('Fatal error');
+      }
+      let totalMillis: number = 0;
+      totalMillis += parseInt(basePart, 10) * 1000;
+      if (fractionPart != undefined) {
+        totalMillis += parseInt(fractionPart.substr(0, 3).padEnd(3, '0'), 10);
+      }
+
+      return totalMillis;
+    }
+
+    return Error("[Utils] Unknown format");
   }
 }
 
