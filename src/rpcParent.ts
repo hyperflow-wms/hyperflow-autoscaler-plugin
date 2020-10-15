@@ -23,6 +23,10 @@ class ParentRPC extends RPC {
     super.init();
     this.child_process.on('message', (data) => {
       Loggers.base.debug('[ParentRPC] Got message: ' + JSON.stringify(data));
+      if (typeof data != "object") {
+        Loggers.base.error('[ParentRPC] Expected object as message!');
+        throw Error('Unexpected message format');
+      }
       this.handleMessage(data);
     });
     return;

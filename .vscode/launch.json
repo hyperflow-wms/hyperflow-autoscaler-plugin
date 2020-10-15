@@ -36,7 +36,7 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/workflow/plan.ts",
+      "program": "${workspaceFolder}/src/workflow/plan.ts",
       "args": [],
       "env": {},
       "preLaunchTask": "compileAutoscaler",
