@@ -118,7 +118,7 @@ class Plan
   /**
    * Stores process start time as positive number.
    */
-  private saveProcessStartEvent(processId: number, processStartTime: Date) {
+  private saveProcessStartEvent(processId: number, processStartTime: Date): void {
     let timeMs = processStartTime.getTime();
     if (this.procHistory.has(timeMs) == false) {
       this.procHistory.set(timeMs, new Set());
@@ -130,7 +130,7 @@ class Plan
   /**
    * Stores process end time as negative number (mulitplied with -1).
    */
-  private saveProcessEndEvent(processId: number, processEndTime: Date) {
+  private saveProcessEndEvent(processId: number, processEndTime: Date): void {
     let timeMs = processEndTime.getTime();
     if (this.procHistory.has(timeMs) == false) {
       this.procHistory.set(timeMs, new Set());
