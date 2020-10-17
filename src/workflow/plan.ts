@@ -3,7 +3,7 @@ import Workflow from "./workflow";
 import WorkflowTracker from "./tracker";
 import EstimatorInterface from './estimatorInterface';
 import StaticEstimator from './staticEstimator';
-import Utils from '../utils';
+import Resources from '../kubernetes/resources';
 
 export interface Demand {
   cpuMillis: number;
@@ -193,11 +193,11 @@ class Plan
         if (process == undefined) {
           throw Error("Process " + procId.toString() + " not found");
         }
-        let cpuRequest = Utils.cpuStringToMillis(process.getCpuRequest());
+        let cpuRequest = Resources.cpuStringToMillis(process.getCpuRequest());
         if (cpuRequest instanceof Error) {
           throw cpuRequest;
         }
-        let memRequest = Utils.memoryStringToBytes(process.getMemRequest());
+        let memRequest = Resources.memoryStringToBytes(process.getMemRequest());
         if (memRequest instanceof Error) {
           throw memRequest;
         }

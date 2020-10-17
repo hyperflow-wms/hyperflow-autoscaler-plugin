@@ -1,6 +1,6 @@
-import Loggers from '../..//logger';
+import Loggers from '../../logger';
 import K8sClient from '../../k8sClient';
-import Utils from "../../utils";
+import Resources from "../resources";
 
 import k8s = require('@kubernetes/client-node');
 
@@ -115,7 +115,7 @@ abstract class BaseProvider {
         }
         if (requests != undefined) {
           if (requests.cpu != undefined) {
-            let cpu = Utils.cpuStringToMillis(requests.cpu);
+            let cpu = Resources.cpuStringToMillis(requests.cpu);
             if (cpu instanceof Error) {
               return Error("Unable to convert CPU string:\n" + cpu.message)
             }
@@ -123,7 +123,7 @@ abstract class BaseProvider {
             Loggers.base.debug("[BaseProvider] Extracted container CPU requests: " + cpu);
           }
           if (requests.memory != undefined) {
-            let memory = Utils.memoryStringToBytes(requests.memory);
+            let memory = Resources.memoryStringToBytes(requests.memory);
             if (memory instanceof Error) {
               return Error("Unable to convert memory string:\n" + memory.message)
             }
@@ -147,7 +147,7 @@ abstract class BaseProvider {
     if (allocatable === undefined) {
       return Error("Node has no status.allocatable details");
     }
-    let cpu = Utils.cpuStringToMillis(allocatable.cpu);
+    let cpu = Resources.cpuStringToMillis(allocatable.cpu);
     return cpu;
   }
 
@@ -160,7 +160,7 @@ abstract class BaseProvider {
     if (allocatable === undefined) {
       return Error("Node has no status.allocatable details");
     }
-    let memory = Utils.memoryStringToBytes(allocatable.memory);
+    let memory = Resources.memoryStringToBytes(allocatable.memory);
     return memory;
   }
 

@@ -1,8 +1,8 @@
-import Loggers from './logger';
+import Loggers from '../logger';
 
-class Utils {
+class Resources {
   static memoryStringToBytes(mem: string): number | Error  {
-    //Loggers.base.silly('[Utils] memoryStringToBytes(' + mem + ')');
+    //Loggers.base.silly('[Resources] memoryStringToBytes(' + mem + ')');
     let format1 = mem.match(/^(?<num>\d+)$/);
     if (format1 != null) {
       let numPart = format1?.groups?.num;
@@ -93,11 +93,11 @@ class Utils {
       return baseVal * Math.pow(2, power);;
     }
 
-    return Error("[Utils] Unknown format");
+    return Error("[Resources] Unknown format");
   }
 
   static cpuStringToMillis(cpu: string): number | Error {
-    //Loggers.base.silly('[Utils] cpuStringToMillis(' + cpu + ')');
+    //Loggers.base.silly('[Resources] cpuStringToMillis(' + cpu + ')');
     let format1 = cpu.match(/^(?<num>\d+)m$/);
     if (format1 != null) {
       let numPart = format1?.groups?.num;
@@ -124,8 +124,8 @@ class Utils {
       return totalMillis;
     }
 
-    return Error("[Utils] Unknown format");
+    return Error("[Resources] Unknown format");
   }
 }
 
-export default Utils;
+export default Resources;
