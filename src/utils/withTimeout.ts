@@ -1,4 +1,4 @@
-import Loggers from './logger';
+import Loggers from '../logger';
 
 /**
  * returns a new function which calls the input function and "races" the result against a promise that throws an error on timeout.

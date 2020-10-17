@@ -6,7 +6,7 @@ import DummyProvider from './kubernetes/providers/dummyProvider';
 import KindProvider from './kubernetes/providers/kindProvider';
 import GCPProvider from './kubernetes/providers/gcpProvider';
 import RPCChild from "./communication/rpcChild";
-import withTimeout from './helpers'
+import withTimeout from './utils/withTimeout'
 import WorkflowTracker from './workflow/tracker';
 import logger from './logger';
 import Workflow from './workflow/workflow';
