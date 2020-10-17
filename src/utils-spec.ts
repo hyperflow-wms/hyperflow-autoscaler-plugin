@@ -34,5 +34,49 @@ describe('Utils', function() {
       expect(Utils.memoryStringToBytes("1Pi")).to.equal(1024*1024*1024*1024*1024);
       expect(Utils.memoryStringToBytes("1Ei")).to.equal(1024*1024*1024*1024*1024*1024);
     });
+
+    it('return error for for invalid formats', function() {
+      expect(Utils.memoryStringToBytes("eee")).to.be.an('error');
+      expect(Utils.memoryStringToBytes("1a")).to.be.an('error');
+      expect(Utils.memoryStringToBytes("1.0a")).to.be.an('error');
+      expect(Utils.memoryStringToBytes("10Kii")).to.be.an('error');
+      expect(Utils.memoryStringToBytes("0-0")).to.be.an('error');
+    });
+  });
+
+  context('cpu conversion to millis', function() {
+    it('handle millis', function() {
+      expect(Utils.cpuStringToMillis("0m")).to.equal(0);
+      expect(Utils.cpuStringToMillis("1m")).to.equal(1);
+      expect(Utils.cpuStringToMillis("24m")).to.equal(24);
+      expect(Utils.cpuStringToMillis("12345m")).to.equal(12345);
+    });
+
+    it('handle plain integers', function() {
+      expect(Utils.cpuStringToMillis("0")).to.equal(0);
+      expect(Utils.cpuStringToMillis("1")).to.equal(1000);
+      expect(Utils.cpuStringToMillis("23")).to.equal(23000);
+    });
+
+    it('handle decimals (3-places precision)', function() {
+      expect(Utils.cpuStringToMillis("0.0")).to.equal(0);
+      expect(Utils.cpuStringToMillis("0.1")).to.equal(100);
+      expect(Utils.cpuStringToMillis("0.12")).to.equal(120);
+      expect(Utils.cpuStringToMillis("0.123")).to.equal(123);
+      expect(Utils.cpuStringToMillis("0.1234")).to.equal(123);
+      expect(Utils.cpuStringToMillis("4.0")).to.equal(4000);
+      expect(Utils.cpuStringToMillis("4.1")).to.equal(4100);
+      expect(Utils.cpuStringToMillis("4.12")).to.equal(4120);
+      expect(Utils.cpuStringToMillis("4.123")).to.equal(4123);
+      expect(Utils.cpuStringToMillis("4.1234")).to.equal(4123);
+    });
+
+    it('return error for for invalid formats', function() {
+      expect(Utils.cpuStringToMillis("eee")).to.be.an('error');
+      expect(Utils.cpuStringToMillis("1m1")).to.be.an('error');
+      expect(Utils.cpuStringToMillis("1.0m")).to.be.an('error');
+      expect(Utils.cpuStringToMillis("10Kii")).to.be.an('error');
+      expect(Utils.cpuStringToMillis("0-0")).to.be.an('error');
+    });
   });
 });
