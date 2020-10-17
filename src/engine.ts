@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import Loggers from './logger';
 import BaseProvider from './kubernetes/providers/baseProvider';
-import CooldownTracker from './cooldownTracker';
+import CooldownTracker from './utils/cooldownTracker';
 import DummyProvider from './kubernetes/providers/dummyProvider';
 import KindProvider from './kubernetes/providers/kindProvider';
 import GCPProvider from './kubernetes/providers/gcpProvider';
