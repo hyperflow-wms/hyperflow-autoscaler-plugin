@@ -4,7 +4,8 @@
   "description": "Autoscaler plugin for HyperFlow",
   "main": "./dist/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha -r ts-node/register --timeout 999999 --colors ./src/**/*-spec.ts",
+    "coverage": "nyc -r lcov -e .ts -x \"*.test.ts\" npm run test"
   },
   "repository": {
     "type": "git",
