@@ -1,7 +1,7 @@
-import Loggers from './logger';
-import { HFWflib, HFEngine } from "./hyperflow/types";
+import Loggers from '../logger';
+import { HFWflib, HFEngine } from "./types";
 import { RedisClient } from 'redis';
-import RPC from './communication/rpc';
+import RPC from '../communication/rpc';
 
 class API {
   private rcl: RedisClient;

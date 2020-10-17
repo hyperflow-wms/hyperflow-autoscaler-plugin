@@ -1,4 +1,4 @@
-import API from './api';
+import API from './hyperflow/api';
 import Loggers from './logger';
 import { HFWflib, HFEngine } from "./hyperflow/types";
 import RPCParent from "./communication/rpcParent";
