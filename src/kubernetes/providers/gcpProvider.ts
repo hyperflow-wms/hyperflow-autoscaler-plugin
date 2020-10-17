@@ -1,6 +1,6 @@
 import BaseProvider from './baseProvider';
-import Loggers from './logger';
-import Utils from "./utils";
+
+import Loggers from '../../logger';
 
 import container = require('@google-cloud/container');
 

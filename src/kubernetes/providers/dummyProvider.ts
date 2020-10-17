@@ -1,5 +1,6 @@
-import Loggers from './logger';
 import BaseProvider from './baseProvider';
+
+import Loggers from '../../logger';
 
 class DummyProvider extends BaseProvider {
 

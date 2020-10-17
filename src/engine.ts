@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 import Loggers from './logger';
-import BaseProvider from './baseProvider';
+import BaseProvider from './kubernetes/providers/baseProvider';
 import CooldownTracker from './cooldownTracker';
-import DummyProvider from './dummyProvider';
-import KindProvider from './kindProvider';
-import GCPProvider from './gcpProvider';
-import RPCChild from "./rpcChild";
+import DummyProvider from './kubernetes/providers/dummyProvider';
+import KindProvider from './kubernetes/providers/kindProvider';
+import GCPProvider from './kubernetes/providers/gcpProvider';
 import RPCChild from "./communication/rpcChild";
 import withTimeout from './helpers'
 import WorkflowTracker from './workflow/tracker';

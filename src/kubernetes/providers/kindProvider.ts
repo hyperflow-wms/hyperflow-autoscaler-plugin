@@ -1,5 +1,6 @@
-import Loggers from './logger';
 import BaseProvider from './baseProvider';
+
+import Loggers from '../../logger';
 
 import k8s = require('@kubernetes/client-node');
 

@@ -1,6 +1,6 @@
-import Loggers from './logger';
-import K8sClient from './k8sClient';
-import Utils from "./utils";
+import Loggers from '../..//logger';
+import K8sClient from '../../k8sClient';
+import Utils from "../../utils";
 
 import k8s = require('@kubernetes/client-node');
 
