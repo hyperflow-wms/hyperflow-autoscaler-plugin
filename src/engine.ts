@@ -6,6 +6,7 @@ import DummyProvider from './dummyProvider';
 import KindProvider from './kindProvider';
 import GCPProvider from './gcpProvider';
 import RPCChild from "./rpcChild";
+import RPCChild from "./communication/rpcChild";
 import withTimeout from './helpers'
 import WorkflowTracker from './workflow/tracker';
 import logger from './logger';

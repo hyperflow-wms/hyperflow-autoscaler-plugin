@@ -1,6 +1,7 @@
 import RPC from './rpc';
 
-import Loggers from './logger';
+import Loggers from '../logger';
+
 class ChildRPC extends RPC {
 
   private parent_process: NodeJS.Process;

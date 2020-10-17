@@ -1,7 +1,7 @@
 import Loggers from './logger';
 import { HFWflib, HFEngine } from "./types";
 import { RedisClient } from 'redis';
-import RPC from './rpc';
+import RPC from './communication/rpc';
 
 class API {
   private rcl: RedisClient;

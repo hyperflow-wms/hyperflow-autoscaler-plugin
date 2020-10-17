@@ -1,7 +1,7 @@
 import API from './api';
 import Loggers from './logger';
 import { HFWflib, HFEngine } from "./types";
-import RPCParent from "./rpcParent";
+import RPCParent from "./communication/rpcParent";
 
 import { RedisClient } from 'redis';
 import * as child_process from 'child_process';

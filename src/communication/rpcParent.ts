@@ -1,6 +1,7 @@
 import RPC from './rpc';
 
-import Loggers from './logger';
+import Loggers from '../logger';
+
 import * as child_process from 'child_process';
 
 class ParentRPC extends RPC {
