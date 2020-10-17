@@ -25,7 +25,7 @@ class Utils {
       return baseVal * Math.pow(10, exponentVal);;
     }
 
-    let format3 = mem.match(/^(?<num>\d+)(?<unit>[EPTHMK])$/);
+    let format3 = mem.match(/^(?<num>\d+)(?<unit>[EPTGMK])$/);
     if (format3 != null) {
       let numPart = format3?.groups?.num;
       let unitPart = format3?.groups?.unit;
@@ -59,7 +59,7 @@ class Utils {
       return baseVal * Math.pow(10, power);;
     }
 
-    let format4 = mem.match(/^(?<num>\d+)(?<unit>[EPTHMK]i)$/);
+    let format4 = mem.match(/^(?<num>\d+)(?<unit>[EPTGMK]i)$/);
     if (format4 != null) {
       let numPart = format4?.groups?.num;
       let unitPart = format4?.groups?.unit;
@@ -92,7 +92,7 @@ class Utils {
       }
       return baseVal * Math.pow(2, power);;
     }
-    
+
     return Error("[Utils] Unknown format");
   }
 
