@@ -1,4 +1,4 @@
-import Loggers from '../../logger';
+import Loggers from '../../utils/logger';
 import K8sClient from '../../k8sClient';
 import Resources from "../resources";
 

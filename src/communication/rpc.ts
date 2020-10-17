@@ -1,4 +1,4 @@
-import Loggers from '../logger';
+import Loggers from '../utils/logger';
 
 const MESSAGE_TYPE_REQUEST = 1;
 const MESSAGE_TYPE_REPLY = 2;

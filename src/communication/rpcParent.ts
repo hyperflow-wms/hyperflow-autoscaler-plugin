@@ -1,6 +1,6 @@
 import RPC from './rpc';
 
-import Loggers from '../logger';
+import Loggers from '../utils/logger';
 
 import * as child_process from 'child_process';
 

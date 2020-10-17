@@ -1,4 +1,4 @@
-import Loggers from '../logger';
+import Loggers from '../utils/logger';
 
 class Resources {
   static memoryStringToBytes(mem: string): number | Error  {

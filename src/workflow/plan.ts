@@ -1,4 +1,4 @@
-import Loggers from '../logger';
+import Loggers from '../utils/logger';
 import Workflow from "./workflow";
 import WorkflowTracker from "./tracker";
 import EstimatorInterface from './estimatorInterface';

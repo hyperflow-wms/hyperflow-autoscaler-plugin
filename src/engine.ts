@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import Loggers from './logger';
+import Loggers from './utils/logger';
 import BaseProvider from './kubernetes/providers/baseProvider';
 import CooldownTracker from './utils/cooldownTracker';
 import DummyProvider from './kubernetes/providers/dummyProvider';
@@ -8,7 +8,6 @@ import GCPProvider from './kubernetes/providers/gcpProvider';
 import RPCChild from "./communication/rpcChild";
 import withTimeout from './utils/withTimeout'
 import WorkflowTracker from './workflow/tracker';
-import logger from './logger';
 import Workflow from './workflow/workflow';
 
 const REACT_INTERVAL = 10000;

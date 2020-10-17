@@ -1,6 +1,6 @@
 import RPC from './rpc';
 
-import Loggers from '../logger';
+import Loggers from '../utils/logger';
 
 class ChildRPC extends RPC {
 

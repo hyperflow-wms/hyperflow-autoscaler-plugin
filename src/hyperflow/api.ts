@@ -1,4 +1,4 @@
-import Loggers from '../logger';
+import Loggers from '../utils/logger';
 import { HFWflib, HFEngine } from "./types";
 import { RedisClient } from 'redis';
 import RPC from '../communication/rpc';

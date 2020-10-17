@@ -1,4 +1,4 @@
-import Loggers from '../logger';
+import Loggers from '../utils/logger';
 import { HFWorkflow } from "../hyperflow/types";
 import Process from "./process";
 import Signal from "./signal";
