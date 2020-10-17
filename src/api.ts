@@ -1,5 +1,5 @@
 import Loggers from './logger';
-import { HFWflib, HFEngine } from "./types";
+import { HFWflib, HFEngine } from "./hyperflow/types";
 import { RedisClient } from 'redis';
 import RPC from './communication/rpc';
 

@@ -1,4 +1,4 @@
-import { HFProcess } from "../types";
+import { HFProcess } from "../hyperflow/types";
 
 class Process {
 

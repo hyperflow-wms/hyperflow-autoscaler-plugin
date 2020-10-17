@@ -1,6 +1,6 @@
 import API from './api';
 import Loggers from './logger';
-import { HFWflib, HFEngine } from "./types";
+import { HFWflib, HFEngine } from "./hyperflow/types";
 import RPCParent from "./communication/rpcParent";
 
 import { RedisClient } from 'redis';
