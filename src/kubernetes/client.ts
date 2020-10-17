@@ -1,8 +1,8 @@
-import Loggers from './utils/logger';
+import Loggers from '../utils/logger';
 
 import k8s = require('@kubernetes/client-node');
 
-class K8sClient
+class Client
 {
   static readonly hfMasterLabel = 'node-role.hyperflow.local/master'
   static readonly hfWorkerLabel = 'node-role.hyperflow.local/worker'
@@ -11,7 +11,7 @@ class K8sClient
 
   constructor()
   {
-    Loggers.base.silly('[K8sClient] Constructor');
+    Loggers.base.silly('[Client] Constructor');
     let kubeConfig = new k8s.KubeConfig();
     kubeConfig.loadFromDefault();
 
@@ -22,10 +22,10 @@ class K8sClient
    * Fetch all nodes.
    */
   public async fetchNodes(): Promise<k8s.V1Node[] | Error> {
-    Loggers.base.verbose('[K8sClient] Fetching nodes');
+    Loggers.base.verbose('[Client] Fetching nodes');
     let response = await this.coreApi.listNode();
     let nodeList = response.body.items;
-    Loggers.base.debug('[K8sClient] Fetched ' + nodeList.length.toString() + ' nodes');
+    Loggers.base.debug('[Client] Fetched ' + nodeList.length.toString() + ' nodes');
     return nodeList;
   }
 
@@ -33,10 +33,10 @@ class K8sClient
    * Fetch all pods in given namespace.
    */
   public async fetchPods(namespace: string = 'default') {
-    Loggers.base.verbose('[K8sClient] Fetching pods for namespace ' + namespace);
+    Loggers.base.verbose('[Client] Fetching pods for namespace ' + namespace);
     let response = await this.coreApi.listNamespacedPod('default');
     let podList = response.body.items;
-    Loggers.base.debug('[K8sClient] Fetched ' + podList.length.toString() + ' pods');
+    Loggers.base.debug('[Client] Fetched ' + podList.length.toString() + ' pods');
 
     return podList;
   }
@@ -59,9 +59,9 @@ class K8sClient
       if (nodeName == undefined) {
         return Error("Node does not contain name");
       }
-      let workerLabel = labels[K8sClient.hfWorkerLabel];
+      let workerLabel = labels[Client.hfWorkerLabel];
       if (workerLabel === undefined) {
-        Loggers.base.silly('[K8sClient] Skipping node ' + nodeName + ' (no worker label)');
+        Loggers.base.silly('[Client] Skipping node ' + nodeName + ' (no worker label)');
         continue;
       }
       workerNodes.push(node);
@@ -80,16 +80,16 @@ class K8sClient
         return Error("Unable to get spec.nodeName from pod");
       }
       if (workerNodesNames.includes(nodeName) === false) {
-        Loggers.base.silly("[K8sClient] Skipping pod " + podName + " that is NOT placed on worker node");
+        Loggers.base.silly("[Client] Skipping pod " + podName + " that is NOT placed on worker node");
         continue;
       }
       podsOnWorkers.push(pod);
     }
 
-    Loggers.base.debug('[K8sClient] Filtered out ' + workerNodes.length.toString() + ' hyperflow worker nodes and '
+    Loggers.base.debug('[Client] Filtered out ' + workerNodes.length.toString() + ' hyperflow worker nodes and '
       + podsOnWorkers.length.toString() + ' total pods on them');
     return [workerNodes, podsOnWorkers];
   }
 }
 
-export default K8sClient;
+export default Client;

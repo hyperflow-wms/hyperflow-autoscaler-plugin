@@ -1,5 +1,5 @@
 import Loggers from '../../utils/logger';
-import K8sClient from '../../k8sClient';
+import Client from '../../kubernetes/client';
 import Resources from "../resources";
 
 import k8s = require('@kubernetes/client-node');
@@ -10,12 +10,12 @@ interface ClusterState {
   pods: k8s.V1Pod[];
 }
 abstract class BaseProvider {
-  protected client: K8sClient;
+  protected client: Client;
   protected clusterState: ClusterState;
 
   constructor() {
     Loggers.base.silly("[BaseProvider] Constructor");
-    this.client = new K8sClient();
+    this.client = new Client();
   }
 
   public abstract async initialize(): Promise<void | Error>;
