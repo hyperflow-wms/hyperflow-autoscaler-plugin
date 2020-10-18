@@ -34,11 +34,11 @@
     {
       "type": "pwa-node",
       "request": "launch",
-      "name": "Launch Plan",
+      "name": "Launch Optimizer",
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/src/workflow/plan.ts",
+      "program": "${workspaceFolder}/src/workflow/scalingOptimizer.ts",
       "args": [],
       "env": {},
       "preLaunchTask": "compileAutoscaler",
