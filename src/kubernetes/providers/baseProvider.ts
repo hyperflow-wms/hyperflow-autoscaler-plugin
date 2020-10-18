@@ -1,6 +1,6 @@
 import Loggers from '../../utils/logger';
 import Client from '../../kubernetes/client';
-import Resources from "../resources";
+import ResourceRequirements from "../../kubernetes/resourceRequirements";
 
 import k8s = require('@kubernetes/client-node');
 
@@ -54,113 +54,98 @@ abstract class BaseProvider {
   /**
    * Gets CPU/Memory supply of last-known cluster state.
    */
-  public getSupply(): number[] | Error {
+  public getSupply(): ResourceRequirements {
     if (this.clusterState === undefined) {
-      return Error("You have to fetch cluster state at first");
+      throw Error("You have to fetch cluster state at first");
     }
-
-    let totalCpu = 0.0;
-    let totalMemory = 0.0;
 
     let nodes = this.clusterState.workerNodes;
+    let resArr: ResourceRequirements[] = [];
     for (let node of nodes) {
       let cpu = this.getNodeCpu(node);
-      if (cpu instanceof Error) {
-        return Error("Unable to get node's CPU status:\n" + cpu.message)
-      }
       let memory = this.getNodeMemory(node);
-      if (memory instanceof Error) {
-        return Error("Unable to get node's memory status:\n" + memory.message)
-      }
       let nodeName = node?.metadata?.name;
-      if (nodeName == undefined) {
-        return Error("Unable to get metadata.name from node");
+      if (nodeName === undefined) {
+        throw Error("Unable to get metadata.name from node");
       }
-      Loggers.base.debug('[BaseProvider] Extracted details of node ' + nodeName + ': vCPU=' + cpu + 'm, RAM=' + memory + 'B');
-
-      totalCpu += cpu;
-      totalMemory += memory;
+      Loggers.base.debug('[BaseProvider] Extracted details of node ' + nodeName + ': vCPU=' + cpu + ', RAM=' + memory);
+      resArr.push(new ResourceRequirements({cpu: cpu, mem: memory}));
     }
-    Loggers.base.debug("[BaseProvider] Total supply of " + nodes.length.toString() + ' nodes: vCPU=' + totalCpu + 'm, RAM=' + totalMemory + 'B');
 
-    return [totalCpu, totalMemory];
+    let resSum = ResourceRequirements.Utils.getSum(resArr);
+    Loggers.base.debug("[BaseProvider] Total supply of " + nodes.length.toString() + ' nodes: vCPU=' + resSum.getCpuMillis() + 'm, RAM=' + resSum.getMemBytes() + 'B');
+
+    return resSum;
   }
 
   /**
    * Gets CPU/Memory demand of last-known cluster pods.
    */
-  public getDemand(): number[] | Error {
+  public getDemand(): ResourceRequirements {
     if (this.clusterState === undefined) {
-      return Error("You have to fetch cluster state at first");
+      throw Error("You have to fetch cluster state at first");
     }
 
-    let totalCpu = 0.0;
-    let totalMemory = 0.0;
-
     let pods = this.clusterState.pods;
+    let resArr: ResourceRequirements[] = [];
     for (let pod of pods) {
       let nodeName = pod?.spec?.nodeName;
       if (nodeName == undefined) {
-        return Error("Unable to get spec.nodeName from pod");
+        throw Error("Unable to get spec.nodeName from pod");
       }
       let containers = pod?.spec?.containers;
       if (containers == undefined) {
-        return Error("Unable to get spec.containers from pod");
+        throw Error("Unable to get spec.containers from pod");
       }
       for (let container of containers) {
         //let limits = container.resources.limits;
         let requests = container?.resources?.requests;
-        if (requests == undefined) {
-          return Error("Unable to get resources.requests from container");
+        if (requests === undefined) {
+          throw Error("Unable to get resources.requests from container");
         }
-        if (requests != undefined) {
-          if (requests.cpu != undefined) {
-            let cpu = Resources.cpuStringToMillis(requests.cpu);
-            if (cpu instanceof Error) {
-              return Error("Unable to convert CPU string:\n" + cpu.message)
-            }
-            totalCpu += cpu;
-            Loggers.base.debug("[BaseProvider] Extracted container CPU requests: " + cpu);
-          }
-          if (requests.memory != undefined) {
-            let memory = Resources.memoryStringToBytes(requests.memory);
-            if (memory instanceof Error) {
-              return Error("Unable to convert memory string:\n" + memory.message)
-            }
-            totalMemory += memory;
-            Loggers.base.debug("[BaseProvider] Extracted container memory requests: " + memory);
-          }
+        if (requests.cpu === undefined) {
+          throw Error("Requests does not have cpu details");
         }
+        if (requests.memory === undefined) {
+          throw Error("Requests does not have memory details");
+        }
+        let cpu = requests.cpu;
+        let memory = requests.memory;
+        Loggers.base.debug('[BaseProvider] Extracted details of container demand: vCPU=' + cpu + ', RAM=' + memory);
+
+        resArr.push(new ResourceRequirements({cpu: cpu, mem: memory}));
       }
     }
-    Loggers.base.debug("[BaseProvider] Total demand of " + pods.length.toString() + ' pods: vCPU=' + totalCpu + 'm, RAM=' + totalMemory + 'B');
 
-    return [totalCpu, totalMemory];
+    let resSum = ResourceRequirements.Utils.getSum(resArr);
+    Loggers.base.debug("[BaseProvider] Total demand of " + pods.length.toString() + ' pods: vCPU=' + resSum.getCpuMillis() + 'm, RAM=' + resSum.getMemBytes() + 'B');
+
+    return resSum;
   }
 
   /**
-   * Extracts amount of allocatable CPU from node item.
+   * Extracts allocatable CPU from node item.
    */
-  protected getNodeCpu(node: k8s.V1Node): number | Error {
+  protected getNodeCpu(node: k8s.V1Node): string {
     // NOTE: allocatable = capacity - reserved
     let allocatable = node?.status?.allocatable;
     if (allocatable === undefined) {
-      return Error("Node has no status.allocatable details");
+      throw Error("Node has no status.allocatable details");
     }
-    let cpu = Resources.cpuStringToMillis(allocatable.cpu);
+    let cpu = allocatable.cpu;
     return cpu;
   }
 
   /**
-   * Extracts amount of allocatable memory from node item.
+   * Extracts allocatable memory from node item.
    */
-  protected getNodeMemory(node: k8s.V1Node): number | Error {
+  protected getNodeMemory(node: k8s.V1Node): string {
     // NOTE: allocatable = capacity - reserved
     let allocatable = node?.status?.allocatable;
     if (allocatable === undefined) {
-      return Error("Node has no status.allocatable details");
+      throw Error("Node has no status.allocatable details");
     }
-    let memory = Resources.memoryStringToBytes(allocatable.memory);
+    let memory = allocatable.memory;
     return memory;
   }
 

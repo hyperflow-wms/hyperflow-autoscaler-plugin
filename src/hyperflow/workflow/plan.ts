@@ -3,12 +3,7 @@ import Workflow from "../tracker/workflow";
 import WorkflowTracker from "../tracker/tracker";
 import EstimatorInterface from '../estimators/estimatorInterface';
 import StaticEstimator from '../estimators/staticEstimator';
-import Resources from '../../kubernetes/resources';
-
-export interface Demand {
-  cpuMillis: number;
-  memBytes: number;
-}
+import ResourceRequirements from '../../kubernetes/resourceRequirements';
 
 class Plan
 {
@@ -180,32 +175,24 @@ class Plan
     return states;
   }
 
-  public getDemandFrames(): Map<number, Demand> {
-    let frames = new Map<number, Demand>();
+  public getDemandFrames(): Map<number, ResourceRequirements> {
+    let frames = new Map<number, ResourceRequirements>();
 
     let stateHistory = this.getStateHistory();
     stateHistory.forEach((procIds, timeKeyMs) => {
-      let totalCpuMillis = 0;
-      let totalMemBytes = 0;
-
+      let resArr: ResourceRequirements[] = [];
       procIds.forEach((procId) => {
         let process = this.tracker.getProcessById(procId);
         if (process == undefined) {
           throw Error("Process " + procId.toString() + " not found");
         }
-        let cpuRequest = Resources.cpuStringToMillis(process.getCpuRequest());
-        if (cpuRequest instanceof Error) {
-          throw cpuRequest;
-        }
-        let memRequest = Resources.memoryStringToBytes(process.getMemRequest());
-        if (memRequest instanceof Error) {
-          throw memRequest;
-        }
-        totalCpuMillis += cpuRequest;
-        totalMemBytes += memRequest;
+        let cpuRequest = process.getCpuRequest();
+        let memRequest = process.getMemRequest();
+        resArr.push(new ResourceRequirements({cpu: cpuRequest, mem: memRequest}));
       });
 
-      frames.set(timeKeyMs, {"cpuMillis": totalCpuMillis, "memBytes": totalMemBytes});
+      let averageRes = ResourceRequirements.Utils.getAverage(resArr);
+      frames.set(timeKeyMs, averageRes);
     });
 
     return frames;

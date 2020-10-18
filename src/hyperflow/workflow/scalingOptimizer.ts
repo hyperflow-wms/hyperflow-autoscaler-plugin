@@ -1,5 +1,5 @@
 import { MachineSpec } from "../../cloud/gcp_machines";
-import { Demand } from "./plan";
+import ResourceRequirements from "../../kubernetes/resourceRequirements";
 
 const SCALING_PROBE_TIME_MS = 100;
 const MAX_MACHINES = 8;
@@ -26,25 +26,11 @@ class ScalingOptimizer
     this.analyzedTimeMs = analyzedTimeMs;
   }
 
-  getAverageDemand(demandArr: Demand[]) {
-    let totalCpu = 0;
-    let totalMem = 0;
-    for (let demand of demandArr) {
-      totalCpu += demand.cpuMillis;
-      totalMem += demand.memBytes;
-    }
-    let result: Demand = {
-      "cpuMillis": totalCpu / demandArr.length,
-      "memBytes": totalMem / demandArr.length,
-    };
-    return result;
-  }
-
-  getEqualFrames(demandFrames: Map<number, Demand>, startTime: number, endTime: number): Map<number, Demand> {
+  getEqualFrames(demandFrames: Map<number, ResourceRequirements>, startTime: number, endTime: number): Map<number, ResourceRequirements> {
     /* Base equal frames - but not propagated and not averaged. */
     let demandIterator = demandFrames.entries();
-    let currentRes: IteratorResult<[number, Demand], any> | undefined;
-    let equalFrames = new Map<number, Demand[]>();
+    let currentRes: IteratorResult<[number, ResourceRequirements], any> | undefined;
+    let equalFrames = new Map<number, ResourceRequirements[]>();
     for (let currentTime = startTime; currentTime < endTime; currentTime += SCALING_PROBE_TIME_MS) {
       equalFrames.set(currentTime, []);
       let currentFrame = equalFrames.get(currentTime);
@@ -59,7 +45,7 @@ class ScalingOptimizer
             break;
           }
         }
-        let element: [number, Demand] = currentRes.value;
+        let element: [number, ResourceRequirements] = currentRes.value;
         let time = element[0];
         let demand = element[1];
         if (time < currentTime || time >= (currentTime + SCALING_PROBE_TIME_MS)) {
@@ -71,11 +57,11 @@ class ScalingOptimizer
     }
 
     /* Propagate demands over frames + use average when they are multiple of them. */
-    let superEqualFrames = new Map<number, Demand>();
-    let lastDemand: Demand = {"cpuMillis": -1, "memBytes": -1};
+    let superEqualFrames = new Map<number, ResourceRequirements>();
+    let lastDemand: ResourceRequirements = new ResourceRequirements({cpu: "0", mem: "0"});
     equalFrames.forEach((demandArr, timeKeyMs) => {
       if (demandArr.length > 0) {
-        let currentAvgDemand = this.getAverageDemand(demandArr);
+        let currentAvgDemand = ResourceRequirements.Utils.getAverage(demandArr);
         lastDemand = currentAvgDemand;
       }
       superEqualFrames.set(timeKeyMs, lastDemand);
@@ -84,7 +70,7 @@ class ScalingOptimizer
     return superEqualFrames;
   }
 
-  calculateScalingResult(baseEqualSupply: Map<number, Demand>, startTimeMs: number, maxTimeMs: number, machinesDiff: number, scalingTime: number): ScalingResult {
+  calculateScalingResult(baseEqualSupply: Map<number, ResourceRequirements>, startTimeMs: number, maxTimeMs: number, machinesDiff: number, scalingTime: number): ScalingResult {
     console.log("Analyzing result of scaling ", Math.abs(machinesDiff), "machines", ((machinesDiff >= 0) ? "up" : "down"), "at", scalingTime);
     /* Calculate total price. */
     let timeUnscaledMs = scalingTime - startTimeMs;
@@ -116,15 +102,15 @@ class ScalingOptimizer
         currentCpuSupply = cpuSupplyBeforeScaling;
         currentMemSupply = memSupplyBeforeScaling;
       }
-      if (currentCpuSupply < demand.cpuMillis) {
-        totalCpuUndeprovision += (demand.cpuMillis - currentCpuSupply);
+      if (currentCpuSupply < demand.getCpuMillis()) {
+        totalCpuUndeprovision += (demand.getCpuMillis() - currentCpuSupply);
       } else {
-        totalCpuOverprovision += (currentCpuSupply - demand.cpuMillis);
+        totalCpuOverprovision += (currentCpuSupply - demand.getCpuMillis());
       }
-      if (currentMemSupply < demand.memBytes) {
-        totalMemUndeprovision += (demand.memBytes - currentMemSupply);
+      if (currentMemSupply < demand.getMemBytes()) {
+        totalMemUndeprovision += (demand.getMemBytes() - currentMemSupply);
       } else {
-        totalMemUndeprovision += (currentMemSupply - demand.memBytes);
+        totalMemUndeprovision += (currentMemSupply - demand.getMemBytes());
       }
     });
 
@@ -139,7 +125,7 @@ class ScalingOptimizer
     return result;
   }
 
-  findBestDecision(startTime: Date, demandFrames: Map<number, Demand>): void {
+  findBestDecision(startTime: Date, demandFrames: Map<number, ResourceRequirements>): void {
     let startTimeMs = startTime.getTime();
     let maxTimeMs = startTimeMs + this.analyzedTimeMs;
 
