@@ -7,8 +7,8 @@ import KindProvider from './kubernetes/providers/kindProvider';
 import GCPProvider from './kubernetes/providers/gcpProvider';
 import RPCChild from "./communication/rpcChild";
 import withTimeout from './utils/withTimeout'
-import WorkflowTracker from './workflow/tracker';
-import Workflow from './workflow/workflow';
+import WorkflowTracker from './hyperflow/tracker/tracker';
+import Workflow from './hyperflow/tracker/workflow';
 
 const REACT_INTERVAL = 10000;
 const SCALE_UP_UTILIZATION = 0.9;

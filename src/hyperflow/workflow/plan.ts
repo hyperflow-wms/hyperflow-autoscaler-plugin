@@ -1,9 +1,9 @@
-import Loggers from '../utils/logger';
-import Workflow from "./workflow";
-import WorkflowTracker from "./tracker";
-import EstimatorInterface from './estimatorInterface';
-import StaticEstimator from './staticEstimator';
-import Resources from '../kubernetes/resources';
+import Loggers from '../../utils/logger';
+import Workflow from "../tracker/workflow";
+import WorkflowTracker from "../tracker/tracker";
+import EstimatorInterface from '../estimators/estimatorInterface';
+import StaticEstimator from '../estimators/staticEstimator';
+import Resources from '../../kubernetes/resources';
 
 export interface Demand {
   cpuMillis: number;
@@ -213,31 +213,3 @@ class Plan
 }
 
 export default Plan;
-
-async function test() {
-  let wfDir = '/home/andrew/Projects/master-thesis/hyperflow/source/examples/Test';
-  let workflow = Workflow.createFromFile(wfDir);
-  let tracker = new WorkflowTracker(workflow);
-
-  // Optionals steps
-  tracker.notifyStart(new Date());
-  for (let sigId of [1,4,5,8,11,14,17,20,23,26,29,32,33,68,70,92,94]) {
-    tracker.notifyInitialSignal(sigId, new Date());
-  }
-  for (let procId of [1,2,3,4,5,6,7,8,9,10,11,12,14]) {
-    let randDelay = Math.floor(Math.random() * 500);
-    await new Promise((res, rej) => { setTimeout(res, randDelay); });
-    tracker.notifyProcessFinished(procId, new Date());
-  }
-
-  let estimator = new StaticEstimator();
-  let plan = new Plan(workflow, tracker, 50000, estimator);
-  plan.run();
-
-  console.log('Process prediction:');
-  console.log(plan.getStateHistory());
-  console.log('Demand prediction:');
-  console.log(plan.getDemandFrames());
-}
-
-test();

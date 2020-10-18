@@ -1,4 +1,4 @@
-import Loggers from '../utils/logger';
+import Loggers from '../../utils/logger';
 import Process from "./process";
 import Signal from "./signal";
 import Workflow from "./workflow";

@@ -1,4 +1,4 @@
-import { HFSignal } from "../hyperflow/types";
+import { HFSignal } from "../types";
 
 class Signal {
 

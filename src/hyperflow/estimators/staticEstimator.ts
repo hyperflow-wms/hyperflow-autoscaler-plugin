@@ -1,4 +1,4 @@
-import Process from './process';
+import Process from '../tracker/process';
 import EstimatorInterface from './estimatorInterface'
 
 let lut = {
@@ -15,6 +15,7 @@ let lut = {
 }
 
 const DELAYS_OVERHEAD = 2000;
+const RANDOM_DISTRIBUTION = 0.02;
 
 class StaticEstimator implements EstimatorInterface {
   public getName() {
@@ -26,6 +27,13 @@ class StaticEstimator implements EstimatorInterface {
       throw Error("No estimates known for process " + p.name);
     }
     let estimation = lut[p.name];
+
+    /**
+     * We want to make estimations more real,
+     * by changing total time by a few percent.
+     */
+    let notIdealFactor = 1 + (RANDOM_DISTRIBUTION * (Math.random()*2-1));
+    estimation = estimation * notIdealFactor;
 
     /* There are multiple additional delays for each task:
      * - time for container start/stop (pulling, executor overhead)
