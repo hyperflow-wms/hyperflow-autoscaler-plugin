@@ -6,3 +6,7 @@ logs
 
 # generated dist files
 /dist
+
+# testing output
+/.nyc_output
+/coverage
