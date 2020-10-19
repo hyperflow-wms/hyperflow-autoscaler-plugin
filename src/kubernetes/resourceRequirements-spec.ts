@@ -40,7 +40,7 @@ describe('ResourceRequests class', function() {
       expect(RR.Utils.parseMemString("3.5G")).to.equal(3.5*1000*1000*1000);
     });
 
-    it('throw error for for invalid formats', function() {
+    it('throw error for invalid formats', function() {
       expect(() => { RR.Utils.parseMemString("eee"); }).to.throw(Error);
       expect(() => { RR.Utils.parseMemString("1a"); }).to.throw(Error);
       expect(() => { RR.Utils.parseMemString("1.0a"); }).to.throw(Error);
@@ -77,7 +77,7 @@ describe('ResourceRequests class', function() {
       expect(RR.Utils.parseCpuString("4.1234")).to.equal(4123);
     });
 
-    it('throw error for for invalid formats', function() {
+    it('throw error for invalid formats', function() {
       expect(() => { RR.Utils.parseCpuString("eee"); }).to.throw(Error);
       expect(() => { RR.Utils.parseCpuString("1m1"); }).to.throw(Error);
       expect(() => { RR.Utils.parseCpuString("1.0m"); }).to.throw(Error);
