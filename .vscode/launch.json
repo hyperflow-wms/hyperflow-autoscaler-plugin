@@ -38,7 +38,7 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "program": "${workspaceFolder}/src/workflow/scalingOptimizer.ts",
+      "program": "${workspaceFolder}/src/hyperflow/workflow/scalingOptimizer.ts",
       "args": [],
       "env": {},
       "preLaunchTask": "compileAutoscaler",
