@@ -35,12 +35,18 @@ describe('ResourceRequests class', function() {
       expect(RR.Utils.parseMemString("1Ei")).to.equal(1024*1024*1024*1024*1024*1024);
     });
 
+    it('handle fractions', function() {
+      expect(RR.Utils.parseMemString("2.5Mi")).to.equal(2.5*1024*1024);
+      expect(RR.Utils.parseMemString("3.5G")).to.equal(3.5*1000*1000*1000);
+    });
+
     it('throw error for for invalid formats', function() {
       expect(() => { RR.Utils.parseMemString("eee"); }).to.throw(Error);
       expect(() => { RR.Utils.parseMemString("1a"); }).to.throw(Error);
       expect(() => { RR.Utils.parseMemString("1.0a"); }).to.throw(Error);
       expect(() => { RR.Utils.parseMemString("10Kii"); }).to.throw(Error);
       expect(() => { RR.Utils.parseMemString("0-0"); }).to.throw(Error);
+      expect(() => { RR.Utils.parseMemString("10.2"); }).to.throw(Error);
     });
   });
 

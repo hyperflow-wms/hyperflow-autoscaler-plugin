@@ -58,13 +58,17 @@ class ResourceRequirements {
       return baseVal * Math.pow(10, exponentVal);;
     }
 
-    let format3 = mem.match(/^(?<num>\d+)(?<unit>[EPTGMK])$/);
+    let format3 = mem.match(/^(?<num>\d+)(\.(?<fraction>\d+))?(?<unit>[EPTGMK])$/);
     if (format3 != null) {
       // @ts-ignore: Object is possibly 'undefined'.
       let numPart = format3.groups.num;
+      let fractionPart = format3?.groups?.fraction;
       // @ts-ignore: Object is possibly 'undefined'.
       let unitPart = format3.groups.unit;
       let baseVal: number = parseInt(numPart, 10);
+      if (fractionPart != undefined) {
+        baseVal += parseInt(fractionPart.substr(0, 3).padEnd(3, '0'), 10) / 1000;
+      }
       let power: number;
       switch (unitPart) {
         case "E":
@@ -88,13 +92,17 @@ class ResourceRequirements {
       return baseVal * Math.pow(10, power);;
     }
 
-    let format4 = mem.match(/^(?<num>\d+)(?<unit>[EPTGMK]i)$/);
+    let format4 = mem.match(/^(?<num>\d+)(\.(?<fraction>\d+))?(?<unit>[EPTGMK]i)$/);
     if (format4 != null) {
       // @ts-ignore: Object is possibly 'undefined'.
       let numPart = format4.groups.num;
+      let fractionPart = format4?.groups?.fraction;
       // @ts-ignore: Object is possibly 'undefined'.
       let unitPart = format4.groups.unit;
       let baseVal: number = parseInt(numPart, 10);
+      if (fractionPart != undefined) {
+        baseVal += parseInt(fractionPart.substr(0, 3).padEnd(3, '0'), 10) / 1000;
+      }
       let power: number;
       switch (unitPart) {
         case "Ei":
@@ -140,8 +148,7 @@ class ResourceRequirements {
     if (format2 != null) {
       // @ts-ignore: Object is possibly 'undefined'.
       let basePart = format2.groups.base;
-      // @ts-ignore: Object is possibly 'undefined'.
-      let fractionPart = format2.groups.fraction;
+      let fractionPart = format2?.groups?.fraction;
       let totalMillis: number = 0;
       totalMillis += parseInt(basePart, 10) * 1000;
       if (fractionPart != undefined) {
