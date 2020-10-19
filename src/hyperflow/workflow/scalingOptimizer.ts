@@ -1,5 +1,6 @@
 import { MachineSpec } from "../../cloud/gcp_machines";
 import ResourceRequirements from "../../kubernetes/resourceRequirements";
+import Timeframe from "../../utils/timeframe";
 
 const SCALING_PROBE_TIME_MS = 100;
 const MAX_MACHINES = 8;
@@ -11,6 +12,9 @@ interface ScalingResult {
   memUndeprovision: number;
   memOverprovision: number;
 }
+
+type timestamp = number;
+type milliseconds = number;
 
 class ScalingOptimizer
 {
@@ -26,48 +30,22 @@ class ScalingOptimizer
     this.analyzedTimeMs = analyzedTimeMs;
   }
 
-  getEqualFrames(demandFrames: Map<number, ResourceRequirements>, startTime: number, endTime: number): Map<number, ResourceRequirements> {
-    /* Base equal frames - but not propagated and not averaged. */
-    let demandIterator = demandFrames.entries();
-    let currentRes: IteratorResult<[number, ResourceRequirements], any> | undefined;
-    let equalFrames = new Map<number, ResourceRequirements[]>();
-    for (let currentTime = startTime; currentTime < endTime; currentTime += SCALING_PROBE_TIME_MS) {
-      equalFrames.set(currentTime, []);
-      let currentFrame = equalFrames.get(currentTime);
-      if (currentFrame === undefined) {
-        throw Error('Fatal error');
-      }
-      while (true) {
-        if (currentRes === undefined) {
-          currentRes = demandIterator.next();
-          if (currentRes.done == true) {
-            currentRes = undefined;
-            break;
-          }
-        }
-        let element: [number, ResourceRequirements] = currentRes.value;
-        let time = element[0];
-        let demand = element[1];
-        if (time < currentTime || time >= (currentTime + SCALING_PROBE_TIME_MS)) {
-          break;
-        }
-        currentFrame.push(demand); // TODO we should use prev. element...
-        currentRes = undefined;
-      }
-    }
-
-    /* Propagate demands over frames + use average when they are multiple of them. */
-    let superEqualFrames = new Map<number, ResourceRequirements>();
-    let lastDemand: ResourceRequirements = new ResourceRequirements({cpu: "0", mem: "0"});
-    equalFrames.forEach((demandArr, timeKeyMs) => {
-      if (demandArr.length > 0) {
-        let currentAvgDemand = ResourceRequirements.Utils.getAverage(demandArr);
-        lastDemand = currentAvgDemand;
-      }
-      superEqualFrames.set(timeKeyMs, lastDemand);
+  /**
+   * Generates average demand (baseline) on given scaling probe intervals.
+   *
+   * @param demandFrames demand frames
+   * @param startTime timestamp of first interval start
+   * @param endTime timestamp of last interval end
+   * @param interval interval in milliseconds
+   */
+  getDemandBaseline(demandFrames: Map<timestamp, ResourceRequirements[]>, startTime: timestamp, endTime: timestamp, interval: milliseconds): Map<timestamp, ResourceRequirements> {
+    let equalizedData = Timeframe.packEqualIntervals(demandFrames, startTime, endTime, interval);
+    let filledData: Map<timestamp, ResourceRequirements[]> = Timeframe.fillEmptyWithLast(equalizedData, [new ResourceRequirements({cpu: "0", mem: "0"})]);
+    let baseLine: Map<timestamp, ResourceRequirements> = new Map();
+    filledData.forEach((resArr, key) => {
+      baseLine.set(key, ResourceRequirements.Utils.getAverage(resArr));
     });
-
-    return superEqualFrames;
+    return baseLine;
   }
 
   calculateScalingResult(baseEqualSupply: Map<number, ResourceRequirements>, startTimeMs: number, maxTimeMs: number, machinesDiff: number, scalingTime: number): ScalingResult {
