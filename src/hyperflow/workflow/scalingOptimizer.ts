@@ -1,17 +1,8 @@
-import { MachineSpec } from "../../cloud/gcp_machines";
 import ResourceRequirements from "../../kubernetes/resourceRequirements";
 import Timeframe from "../../utils/timeframe";
 
 const SCALING_PROBE_TIME_MS = 100;
 const MAX_MACHINES = 8;
-
-interface ScalingResult {
-  price: number
-  cpuUndeprovision: number;
-  cpuOverprovision: number;
-  memUndeprovision: number;
-  memOverprovision: number;
-}
 
 type timestamp = number;
 type milliseconds = number;
@@ -19,15 +10,17 @@ type milliseconds = number;
 class ScalingOptimizer
 {
   private runningMachines: number;
-  private machineType: MachineSpec;
+  private machineType: MachineType;
   private provisioningTimeMs: number;
   private analyzedTimeMs: number;
+  private billingModel: BillingModel;
 
-  constructor(runningMachines: number, machineType: MachineSpec, provisioningTimeMs: number, analyzedTimeMs: number) {
+  constructor(runningMachines: number, machineType: MachineType, provisioningTimeMs: number, analyzedTimeMs: number) {
     this.runningMachines = runningMachines;
     this.machineType = machineType;
     this.provisioningTimeMs = provisioningTimeMs;
     this.analyzedTimeMs = analyzedTimeMs;
+    this.billingModel = new GCPBillingModel();
   }
 
   /**
@@ -48,100 +41,89 @@ class ScalingOptimizer
     return baseLine;
   }
 
-  calculateScalingResult(baseEqualSupply: Map<number, ResourceRequirements>, startTimeMs: number, maxTimeMs: number, machinesDiff: number, scalingTime: number): ScalingResult {
-    console.log("Analyzing result of scaling ", Math.abs(machinesDiff), "machines", ((machinesDiff >= 0) ? "up" : "down"), "at", scalingTime);
+  /**
+   * Calculates result of scaling decision.
+   *
+   * @param demandBaseline
+   * @param startTime
+   * @param endTime
+   * @param machinesDiff
+   * @param scalingTime
+   */
+  calculateScalingResult(demandBaseline: Map<number, ResourceRequirements>, startTime: timestamp, endTime: timestamp, machinesDiff: number, scalingTime: timestamp): ScalingResult {
+    //console.log("Analyzing result of scaling ", Math.abs(machinesDiff), "machines", ((machinesDiff >= 0) ? "up" : "down"), "at", scalingTime);
+    let scalingResult = new ScalingResult();
+
     /* Calculate total price. */
-    let timeUnscaledMs = scalingTime - startTimeMs;
-    let timeScaledMs = maxTimeMs - scalingTime;
     let machinesUnscaled = this.runningMachines;
     let machinesScaled = this.runningMachines + machinesDiff;
-    let hourlyPrice = this.machineType.price;
-    let priceUnscaled = timeUnscaledMs * machinesUnscaled * hourlyPrice / 60 / 60 / 1000;
-    let priceScaled = timeScaledMs * machinesScaled * hourlyPrice / 60 / 60 / 1000;
+    let priceUnscaled = this.billingModel.getPriceForInterval(this.machineType, startTime, scalingTime) * machinesUnscaled;
+    let priceScaled = this.billingModel.getPriceForInterval(this.machineType, scalingTime, endTime) * machinesScaled;
     let totalPrice = priceUnscaled + priceScaled;
+    scalingResult.setPrice(totalPrice);
 
-    /* Calculate total under/overprovision. */
-    let cpuSupplyBeforeScaling = machinesUnscaled * this.machineType.cpu;
-    let cpuSupplyAfterScaling = machinesScaled * this.machineType.cpu;
-    let memSupplyBeforeScaling = machinesUnscaled * this.machineType.mem;
-    let memSupplyAfterScaling = machinesScaled * this.machineType.mem;
-    let totalCpuUndeprovision = 0;
-    let totalCpuOverprovision = 0;
-    let totalMemUndeprovision = 0;
-    let totalMemOverprovision = 0;
+    /* Calculate total score (based on under/overprovision). */
+    let supplyBeforeScaling = new ResourceRequirements({
+      cpu: (machinesUnscaled * this.machineType.getCpuMillis()).toString() + "m",
+      mem: (machinesUnscaled * this.machineType.getMemBytes()).toString(),
+    });
+    let supplyAfterScaling = new ResourceRequirements({
+      cpu: (machinesScaled * this.machineType.getCpuMillis()).toString() + "m",
+      mem: (machinesScaled * this.machineType.getMemBytes()).toString(),
+    });
+
     let timeScaledAndReadyMs = scalingTime + this.provisioningTimeMs;
-    baseEqualSupply.forEach((demand, timeKeyMs) => {
-      let currentCpuSupply: number;
-      let currentMemSupply: number;
+    demandBaseline.forEach((demand, timeKeyMs) => {
       if (timeKeyMs >= timeScaledAndReadyMs) {
-        currentCpuSupply = cpuSupplyAfterScaling;
-        currentMemSupply = memSupplyAfterScaling;
+        scalingResult.addFrame(supplyBeforeScaling, demand);
       } else {
-        currentCpuSupply = cpuSupplyBeforeScaling;
-        currentMemSupply = memSupplyBeforeScaling;
-      }
-      if (currentCpuSupply < demand.getCpuMillis()) {
-        totalCpuUndeprovision += (demand.getCpuMillis() - currentCpuSupply);
-      } else {
-        totalCpuOverprovision += (currentCpuSupply - demand.getCpuMillis());
-      }
-      if (currentMemSupply < demand.getMemBytes()) {
-        totalMemUndeprovision += (demand.getMemBytes() - currentMemSupply);
-      } else {
-        totalMemUndeprovision += (currentMemSupply - demand.getMemBytes());
+        scalingResult.addFrame(supplyAfterScaling, demand);
       }
     });
 
-    let result: ScalingResult = {
-      "price": totalPrice,
-      "cpuUndeprovision": totalCpuUndeprovision,
-      "cpuOverprovision": totalCpuOverprovision,
-      "memUndeprovision": totalMemUndeprovision,
-      "memOverprovision": totalMemOverprovision,
-    }
-    console.log(result);
-    return result;
+    return scalingResult;
   }
 
-  findBestDecision(startTime: Date, demandFrames: Map<number, ResourceRequirements>): void {
+  /**
+   * Finds most promising scaling decision for given demandFrames.
+   *
+   * @param startTime
+   * @param demandFrames
+   */
+  findBestDecision(startTime: Date, demandFrames: Map<number, ResourceRequirements[]>): ScalingDecision {
+    /* Get average supply over equal time frames - this is our baseline for calculations. */
     let startTimeMs = startTime.getTime();
     let maxTimeMs = startTimeMs + this.analyzedTimeMs;
-
-    /* Get average supply over equal time frames - this is our baseline for calculations. */
-    let baseEqualSupply = this.getEqualFrames(demandFrames, startTimeMs, maxTimeMs);
+    let demandBaseline = this.getDemandBaseline(demandFrames, startTimeMs, maxTimeMs, SCALING_PROBE_TIME_MS);
 
     /* Get space of possible machines, there must at least 1 running,
      * and we cannot exceed our provider's quota. */
     let possbileLessMachines = this.runningMachines - 1;
     let possibleMoreMachines = MAX_MACHINES - this.runningMachines;
 
-    /* Get the result of no scaling at all - our baseline for comparing actions. */
-    let bestScalingMachines = 0;
-    let bestScalingTime = startTimeMs;
-    let scalingRes = this.calculateScalingResult(baseEqualSupply, startTimeMs, maxTimeMs, bestScalingMachines, bestScalingTime);
-    let bestScalingPrice = scalingRes.price;
-    let bestScalingCpuUnderpovision = scalingRes.cpuUndeprovision;
-    let bestScalingCpuOverprovision = scalingRes.cpuOverprovision;
-    let bestScalingMemUnderpovision = scalingRes.memUndeprovision;
-    let bestScalingMemOverprovision = scalingRes.memOverprovision;
+    /* Get the result of NO scaling at all - our base for comparing actions. */
+    let bestScalingDecision = new ScalingDecision(0, startTimeMs);
+    let scalingRes = this.calculateScalingResult(demandBaseline, startTimeMs, maxTimeMs, bestScalingDecision.getMachinesDiff(), bestScalingDecision.getTime());
+    let bestScalingPrice = scalingRes.getPrice();
+    let bestScalingScore = scalingRes.getScore();
+    //console.log('  0' + ' at ' + startTimeMs.toString() + ': ' + scalingRes.getPrice().toString() + '$, score ' + scalingRes.getScore().toString());
 
     /* Try every possible scaling decision at given probe interval,
-     * and find best option in terms of under/overprovisioning. */
+     * and find best option. */
     for (let t = startTimeMs; t < maxTimeMs; t += SCALING_PROBE_TIME_MS) {
       for (let n = (possbileLessMachines*(-1)); n < possibleMoreMachines; n++) {
         /* No-scaling action was already calculated. */
         if (n == 0) {
           continue;
         }
-        let scalingRes2 = this.calculateScalingResult(baseEqualSupply, startTimeMs, maxTimeMs, n, t);
-
-        //let K = 0; //TODO
-        //let C = 0; // TODO
+        scalingRes = this.calculateScalingResult(demandBaseline, startTimeMs, maxTimeMs, n, t);
+        // C = scalingRes.getPrice();
+        // K = ...
+        //console.log(n.toString().padStart(3, ' ') + ' at ' + t.toString() + ': ' + scalingRes.getPrice().toString().padStart(12, ' ') + ' $, score ' + scalingRes.getScore().toFixed(6).toString().padStart(8, ' '));
       }
     }
 
-
-    return;
+    return bestScalingDecision;
   }
 
 }
@@ -151,16 +133,21 @@ export default ScalingOptimizer;
 
 
 
-import { n1_highcpu_4 } from "../../cloud/gcp_machines";
+import { n1_highcpu_4 } from "../../cloud/gcpMachines";
 import StaticEstimator from "../estimators/staticEstimator";
 import WorkflowTracker from "../tracker/tracker";
 import Workflow from "../tracker/workflow";
 import Plan from "./plan";
+import MachineType from "../../cloud/machine";
+import BillingModel from "../../cloud/billingModel";
+import GCPBillingModel from "../../cloud/gcpBillingModel";
+import ScalingResult from "./scalingResult";
+import ScalingDecision from "./scalingDecision";
 
 let wfStart: Date | undefined;
 
 async function getDemandFrames() {
-  let wfDir = '/home/andrew/Projects/master-thesis/hyperflow/autoscaler/assets/wf_example';
+  let wfDir = './assets/wf_example';
   let workflow = Workflow.createFromFile(wfDir);
   let tracker = new WorkflowTracker(workflow);
 
@@ -191,7 +178,9 @@ async function getDemandFrames() {
 async function test() {
   let demandFrames = await getDemandFrames();
   let optimizer = new ScalingOptimizer(1, n1_highcpu_4, 10*1000, 50*1000);
-  optimizer.findBestDecision(wfStart || new Date(), demandFrames);
+  let bestDecision = optimizer.findBestDecision(wfStart || new Date(), demandFrames);
+  console.log('BEST DECISION:', bestDecision.getMachinesDiff(), bestDecision.getTime());
+  console.log('Done!');
 }
 
 test();
