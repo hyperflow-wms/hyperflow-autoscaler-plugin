@@ -92,4 +92,50 @@ describe('Timeframe class', function() {
       sinon.assert.called(warnSpy);
     });
   });
+
+  context('Filling non-empty rows', function() {
+    it('handle empty data with default', function() {
+      let data: Map<number, string[]> = new Map();
+      data.set(100, []);
+      data.set(110, []);
+      data.set(120, []);
+      data.set(130, []);
+      let expectedResult = new Map();
+      expectedResult.set(100, ["A"]);
+      expectedResult.set(110, ["A"]);
+      expectedResult.set(120, ["A"]);
+      expectedResult.set(130, ["A"]);
+      expect(Timeframe.fillEmptyWithLast(data, ["A"])).to.deep.equal(expectedResult);
+    });
+
+    it('do not modify full data', function() {
+      let data: Map<number, string[]> = new Map();
+      data.set(100, ["test"]);
+      data.set(110, ["foo", "bar"]);
+      data.set(120, ["baz"]);
+      data.set(130, ["woof"]);
+      let expectedResult = new Map();
+      expectedResult.set(100, ["test"]);
+      expectedResult.set(110, ["foo", "bar"]);
+      expectedResult.set(120, ["baz"]);
+      expectedResult.set(130, ["woof"]);
+      expect(Timeframe.fillEmptyWithLast(data, ["A"])).to.deep.equal(expectedResult);
+    });
+
+    it('handle partial data', function() {
+      let data: Map<number, string[]> = new Map();
+      data.set(100, []);
+      data.set(110, []);
+      data.set(120, ["baz"]);
+      data.set(130, []);
+      data.set(140, []);
+      let expectedResult = new Map();
+      expectedResult.set(100, ["def", "fault"]);
+      expectedResult.set(110, ["def", "fault"]);
+      expectedResult.set(120, ["baz"]);
+      expectedResult.set(130, ["baz"]);
+      expectedResult.set(140, ["baz"]);
+      expect(Timeframe.fillEmptyWithLast(data, ["def", "fault"])).to.deep.equal(expectedResult);
+    });
+  });
 });

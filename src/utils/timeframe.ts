@@ -59,6 +59,26 @@ class Timeframe
 
     return intervals;
   }
+
+  /**
+   * Filling empty map's data with last non-empty value.
+   * @param data map with timestamp as key
+   * @param defaultStart default value used until first non-empty row
+   *
+   * CAUTION: data must be sorted by key (time).
+   */
+  public static fillEmptyWithLast<T extends { toString(): String }>(data: Map<timestamp, T>, defaultStart: T): Map<timestamp, T> {
+    let filledData = new Map<timestamp, T>();
+    let lastValue: T = defaultStart;
+    data.forEach((value, timeKey) => {
+      if (value.toString() != "") {
+        lastValue = value;
+      }
+      filledData.set(timeKey, lastValue);
+    });
+
+    return filledData;
+  }
 }
 
 export default Timeframe;
