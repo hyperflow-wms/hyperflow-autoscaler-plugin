@@ -175,8 +175,8 @@ class Plan
     return states;
   }
 
-  public getDemandFrames(): Map<number, ResourceRequirements> {
-    let frames = new Map<number, ResourceRequirements>();
+  public getDemandFrames(): Map<number, ResourceRequirements[]> {
+    let frames = new Map<number, ResourceRequirements[]>();
 
     let stateHistory = this.getStateHistory();
     stateHistory.forEach((procIds, timeKeyMs) => {
@@ -190,9 +190,7 @@ class Plan
         let memRequest = process.getMemRequest();
         resArr.push(new ResourceRequirements({cpu: cpuRequest, mem: memRequest}));
       });
-
-      let averageRes = ResourceRequirements.Utils.getAverage(resArr);
-      frames.set(timeKeyMs, averageRes);
+      frames.set(timeKeyMs, resArr);
     });
 
     return frames;
