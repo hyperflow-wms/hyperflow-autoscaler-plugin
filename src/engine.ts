@@ -15,6 +15,7 @@ import Policy from './policies/policy';
 import ReactPolicy from './policies/reactPolicy';
 import { GCPMachines } from './cloud/gcpMachines';
 import MachineType from './cloud/machine';
+import PredictPolicy from './policies/predictPolicy';
 
 const REACT_INTERVAL = 10000;
 const SCALE_UP_UTILIZATION = 0.9;
@@ -62,6 +63,8 @@ class Engine {
     Loggers.base.info("[Engine] Trying to create policy '" + policyName + "'");
     if (policyName == "react") {
       this.policy = new ReactPolicy(this.workflowTracker, this.billingModel, this.machineType);
+    } else if (policyName == "predict") {
+      this.policy = new PredictPolicy(this.workflowTracker, this.billingModel, this.machineType);
     } else {
       throw Error('No valid policy specified. Hint: use env var HF_VAR_autoscalerPolicy');
     }
@@ -93,6 +96,7 @@ class Engine {
     Loggers.base.verbose('[Engine] Supply: ' + supply);
 
     let scalingDecision = this.policy.getDecision(demand, supply, numWorkers);
+    Loggers.base.debug("[Engine] Recomended action: " + scalingDecision.getMachinesDiff().toString() + " at " + scalingDecision.getTime());
     let machinesDiff = scalingDecision.getMachinesDiff();
     if (machinesDiff == 0) {
       Loggers.base.info("[Engine] No action necessary");
