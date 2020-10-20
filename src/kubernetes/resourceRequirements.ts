@@ -213,6 +213,15 @@ class ResourceRequirements {
       return result;
     }
   }
+
+  /**
+   * @inheritdoc
+   */
+  public toString = () : string => {
+    let string = "{CPU: " + this.cpuMillis.toString() + "m;";
+    string += " MEM: " + this.memBytes.toString() + "B}";
+    return string;
+  }
 }
 
 export default ResourceRequirements;

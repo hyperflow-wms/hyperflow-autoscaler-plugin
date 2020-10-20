@@ -131,5 +131,10 @@ describe('ResourceRequests class', function() {
       expect(resSum.getCpuMillis()).to.equal(900);
       expect(resSum.getMemBytes()).to.equal(120 * 1000);
     });
+
+    it('override toString method', function() {
+      let res = new RR({cpu: "0.1", mem: "20K"});
+      expect(res.toString()).to.equal("{CPU: 100m; MEM: 20000B}");
+    });
   });
 });
