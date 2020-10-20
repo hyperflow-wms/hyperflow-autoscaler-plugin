@@ -15,12 +15,12 @@ class ScalingOptimizer
   private analyzedTimeMs: number;
   private billingModel: BillingModel;
 
-  constructor(runningMachines: number, machineType: MachineType, provisioningTimeMs: number, analyzedTimeMs: number) {
+  constructor(runningMachines: number, machineType: MachineType, provisioningTimeMs: number, analyzedTimeMs: number, billingModel: BillingModel) {
     this.runningMachines = runningMachines;
     this.machineType = machineType;
     this.provisioningTimeMs = provisioningTimeMs;
     this.analyzedTimeMs = analyzedTimeMs;
-    this.billingModel = new GCPBillingModel();
+    this.billingModel = billingModel;
   }
 
   /**
@@ -177,7 +177,7 @@ async function getDemandFrames() {
 
 async function test() {
   let demandFrames = await getDemandFrames();
-  let optimizer = new ScalingOptimizer(1, n1_highcpu_4, 10*1000, 50*1000);
+  let optimizer = new ScalingOptimizer(1, n1_highcpu_4, 10*1000, 50*1000, new GCPBillingModel());
   let bestDecision = optimizer.findBestDecision(wfStart || new Date(), demandFrames);
   console.log('BEST DECISION:', bestDecision.getMachinesDiff(), bestDecision.getTime());
   console.log('Done!');
