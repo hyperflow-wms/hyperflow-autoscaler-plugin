@@ -9,6 +9,12 @@ import RPCChild from "./communication/rpcChild";
 import withTimeout from './utils/withTimeout'
 import WorkflowTracker from './hyperflow/tracker/tracker';
 import Workflow from './hyperflow/tracker/workflow';
+import BillingModel from './cloud/billingModel';
+import GCPBillingModel from './cloud/gcpBillingModel';
+import Policy from './policies/policy';
+import ReactPolicy from './policies/reactPolicy';
+import { GCPMachines } from './cloud/gcpMachines';
+import MachineType from './cloud/machine';
 
 const REACT_INTERVAL = 10000;
 const SCALE_UP_UTILIZATION = 0.9;
@@ -20,11 +26,14 @@ const SCALE_DOWN_COOLDOWN_S = 3 * 60;
 class Engine {
 
   private provider: BaseProvider;
+  private billingModel: BillingModel;
   private rpc: RPCChild;
   private scaleUpCooldown: CooldownTracker;
   private scaleDownCooldown: CooldownTracker;
   private workflow: Workflow;
   private workflowTracker: WorkflowTracker;
+  private machineType: MachineType;
+  private policy: Policy;
 
   constructor(providerName: string) {
     Loggers.base.info("[Engine] Trying to create provider " + providerName);
@@ -38,9 +47,24 @@ class Engine {
     if (this.provider === undefined) {
       throw Error("Provider " + providerName + " not found!");
     }
+    this.billingModel = new GCPBillingModel();
     this.scaleUpCooldown = new CooldownTracker();
     this.scaleDownCooldown = new CooldownTracker();
     this.rpc = new RPCChild(this);
+
+    let machineTypeName = process.env['HF_VAR_autoscalerMachineType'];
+    if (machineTypeName == undefined) {
+      throw Error('No machine type specified. Hint: use env var HF_VAR_autoscalerMachineType');
+    }
+    this.machineType = GCPMachines.makeObject(machineTypeName);
+
+    let policyName = process.env['HF_VAR_autoscalerPolicy'];
+    Loggers.base.info("[Engine] Trying to create policy '" + policyName + "'");
+    if (policyName == "react") {
+      this.policy = new ReactPolicy(this.workflowTracker, this.billingModel, this.machineType);
+    } else {
+      throw Error('No valid policy specified. Hint: use env var HF_VAR_autoscalerPolicy');
+    }
   }
 
   public async run(): Promise<void> {
@@ -68,32 +92,24 @@ class Engine {
     Loggers.base.verbose('[Engine] Demand: ' + demand);
     Loggers.base.verbose('[Engine] Supply: ' + supply);
 
-    if ((demand[0] / supply[0]) > SCALE_UP_UTILIZATION) {
-      if (this.scaleUpCooldown.isExpired() === false) {
-        Loggers.base.info("[Engine] Not enough CPU - not scaling due to up-cooldown");
-      } else {
-        Loggers.base.info("[Engine] Scaling up - not enough CPU");
-        this.provider.resizeCluster(numWorkers + 1);
-        this.scaleUpCooldown.setNSeconds(SCALE_UP_COOLDOWN_S);
-      }
-    } else if ((demand[1] / supply[1]) > SCALE_UP_UTILIZATION) {
-      if (this.scaleUpCooldown.isExpired() === false) {
-        Loggers.base.info("[Engine] Not enough RAM - not scaling due to up-cooldown");
-      } else {
-        Loggers.base.info("[Engine] Scaling up - not enough RAM");
-        this.provider.resizeCluster(numWorkers + 1);
-        this.scaleUpCooldown.setNSeconds(SCALE_UP_COOLDOWN_S);
-      }
-    } else if ((demand[0] / supply[0]) < SCALE_DOWN_UTILIZATION && (demand[1] / supply[1]) < SCALE_DOWN_UTILIZATION && numWorkers > 0) {
-      if (this.scaleDownCooldown.isExpired() === false) {
-        Loggers.base.info("[Engine] Too much CPU & RAM - not scaling due to down-cooldown");
-      } else {
-        Loggers.base.info("[Engine] Scaling down - too much CPU & RAM");
-        this.provider.resizeCluster(numWorkers - 1);
-        this.scaleDownCooldown.setNSeconds(SCALE_DOWN_COOLDOWN_S);
-      }
-    } else {
+    let scalingDecision = this.policy.getDecision(demand, supply, numWorkers);
+    let machinesDiff = scalingDecision.getMachinesDiff();
+    if (machinesDiff == 0) {
       Loggers.base.info("[Engine] No action necessary");
+    } else {
+      if (this.policy.isReady(scalingDecision) === false) {
+        Loggers.base.info("[Engine] No action, due to policy condition: not_ready");
+      } else {
+        if (machinesDiff > 0) {
+          Loggers.base.info("[Engine] Scaling up");
+        } else {
+          Loggers.base.info("[Engine] Scaling down");
+        }
+        // TODO: postpone scaling to appropriate time
+        this.provider.resizeCluster(numWorkers + machinesDiff);
+        // TODO: notify about new time (updated decision)
+        this.policy.actionTaken(scalingDecision);
+      }
     }
 
     setTimeout(() => { this.reactLoop(); }, REACT_INTERVAL);
