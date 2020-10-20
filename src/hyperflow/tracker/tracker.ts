@@ -5,6 +5,9 @@ import Workflow from "./workflow";
 
 class WorkflowTracker
 {
+  // CAUTION: this is shared across object copies
+  private workflow: Workflow;
+
   private executionStartTime?: Date;
 
   private processesMap: Map<number, Process> = new Map;
@@ -38,6 +41,7 @@ class WorkflowTracker
       this.signalToPrevProcess = new Map(oldWT.signalToPrevProcess);
       this.signalToNextProcess = new Map(oldWT.signalToNextProcess);
       this.runningProcesses = new Set(oldWT.runningProcesses);
+      this.workflow = oldWT.workflow; // CAUTION: this is shared reference (const)
     } else {
       Loggers.base.silly("[WorkflowTracker] Constructor");
       let wf = wfOrTracker;
@@ -147,6 +151,11 @@ class WorkflowTracker
    * @param wf workflow
    */
   private loadWorkflow(wf: Workflow): void {
+    /* Make sure workflow was not already loaded. */
+    if (this.workflow !== undefined) {
+      throw Error("Workflow already loaded!");
+    }
+    this.workflow = wf;
 
     Loggers.base.debug("[WorkflowTracker] Parsing workflow into graph");
 
@@ -187,6 +196,13 @@ class WorkflowTracker
 
   public getProcessById(processId: number): Process | undefined {
     return this.processesMap.get(processId);
+  }
+
+  /**
+   * Getter for workflow.
+   */
+  public getWorkflow() {
+    return this.workflow;
   }
 }
 
