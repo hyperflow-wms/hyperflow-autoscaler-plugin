@@ -116,10 +116,16 @@ class ScalingOptimizer
         if (n == 0) {
           continue;
         }
+        /* Calculate result; update best one if we get higher score, or same with less price. */
         scalingRes = this.calculateScalingResult(demandBaseline, startTimeMs, maxTimeMs, n, t);
-        // C = scalingRes.getPrice();
-        // K = ...
         //console.log(n.toString().padStart(3, ' ') + ' at ' + t.toString() + ': ' + scalingRes.getPrice().toString().padStart(12, ' ') + ' $, score ' + scalingRes.getScore().toFixed(6).toString().padStart(8, ' '));
+        let scalingPrice = scalingRes.getPrice(); // 'C' in math equation
+        let scalingScore = scalingRes.getScore();
+        if (scalingScore > bestScalingScore || (scalingScore == bestScalingScore && scalingPrice < bestScalingPrice)) {
+          bestScalingDecision = new ScalingDecision(n, t);
+          bestScalingPrice = scalingPrice;
+          bestScalingScore = scalingScore;
+        }
       }
     }
 
