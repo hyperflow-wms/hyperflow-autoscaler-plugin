@@ -8,7 +8,7 @@ interface IMachineType {
 
 class MachineType
 {
-  private name: string;
+  public readonly name: string;
   private cpuMillis: number;
   private memBytes: number;
 

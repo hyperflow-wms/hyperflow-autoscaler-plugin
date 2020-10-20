@@ -133,7 +133,7 @@ export default ScalingOptimizer;
 
 
 
-import { n1_highcpu_4 } from "../../cloud/gcpMachines";
+import { GCPMachines, N1_HIGHCPU_4 } from "../../cloud/gcpMachines";
 import StaticEstimator from "../estimators/staticEstimator";
 import WorkflowTracker from "../tracker/tracker";
 import Workflow from "../tracker/workflow";
@@ -177,7 +177,8 @@ async function getDemandFrames() {
 
 async function test() {
   let demandFrames = await getDemandFrames();
-  let optimizer = new ScalingOptimizer(1, n1_highcpu_4, 10*1000, 50*1000, new GCPBillingModel());
+  let machineType = GCPMachines.makeObject(N1_HIGHCPU_4);
+  let optimizer = new ScalingOptimizer(1, machineType, 10*1000, 50*1000, new GCPBillingModel());
   let bestDecision = optimizer.findBestDecision(wfStart || new Date(), demandFrames);
   console.log('BEST DECISION:', bestDecision.getMachinesDiff(), bestDecision.getTime());
   console.log('Done!');

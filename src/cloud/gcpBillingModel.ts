@@ -1,4 +1,5 @@
 import BillingModel from "./billingModel";
+import { N1_HIGHCPU_2, N1_HIGHCPU_4, N1_HIGHCPU_8, N1_HIGHCPU_16, N1_HIGHCPU_32, N1_HIGHCPU_64, N1_HIGHCPU_96 } from './gcpMachines';
 import MachineType from "./machine";
 
 type timestamp = number;
@@ -33,19 +34,19 @@ class GCPBillingModel extends BillingModel
     let name = machine.getName();
     /* Note: this are prices for us-central-1 zone. */
     switch (name) {
-      case "n1-highcpu-2":
+      case N1_HIGHCPU_2:
         return 0.0708486;
-      case "n1-highcpu-4":
+      case N1_HIGHCPU_4:
         return 0.1416972;
-      case "n1-highcpu-8":
+      case N1_HIGHCPU_8:
         return 0.2833944;
-      case "n1-highcpu-16":
+      case N1_HIGHCPU_16:
         return 0.5667888;
-      case "n1-highcpu-32":
+      case N1_HIGHCPU_32:
         return 1.1335776;
-      case "n1-highcpu-64":
+      case N1_HIGHCPU_64:
         return 2.2671552;
-      case "n1-highcpu-96":
+      case N1_HIGHCPU_96:
         return 3.4007328;
       default:
     }
