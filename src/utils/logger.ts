@@ -18,8 +18,9 @@ const baseLogger = winston.loggers.add('runtime', {
   defaultMeta: { service: 'user-service' },
   transports: [
     new winston.transports.File({ filename: path.join(logDir, 'error.log'), options: {}, level: 'error' }),
-    new winston.transports.File({ filename: path.join(logDir, 'combined.log'), options: {}, level: 'silly' }),
-    new winston.transports.Console({ level: 'silly' }),
+    new winston.transports.File({ filename: path.join(logDir, 'debug.log'), options: {}, level: 'debug' }),
+    new winston.transports.File({ filename: path.join(logDir, 'silly.log'), options: {}, level: 'silly' }),
+    new winston.transports.Console({ level: 'info' }),
   ],
 });
 
