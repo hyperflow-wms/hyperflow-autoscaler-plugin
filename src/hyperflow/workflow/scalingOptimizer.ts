@@ -199,4 +199,6 @@ async function test() {
   Loggers.base.debug("Done!");
 }
 
-test();
+if (require.main === module) {
+  test();
+}
