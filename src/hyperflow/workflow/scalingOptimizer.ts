@@ -1,6 +1,8 @@
-import Loggers from "../../utils/logger";
+import { getBaseLogger } from "../../utils/logger";
 import ResourceRequirements from "../../kubernetes/resourceRequirements";
 import Timeframe from "../../utils/timeframe";
+
+const Logger = getBaseLogger();
 
 const SCALING_PROBE_TIME_MS = 100;
 const MAX_MACHINES = 8;
@@ -52,7 +54,7 @@ class ScalingOptimizer
    * @param scalingTime
    */
   calculateScalingResult(demandBaseline: Map<number, ResourceRequirements>, startTime: timestamp, endTime: timestamp, machinesDiff: number, scalingTime: timestamp): ScalingResult {
-    //Loggers.base.debug("Analyzing result of scaling " + Math.abs(machinesDiff).toString() + " machines " + ((machinesDiff >= 0) ? "up" : "down") + " at " + scalingTime.toString());
+    //Logger.debug("Analyzing result of scaling " + Math.abs(machinesDiff).toString() + " machines " + ((machinesDiff >= 0) ? "up" : "down") + " at " + scalingTime.toString());
     let scalingResult = new ScalingResult();
 
     /* Calculate total price. */
@@ -107,7 +109,7 @@ class ScalingOptimizer
     let scalingRes = this.calculateScalingResult(demandBaseline, startTimeMs, maxTimeMs, bestScalingDecision.getMachinesDiff(), bestScalingDecision.getTime());
     let bestScalingPrice = scalingRes.getPrice();
     let bestScalingScore = scalingRes.getScore();
-    //Loggers.base.debug('Scaling res for no action at ' + startTimeMs.toString() + ': ' + scalingRes.getPrice().toString() + '$, score ' + scalingRes.getScore().toString());
+    //Logger.debug('Scaling res for no action at ' + startTimeMs.toString() + ': ' + scalingRes.getPrice().toString() + '$, score ' + scalingRes.getScore().toString());
 
     /* Try every possible scaling decision at given probe interval,
      * and find best option. */
@@ -119,7 +121,7 @@ class ScalingOptimizer
         }
         /* Calculate result; update best one if we get higher score, or same with less price. */
         scalingRes = this.calculateScalingResult(demandBaseline, startTimeMs, maxTimeMs, n, t);
-        //Loggers.base.debug('Scaling res for ' + (n.toString().padStart(3, ' ') + ' machines at ' + t.toString() + ': ' + scalingRes.getPrice().toString().padStart(12, ' ') + ' $, score ' + scalingRes.getScore().toFixed(6).toString().padStart(8, ' '));
+        //Logger.debug('Scaling res for ' + (n.toString().padStart(3, ' ') + ' machines at ' + t.toString() + ': ' + scalingRes.getPrice().toString().padStart(12, ' ') + ' $, score ' + scalingRes.getScore().toFixed(6).toString().padStart(8, ' '));
         let scalingPrice = scalingRes.getPrice(); // 'C' in math equation
         let scalingScore = scalingRes.getScore();
         if (scalingScore > bestScalingScore || (scalingScore == bestScalingScore && scalingPrice < bestScalingPrice)) {
@@ -184,9 +186,9 @@ async function getDemandFrames() {
 
   wfStart = tracker.getExecutionStartTime();
 
-  Loggers.base.debug(mapToString(plan.getStateHistory()));
+  Logger.debug(mapToString(plan.getStateHistory()));
   let demandFrames = plan.getDemandFrames();
-  Loggers.base.debug(mapToString(demandFrames));
+  Logger.debug(mapToString(demandFrames));
   return demandFrames;
 }
 
@@ -195,8 +197,8 @@ async function test() {
   let machineType = GCPMachines.makeObject(N1_HIGHCPU_4);
   let optimizer = new ScalingOptimizer(1, machineType, 10*1000, 50*1000, new GCPBillingModel());
   let bestDecision = optimizer.findBestDecision(wfStart || new Date(), demandFrames);
-  Loggers.base.debug('BEST DECISION: ' + bestDecision.getMachinesDiff().toString() + ' at ' + bestDecision.getTime().toString());
-  Loggers.base.debug("Done!");
+  Logger.debug('BEST DECISION: ' + bestDecision.getMachinesDiff().toString() + ' at ' + bestDecision.getTime().toString());
+  Logger.debug("Done!");
 }
 
 if (require.main === module) {

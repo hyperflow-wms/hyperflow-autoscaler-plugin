@@ -1,4 +1,6 @@
-import Loggers from './logger';
+import { getBaseLogger } from './logger';
+
+const Logger = getBaseLogger();
 
 type timestamp = number;
 type milliseconds = number;
@@ -34,7 +36,7 @@ class Timeframe
            * This is fast-forward for data iterator. */
           let time = currentResult.value[0];
           if (time < currentTime) {
-            Loggers.base.warn("[Timeframe] There is data before packing start timestamp");
+            Logger.warn("[Timeframe] There is data before packing start timestamp");
             currentResult = undefined;
             continue;
           }
@@ -54,7 +56,7 @@ class Timeframe
 
     /* Warn about data left-overs, outside packing time range. */
     if (currentResult?.done !== undefined && currentResult.done == false) {
-      Loggers.base.warn("[Timeframe] There is data after packing end timestamp");
+      Logger.warn("[Timeframe] There is data after packing end timestamp");
     }
 
     return intervals;

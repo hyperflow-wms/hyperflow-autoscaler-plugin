@@ -1,8 +1,10 @@
-import Loggers from '../../utils/logger';
+import { getBaseLogger } from '../../utils/logger';
 import Client from '../../kubernetes/client';
 import ResourceRequirements from "../../kubernetes/resourceRequirements";
 
 import k8s = require('@kubernetes/client-node');
+
+const Logger = getBaseLogger();
 
 interface ClusterState {
   lastUpdate: Date;
@@ -14,7 +16,7 @@ abstract class BaseProvider {
   protected clusterState: ClusterState;
 
   constructor() {
-    Loggers.base.silly("[BaseProvider] Constructor");
+    Logger.silly("[BaseProvider] Constructor");
     this.client = new Client();
   }
 
@@ -30,7 +32,7 @@ abstract class BaseProvider {
    * Saves cluster state into internal structure.
    */
   public async updateClusterState(): Promise<void | Error> {
-    Loggers.base.info("[BaseProvider] Updating cluster state");
+    Logger.info("[BaseProvider] Updating cluster state");
     let currentTime = new Date();
     let promise1 = this.client.fetchNodes();
     let promise2 = this.client.fetchPods();
@@ -46,7 +48,7 @@ abstract class BaseProvider {
       workerNodes: hfView[0],
       pods: hfView[1],
     };
-    Loggers.base.info("[BaseProvider] Cluster state updated");
+    Logger.info("[BaseProvider] Cluster state updated");
 
     return;
   }
@@ -68,12 +70,12 @@ abstract class BaseProvider {
       if (nodeName === undefined) {
         throw Error("Unable to get metadata.name from node");
       }
-      Loggers.base.debug('[BaseProvider] Extracted details of node ' + nodeName + ': vCPU=' + cpu + ', RAM=' + memory);
+      Logger.debug('[BaseProvider] Extracted details of node ' + nodeName + ': vCPU=' + cpu + ', RAM=' + memory);
       resArr.push(new ResourceRequirements({cpu: cpu, mem: memory}));
     }
 
     let resSum = ResourceRequirements.Utils.getSum(resArr);
-    Loggers.base.debug("[BaseProvider] Total supply of " + nodes.length.toString() + ' nodes: vCPU=' + resSum.getCpuMillis() + 'm, RAM=' + resSum.getMemBytes() + 'B');
+    Logger.debug("[BaseProvider] Total supply of " + nodes.length.toString() + ' nodes: vCPU=' + resSum.getCpuMillis() + 'm, RAM=' + resSum.getMemBytes() + 'B');
 
     return resSum;
   }
@@ -111,14 +113,14 @@ abstract class BaseProvider {
         }
         let cpu = requests.cpu;
         let memory = requests.memory;
-        Loggers.base.debug('[BaseProvider] Extracted details of container demand: vCPU=' + cpu + ', RAM=' + memory);
+        Logger.debug('[BaseProvider] Extracted details of container demand: vCPU=' + cpu + ', RAM=' + memory);
 
         resArr.push(new ResourceRequirements({cpu: cpu, mem: memory}));
       }
     }
 
     let resSum = ResourceRequirements.Utils.getSum(resArr);
-    Loggers.base.debug("[BaseProvider] Total demand of " + pods.length.toString() + ' pods: vCPU=' + resSum.getCpuMillis() + 'm, RAM=' + resSum.getMemBytes() + 'B');
+    Logger.debug("[BaseProvider] Total demand of " + pods.length.toString() + ' pods: vCPU=' + resSum.getCpuMillis() + 'm, RAM=' + resSum.getMemBytes() + 'B');
 
     return resSum;
   }
@@ -165,7 +167,7 @@ abstract class BaseProvider {
       }
       nodesNames.push(nodeName);
     }
-    Loggers.base.silly("[BaseProvider] Found " + nodesNames.length.toString() + ' worker nodes\' names');
+    Logger.silly("[BaseProvider] Found " + nodesNames.length.toString() + ' worker nodes\' names');
     return nodesNames;
   }
 

@@ -1,8 +1,10 @@
 import RPC from './rpc';
 
-import Loggers from '../utils/logger';
+import { getBaseLogger } from '../utils/logger';
 
 import * as child_process from 'child_process';
+
+const Logger = getBaseLogger();
 
 class ParentRPC extends RPC {
 
@@ -10,12 +12,12 @@ class ParentRPC extends RPC {
 
   constructor(child_process: child_process.ChildProcess, api_object: any) {
     super(api_object);
-    Loggers.base.silly('[ParentRPC] Constructor');
+    Logger.silly('[ParentRPC] Constructor');
     this.child_process = child_process;
   }
 
   protected sendRemote(data: object): void | Error {
-    Loggers.base.debug('[ParentRPC] Sending remote: ' + JSON.stringify(data));
+    Logger.debug('[ParentRPC] Sending remote: ' + JSON.stringify(data));
     this.child_process.send(data);
     return;
   }
@@ -23,9 +25,9 @@ class ParentRPC extends RPC {
   public init(): void  {
     super.init();
     this.child_process.on('message', (data) => {
-      Loggers.base.debug('[ParentRPC] Got message: ' + JSON.stringify(data));
+      Logger.debug('[ParentRPC] Got message: ' + JSON.stringify(data));
       if (typeof data != "object") {
-        Loggers.base.error('[ParentRPC] Expected object as message!');
+        Logger.error('[ParentRPC] Expected object as message!');
         throw Error('Unexpected message format');
       }
       this.handleMessage(data);

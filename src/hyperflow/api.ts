@@ -1,7 +1,9 @@
-import Loggers from '../utils/logger';
+import { getBaseLogger } from '../utils/logger';
 import { HFWflib, HFEngine } from "./types";
 import { RedisClient } from 'redis';
 import RPC from '../communication/rpc';
+
+const Logger = getBaseLogger();
 
 class API {
   private rcl: RedisClient;
@@ -10,7 +12,7 @@ class API {
   private rpc?: RPC;
 
   constructor(rcl: RedisClient, wflib: HFWflib, engine: HFEngine) {
-    Loggers.base.silly('[API] Constructor called');
+    Logger.silly('[API] Constructor called');
     this.rcl = rcl;
     this.wflib = wflib;
     this.engine = engine;
@@ -21,7 +23,7 @@ class API {
    * TODO: remove in future.
    */
   public addNumbers(a: number, b: number): number {
-    Loggers.base.debug('[API] Adding ' + a.toString() + ' to ' + b.toString());
+    Logger.debug('[API] Adding ' + a.toString() + ' to ' + b.toString());
     return a + b;
   }
 
@@ -49,7 +51,7 @@ class API {
     /* Listen for engine events and pass them autoscaler. */
     const cbBuilder = (name) => {
       return (...values) => {
-        Loggers.base.debug('[API] Captured event from engine ' + name.toString() + ': ' + JSON.stringify(values));
+        Logger.debug('[API] Captured event from engine ' + name.toString() + ': ' + JSON.stringify(values));
         if (this.rpc === undefined) {
           throw Error("No RPC assigned to API");
         }

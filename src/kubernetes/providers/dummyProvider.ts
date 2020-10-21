@@ -1,20 +1,22 @@
 import BaseProvider from './baseProvider';
 
-import Loggers from '../../utils/logger';
+import { getBaseLogger } from '../../utils/logger';
+
+const Logger = getBaseLogger();
 
 class DummyProvider extends BaseProvider {
 
   constructor()
   {
     super();
-    Loggers.base.silly("[DummyProvider] Constructor");
+    Logger.silly("[DummyProvider] Constructor");
   }
 
   /**
    * Provider initialization.
    */
   public async initialize(): Promise<void | Error> {
-    Loggers.base.debug("[DummyProvider] Initialization mock");
+    Logger.debug("[DummyProvider] Initialization mock");
     return;
   }
 
@@ -22,13 +24,13 @@ class DummyProvider extends BaseProvider {
    * Resizes cluster to given amount of nodes.
    */
   public async resizeCluster(workersNum: number) {
-    Loggers.base.debug("[DummyProvider] Resizing cluster mock");
+    Logger.debug("[DummyProvider] Resizing cluster mock");
 
     return;
   }
 
   public async updateClusterState(): Promise<void | Error> {
-    Loggers.base.debug("[DummyProvider] Updating cluster mock");
+    Logger.debug("[DummyProvider] Updating cluster mock");
     return;
   }
 }

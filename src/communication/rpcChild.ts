@@ -1,6 +1,8 @@
 import RPC from './rpc';
 
-import Loggers from '../utils/logger';
+import { getBaseLogger } from '../utils/logger';
+
+const Logger = getBaseLogger();
 
 class ChildRPC extends RPC {
 
@@ -8,12 +10,12 @@ class ChildRPC extends RPC {
 
   constructor(api_object: any) {
     super(api_object);
-    Loggers.base.silly('[ChildRPC] Constructor');
+    Logger.silly('[ChildRPC] Constructor');
     this.parent_process = process;
   }
 
   protected sendRemote(data: object): void | Error {
-    Loggers.base.debug('[ChildRPC] Sending remote:' + JSON.stringify(data));
+    Logger.debug('[ChildRPC] Sending remote:' + JSON.stringify(data));
     if (process.send === undefined) {
       return Error("ChildRPC cannot be used on root process");
     }

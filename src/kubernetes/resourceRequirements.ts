@@ -1,4 +1,6 @@
-import Loggers from '../utils/logger';
+import { getBaseLogger } from '../utils/logger';
+
+const Logger = getBaseLogger();
 
 interface IResourceRequirements {
   cpu: string;
@@ -38,7 +40,7 @@ class ResourceRequirements {
    * @return number of bytes
    */
   private static parseMemString(mem: string): number  {
-    //Loggers.base.silly('[Resources] memoryStringToBytes(' + mem + ')');
+    //Logger.silly('[Resources] memoryStringToBytes(' + mem + ')');
     let format1 = mem.match(/^(?<num>\d+)$/);
     if (format1 != null) {
       // @ts-ignore: Object is possibly 'undefined'.
@@ -135,7 +137,7 @@ class ResourceRequirements {
    * @return number of millis
    */
   private static parseCpuString(cpu: string): number {
-    //Loggers.base.silly('[Resources] parseCpuString(' + cpu + ')');
+    //Logger.silly('[Resources] parseCpuString(' + cpu + ')');
     let format1 = cpu.match(/^(?<num>\d+)m$/);
     if (format1 != null) {
       // @ts-ignore: Object is possibly 'undefined'.

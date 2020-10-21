@@ -1,4 +1,6 @@
-import Loggers from '../utils/logger';
+import { getBaseLogger } from '../utils/logger';
+
+const Logger = getBaseLogger();
 
 const MESSAGE_TYPE_REQUEST = 1;
 const MESSAGE_TYPE_REPLY = 2;
@@ -22,7 +24,7 @@ abstract class RPC {
   private api_object: any;
 
   constructor(api_object: any) {
-    Loggers.base.silly('[RPC] Constructor');
+    Logger.silly('[RPC] Constructor');
     this.callback_map = {};
     this.api_object = api_object;
   }
@@ -30,20 +32,20 @@ abstract class RPC {
   protected abstract sendRemote(data: object): void | Error;
 
   private handleRequest(req: RPCRequest): void {
-    Loggers.base.debug('[RPC] Handling request: ' + JSON.stringify(req));
+    Logger.debug('[RPC] Handling request: ' + JSON.stringify(req));
     let fn = this.api_object[req.fn];
     if (fn === undefined) {
-      Loggers.base.error('[RPC] No "' + req.fn + '" function registred');
+      Logger.error('[RPC] No "' + req.fn + '" function registred');
       process.exit(1);
     }
     let args = req.args;
     if (args.length > fn.length) {
-      Loggers.base.error('[RPC] Too much args for "' + req.fn + '" - only ' + fn.length.toString() + " expected");
+      Logger.error('[RPC] Too much args for "' + req.fn + '" - only ' + fn.length.toString() + " expected");
       process.exit(1);
     }
     let result = fn.apply(this.api_object, req.args);
     let callId = req.id;
-    Loggers.base.silly('[RPC] Sending result with callId ' + callId + ': ' + JSON.stringify(result));
+    Logger.silly('[RPC] Sending result with callId ' + callId + ': ' + JSON.stringify(result));
     this.sendRemote({
       id: callId,
       type: MESSAGE_TYPE_REPLY,
@@ -53,23 +55,23 @@ abstract class RPC {
   }
 
   private handleReply(rep: RPCReply): void {
-    Loggers.base.silly('[RPC] Handling reply: ' + JSON.stringify(rep));
+    Logger.silly('[RPC] Handling reply: ' + JSON.stringify(rep));
     let callId = rep.id;
     if (this.callback_map[callId] === undefined) {
-      Loggers.base.error('[RPC] Callback for call-' + callId + ' is not set');
+      Logger.error('[RPC] Callback for call-' + callId + ' is not set');
       process.exit(1);
     }
     let cb_copy = this.callback_map[callId];
     delete this.callback_map[callId];
     let content = rep.content;
-    Loggers.base.silly('[RPC] Running callback');
+    Logger.silly('[RPC] Running callback');
     cb_copy(content);
   }
 
   protected handleMessage(data: object): void {
-    Loggers.base.silly('[RPC] Handling message: ' + JSON.stringify(data));
+    Logger.silly('[RPC] Handling message: ' + JSON.stringify(data));
     if (typeof data !== 'object') {
-      Loggers.base.warn('[RPC] No valid RPC message - skipping');
+      Logger.warn('[RPC] No valid RPC message - skipping');
       return;
     }
     if (data['type'] === MESSAGE_TYPE_REQUEST) {
@@ -79,13 +81,13 @@ abstract class RPC {
       this.handleReply(data as RPCReply);
       return;
     }
-    Loggers.base.warn('[RPC] No valid RPC message - skipping');
+    Logger.warn('[RPC] No valid RPC message - skipping');
     return;
   }
 
   public call(fn_name: string, args: Array<any>, cb: (data: any) => any): void | Error {
     let randomId = Math.random().toString(36).substr(2, 9);
-    Loggers.base.debug('[RPC] Calling ' + fn_name + ' (id: ' + randomId + ')');
+    Logger.debug('[RPC] Calling ' + fn_name + ' (id: ' + randomId + ')');
     this.sendRemote({
       id: randomId,
       type: MESSAGE_TYPE_REQUEST,
@@ -95,7 +97,7 @@ abstract class RPC {
     if (this.callback_map[randomId] !== undefined) {
       return Error("Callback is already set!");
     }
-    Loggers.base.silly('[RPC] Saving callback for ' + randomId);
+    Logger.silly('[RPC] Saving callback for ' + randomId);
     this.callback_map[randomId] = cb;
     return;
   }
@@ -119,7 +121,7 @@ abstract class RPC {
 
   public init(): void {
     process.on('message', (data) => {
-      Loggers.base.debug('[RPC] Got message: ' + JSON.stringify(data));
+      Logger.debug('[RPC] Got message: ' + JSON.stringify(data));
       this.handleMessage(data);
     });
     return;

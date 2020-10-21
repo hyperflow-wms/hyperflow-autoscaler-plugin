@@ -1,10 +1,12 @@
 import API from './hyperflow/api';
-import Loggers from './utils/logger';
+import { getBaseLogger } from './utils/logger';
 import { HFWflib, HFEngine } from "./hyperflow/types";
 import RPCParent from "./communication/rpcParent";
 
 import { RedisClient } from 'redis';
 import * as child_process from 'child_process';
+
+const Logger = getBaseLogger();
 
 class AutoscalerPlugin
 {
@@ -15,7 +17,7 @@ class AutoscalerPlugin
     /* Get provider name from env variable. */
     let providerName = process.env['HF_VAR_autoscalerProvider'];
     if (providerName == undefined) {
-      Loggers.base.error("[main] No valid provider specified. Hint: use env var HF_VAR_autoscalerProvider");
+      Logger.error("[main] No valid provider specified. Hint: use env var HF_VAR_autoscalerProvider");
       return;
     }
     this.providerName = providerName;
@@ -30,20 +32,20 @@ class AutoscalerPlugin
   init(rcl: RedisClient, wflib: HFWflib, engine: HFEngine) {
     /* Stop if constructor has failed. */
     if (this.constructorSuccess == false) {
-      Loggers.base.error("[main] Constructor has failed, so we reject init() call");
+      Logger.error("[main] Constructor has failed, so we reject init() call");
       return;
     }
 
     /* Skip autoscaler if specified 'none'. */
     if (this.providerName == "none") {
-      Loggers.base.debug("[main] Not running autoscaler process, because 'none' provider is specified");
+      Logger.debug("[main] Not running autoscaler process, because 'none' provider is specified");
       return;
     }
 
     /* Create API, engine process and bind it via RPC.
     * Note: when parent dies, child is killed. */
     let api = new API(rcl, wflib, engine);
-    Loggers.base.debug("[main] Running process with engine.js");
+    Logger.debug("[main] Running process with engine.js");
     let engineProcess = child_process.fork(__dirname + '/engine.js', [this.providerName], { detached: false });
     process.on('exit', function () {
       engineProcess.kill();

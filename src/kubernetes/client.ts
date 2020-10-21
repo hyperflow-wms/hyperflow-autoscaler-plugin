@@ -1,6 +1,8 @@
-import Loggers from '../utils/logger';
+import { getBaseLogger } from '../utils/logger';
 
 import k8s = require('@kubernetes/client-node');
+
+const Logger = getBaseLogger();
 
 class Client
 {
@@ -11,7 +13,7 @@ class Client
 
   constructor()
   {
-    Loggers.base.silly('[Client] Constructor');
+    Logger.silly('[Client] Constructor');
     let kubeConfig = new k8s.KubeConfig();
     kubeConfig.loadFromDefault();
 
@@ -22,10 +24,10 @@ class Client
    * Fetch all nodes.
    */
   public async fetchNodes(): Promise<k8s.V1Node[] | Error> {
-    Loggers.base.verbose('[Client] Fetching nodes');
+    Logger.verbose('[Client] Fetching nodes');
     let response = await this.coreApi.listNode();
     let nodeList = response.body.items;
-    Loggers.base.debug('[Client] Fetched ' + nodeList.length.toString() + ' nodes');
+    Logger.debug('[Client] Fetched ' + nodeList.length.toString() + ' nodes');
     return nodeList;
   }
 
@@ -33,10 +35,10 @@ class Client
    * Fetch all pods in given namespace.
    */
   public async fetchPods(namespace: string = 'default') {
-    Loggers.base.verbose('[Client] Fetching pods for namespace ' + namespace);
+    Logger.verbose('[Client] Fetching pods for namespace ' + namespace);
     let response = await this.coreApi.listNamespacedPod('default');
     let podList = response.body.items;
-    Loggers.base.debug('[Client] Fetched ' + podList.length.toString() + ' pods');
+    Logger.debug('[Client] Fetched ' + podList.length.toString() + ' pods');
 
     return podList;
   }
@@ -61,7 +63,7 @@ class Client
       }
       let workerLabel = labels[Client.hfWorkerLabel];
       if (workerLabel === undefined) {
-        Loggers.base.silly('[Client] Skipping node ' + nodeName + ' (no worker label)');
+        Logger.silly('[Client] Skipping node ' + nodeName + ' (no worker label)');
         continue;
       }
       workerNodes.push(node);
@@ -80,13 +82,13 @@ class Client
         return Error("Unable to get spec.nodeName from pod");
       }
       if (workerNodesNames.includes(nodeName) === false) {
-        Loggers.base.silly("[Client] Skipping pod " + podName + " that is NOT placed on worker node");
+        Logger.silly("[Client] Skipping pod " + podName + " that is NOT placed on worker node");
         continue;
       }
       podsOnWorkers.push(pod);
     }
 
-    Loggers.base.debug('[Client] Filtered out ' + workerNodes.length.toString() + ' hyperflow worker nodes and '
+    Logger.debug('[Client] Filtered out ' + workerNodes.length.toString() + ' hyperflow worker nodes and '
       + podsOnWorkers.length.toString() + ' total pods on them');
     return [workerNodes, podsOnWorkers];
   }

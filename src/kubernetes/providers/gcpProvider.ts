@@ -1,8 +1,10 @@
 import BaseProvider from './baseProvider';
 
-import Loggers from '../../utils/logger';
+import { getBaseLogger } from '../../utils/logger';
 
 import container = require('@google-cloud/container');
+
+const Logger = getBaseLogger();
 
 /**
  * Google Cloud Procider
@@ -25,14 +27,14 @@ class GCPProvider extends BaseProvider {
   constructor()
   {
     super();
-    Loggers.base.silly("[GCPProvider] Constructor");
+    Logger.silly("[GCPProvider] Constructor");
   }
 
   /**
    * Provider initialization.
    */
   public async initialize(): Promise<void | Error> {
-    Loggers.base.debug("[GCPProvider] Initialization");
+    Logger.debug("[GCPProvider] Initialization");
     this.clusterClient = new container.v1.ClusterManagerClient();
     this.projectId = await this.clusterClient.getProjectId();
     let clusters = (await this.clusterClient.listClusters({projectId: this.projectId, zone: "-"}))[0].clusters;
@@ -49,13 +51,13 @@ class GCPProvider extends BaseProvider {
     if (clusterName === undefined || clusterName === null) {
       return Error("Unable to extract name from cluster");
     }
-    Loggers.base.silly("[GCPProvider] Fetched clusterName: " + clusterName);
+    Logger.silly("[GCPProvider] Fetched clusterName: " + clusterName);
     this.clusterName = clusterName;
     let location = cluster.location;
     if (location === undefined || location === null) {
       return Error("Unable to location from cluster");
     }
-    Loggers.base.silly("[GCPProvider] Fetched location: " + location);
+    Logger.silly("[GCPProvider] Fetched location: " + location);
     this.zone = location;
     let nodePools = cluster.nodePools;
     if (nodePools === undefined || nodePools === null) {
@@ -69,14 +71,14 @@ class GCPProvider extends BaseProvider {
     if (nodePoolName === undefined || nodePoolName === null) {
       return Error("Unable to extract node pool name");
     }
-    Loggers.base.silly("[GCPProvider] Fetched nodePoolName: " + nodePoolName);
+    Logger.silly("[GCPProvider] Fetched nodePoolName: " + nodePoolName);
     this.nodePoolName = nodePoolName;
 
     return;
   }
 
   public async resizeCluster(workersNum: number) {
-    Loggers.base.silly("[GCPProvider] Resizing cluster to " + workersNum);
+    Logger.silly("[GCPProvider] Resizing cluster to " + workersNum);
     const request = {
       projectId: this.projectId,
       zone: this.zone,
@@ -85,9 +87,9 @@ class GCPProvider extends BaseProvider {
       nodeCount: workersNum,
     };
     try {
-      Loggers.base.silly("[GCPProvider] Resize request " + JSON.stringify(request));
+      Logger.silly("[GCPProvider] Resize request " + JSON.stringify(request));
       let result = await this.clusterClient.setNodePoolSize(request);
-      Loggers.base.silly("[GCPProvider] setNodePoolSize response" + JSON.stringify(result));
+      Logger.silly("[GCPProvider] setNodePoolSize response" + JSON.stringify(result));
 
     } catch (err) {
       return Error("Unable to set node pool size: " + JSON.stringify(err));

@@ -1,5 +1,5 @@
 import CooldownTracker from "../utils/cooldownTracker";
-import Loggers from '../utils/logger';
+import { getBaseLogger } from '../utils/logger';
 import Policy from "./policy";
 import ResourceRequirements from "../kubernetes/resourceRequirements";
 import ScalingDecision from "../hyperflow/workflow/scalingDecision";
@@ -7,6 +7,8 @@ import WorkflowTracker from "../hyperflow/tracker/tracker";
 import ScalingOptimizer from "../hyperflow/workflow/scalingOptimizer";
 import BillingModel from "../cloud/billingModel";
 import MachineType from "../cloud/machine";
+
+const Logger = getBaseLogger();
 
 type timestamp = number;
 
@@ -23,7 +25,7 @@ class ReactPolicy extends Policy
 
   public constructor(wfTracker: WorkflowTracker, billingModel: BillingModel, machineType: MachineType) {
     super(wfTracker, billingModel, machineType);
-    Loggers.base.silly("[ReactPolicy] Constructor");
+    Logger.silly("[ReactPolicy] Constructor");
     this.scaleUpCooldown = new CooldownTracker();
     this.scaleDownCooldown = new CooldownTracker();
   }
@@ -53,12 +55,12 @@ class ReactPolicy extends Policy
     let machinesDiff = action.getMachinesDiff();
 
     if (machinesDiff > 0 && this.scaleUpCooldown.isExpired() === false) {
-      Loggers.base.info("[ReactPolicy] Not ready due to up-cooldown");
+      Logger.info("[ReactPolicy] Not ready due to up-cooldown");
       return false;
     }
 
     if (machinesDiff < 0 && this.scaleDownCooldown.isExpired() === false) {
-      Loggers.base.info("[ReactPolicy] Not ready due to down-cooldown");
+      Logger.info("[ReactPolicy] Not ready due to down-cooldown");
       return false;
     }
 

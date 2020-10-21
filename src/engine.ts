@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import Loggers from './utils/logger';
+import { getBaseLogger } from './utils/logger';
 import BaseProvider from './kubernetes/providers/baseProvider';
 import CooldownTracker from './utils/cooldownTracker';
 import DummyProvider from './kubernetes/providers/dummyProvider';
@@ -16,6 +16,8 @@ import ReactPolicy from './policies/reactPolicy';
 import { GCPMachines } from './cloud/gcpMachines';
 import MachineType from './cloud/machine';
 import PredictPolicy from './policies/predictPolicy';
+
+const Logger = getBaseLogger();
 
 const REACT_INTERVAL = 10000;
 const SCALE_UP_UTILIZATION = 0.9;
@@ -37,7 +39,7 @@ class Engine {
   private policy: Policy;
 
   constructor(providerName: string) {
-    Loggers.base.info("[Engine] Trying to create provider " + providerName);
+    Logger.info("[Engine] Trying to create provider " + providerName);
     if (providerName == "gcp") {
       this.provider = new GCPProvider();
     } else if (providerName == "kind") {
@@ -60,7 +62,7 @@ class Engine {
     this.machineType = GCPMachines.makeObject(machineTypeName);
 
     let policyName = process.env['HF_VAR_autoscalerPolicy'];
-    Loggers.base.info("[Engine] Trying to create policy '" + policyName + "'");
+    Logger.info("[Engine] Trying to create policy '" + policyName + "'");
     if (policyName == "react") {
       this.policy = new ReactPolicy(this.workflowTracker, this.billingModel, this.machineType);
     } else if (policyName == "predict") {
@@ -80,9 +82,9 @@ class Engine {
   }
 
   private async reactLoop(): Promise<void | Error> {
-    Loggers.base.verbose("[Engine] React loop started");
+    Logger.verbose("[Engine] React loop started");
     await this.provider.updateClusterState();
-    Loggers.base.verbose("[Engine] Cluster state updated");
+    Logger.verbose("[Engine] Cluster state updated");
 
     let numWorkers = this.provider.getNumNodeWorkers();
     if (numWorkers instanceof Error) {
@@ -91,23 +93,23 @@ class Engine {
     let supply = this.provider.getSupply();
     let demand = this.provider.getDemand();
 
-    Loggers.base.verbose('[Engine] Number of HyperFlow workers: ' + numWorkers);
-    Loggers.base.verbose('[Engine] Demand: ' + demand);
-    Loggers.base.verbose('[Engine] Supply: ' + supply);
+    Logger.verbose('[Engine] Number of HyperFlow workers: ' + numWorkers);
+    Logger.verbose('[Engine] Demand: ' + demand);
+    Logger.verbose('[Engine] Supply: ' + supply);
 
     let scalingDecision = this.policy.getDecision(demand, supply, numWorkers);
-    Loggers.base.debug("[Engine] Recomended action: " + scalingDecision.getMachinesDiff().toString() + " at " + scalingDecision.getTime());
+    Logger.debug("[Engine] Recomended action: " + scalingDecision.getMachinesDiff().toString() + " at " + scalingDecision.getTime());
     let machinesDiff = scalingDecision.getMachinesDiff();
     if (machinesDiff == 0) {
-      Loggers.base.info("[Engine] No action necessary");
+      Logger.info("[Engine] No action necessary");
     } else {
       if (this.policy.isReady(scalingDecision) === false) {
-        Loggers.base.info("[Engine] No action, due to policy condition: not_ready");
+        Logger.info("[Engine] No action, due to policy condition: not_ready");
       } else {
         if (machinesDiff > 0) {
-          Loggers.base.info("[Engine] Scaling up");
+          Logger.info("[Engine] Scaling up");
         } else {
-          Loggers.base.info("[Engine] Scaling down");
+          Logger.info("[Engine] Scaling down");
         }
         // TODO: postpone scaling to appropriate time
         this.provider.resizeCluster(numWorkers + machinesDiff);
@@ -127,13 +129,13 @@ class Engine {
    * @param values event values
    */
   private onHFEngineEvent(name: String, values: any[]): void {
-    Loggers.base.debug("[Engine] Received HyperFlow's engine event " + name + ': ' + JSON.stringify(values));
+    Logger.debug("[Engine] Received HyperFlow's engine event " + name + ': ' + JSON.stringify(values));
     if (name != "persist") {
-      Loggers.base.warn("[Engine] Unknown event type: " + name);
+      Logger.warn("[Engine] Unknown event type: " + name);
       return;
     }
     if (values.length != 2) {
-      Loggers.base.warn("[Engine] Incorrect event's values length: " + name);
+      Logger.warn("[Engine] Incorrect event's values length: " + name);
       return;
     }
     let eventTime = new Date(values[0]);
@@ -172,7 +174,7 @@ class Engine {
       }
       this.workflowTracker.notifyProcessFinished(processId, eventTime);
     } else {
-      Loggers.base.warn("[Engine] Unknown event details' type: " + details[0]);
+      Logger.warn("[Engine] Unknown event details' type: " + details[0]);
     }
 
     return;

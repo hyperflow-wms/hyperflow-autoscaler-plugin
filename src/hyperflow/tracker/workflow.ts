@@ -1,10 +1,12 @@
-import Loggers from '../../utils/logger';
+import { getBaseLogger } from '../../utils/logger';
 import { HFWorkflow } from "../types";
 import Process from "./process";
 import Signal from "./signal";
 
 import * as fs from "fs";
 import * as pathtool from "path";
+
+const Logger = getBaseLogger();
 
 class Workflow {
 
@@ -80,7 +82,7 @@ class Workflow {
    * @param directory Workflow root directory
    */
   public static createFromFile(directory: string): Workflow {
-    Loggers.base.debug("[WorkflowTracker] Reading HF workflow from " + directory);
+    Logger.debug("[WorkflowTracker] Reading HF workflow from " + directory);
     let wfFile = pathtool.join(directory, "workflow.json");
     let wfFileContent = fs.readFileSync(wfFile, 'utf8');
     let rawWf = JSON.parse(wfFileContent);

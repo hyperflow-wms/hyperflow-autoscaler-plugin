@@ -1,9 +1,11 @@
-import Loggers from '../../utils/logger';
+import { getBaseLogger } from '../../utils/logger';
 import Workflow from "../tracker/workflow";
 import WorkflowTracker from "../tracker/tracker";
 import EstimatorInterface from '../estimators/estimatorInterface';
 import StaticEstimator from '../estimators/staticEstimator';
 import ResourceRequirements from '../../kubernetes/resourceRequirements';
+
+const Logger = getBaseLogger();
 
 class Plan
 {
@@ -15,7 +17,7 @@ class Plan
   private procHistory: Map<number, Set<number>>;
 
   constructor(wf: Workflow, tracker: WorkflowTracker, timeForwardMs: number, estimator: EstimatorInterface) {
-    Loggers.base.silly("[Plan] Constructor");
+    Logger.silly("[Plan] Constructor");
     this.wf = wf;
     this.tracker = tracker;
     this.timeForwardMs = timeForwardMs;
@@ -34,7 +36,7 @@ class Plan
 
     /* If execution not started, then start it and send input signals. */
     if (this.tracker.getExecutionStartTime() == undefined) {
-      Loggers.base.debug("[Plan] Simulating workflow start");
+      Logger.debug("[Plan] Simulating workflow start");
       let intitialSigIds = this.wf.getInitialSigIds();
       if (sendAllInputs == true) {
         let inputSigIds = this.wf.getWfInsSigIds();
@@ -59,10 +61,10 @@ class Plan
         let endedProcessesMap = new Map<number, number[]>();
         let processIds = this.tracker.getRunningProcessIds();
         if (processIds.size == 0) {
-          Loggers.base.debug("[Plan] No more processes - stopping analyze");
+          Logger.debug("[Plan] No more processes - stopping analyze");
           break;
         }
-        Loggers.base.debug("[Plan] Looking for first expected execution among processes " + Array.from(processIds.values()).join(","));
+        Logger.debug("[Plan] Looking for first expected execution among processes " + Array.from(processIds.values()).join(","));
         processIds.forEach((processId) => {
           let process = this.tracker.getProcessById(processId);
           if (process === undefined) {
@@ -72,7 +74,7 @@ class Plan
           if (processStartTime === undefined) {
             throw Error("Running process must have 'start time'");
           }
-          Loggers.base.debug("[Plan] Saving start of " + processId.toString() + " " + processStartTime);
+          Logger.debug("[Plan] Saving start of " + processId.toString() + " " + processStartTime);
           this.saveProcessStartEvent(processId, processStartTime);
 
           /* Stop if we go further in time than it was allowed. */
@@ -81,7 +83,7 @@ class Plan
           }
           let totalPlanningTime = processStartTime.getTime() - executionStartTime.getTime();
           if (totalPlanningTime > this.timeForwardMs) {
-            Loggers.base.debug("[Plan] Stopping analyze - we reached " + totalPlanningTime.toString() + " ms");
+            Logger.debug("[Plan] Stopping analyze - we reached " + totalPlanningTime.toString() + " ms");
             throw BreakException;
           }
 
@@ -103,10 +105,10 @@ class Plan
         let procIdArr = endedProcessesMap.get(endTimeMsKey);
         procIdArr?.forEach((procId) => {
           let endTime = new Date(endTimeMsKey);
-          Loggers.base.debug("[Plan] Notifying about expected process " + procId.toString() + " finish at " + endTime.toString());
+          Logger.debug("[Plan] Notifying about expected process " + procId.toString() + " finish at " + endTime.toString());
           this.tracker.notifyProcessFinished(procId, endTime);
           this.saveProcessEndEvent(procId, endTime);
-          Loggers.base.debug("[Plan] Saving end of " + procId.toString() + " " + endTime);
+          Logger.debug("[Plan] Saving end of " + procId.toString() + " " + endTime);
         });
       }
     } catch (e) {

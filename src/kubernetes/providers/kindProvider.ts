@@ -1,9 +1,11 @@
 import BaseProvider from './baseProvider';
 
-import Loggers from '../../utils/logger';
+import { getBaseLogger, scalingLogger } from '../../utils/logger';
 
 import k8s = require('@kubernetes/client-node');
 
+const Logger = getBaseLogger();
+const ScalingLogger = scalingLogger;
 const util = require('util');
 const execFile = util.promisify(require('child_process').execFile);
 
@@ -14,7 +16,7 @@ class KindProvider extends BaseProvider {
   constructor()
   {
     super();
-    Loggers.base.silly("[KindProvider] Constructor");
+    Logger.silly("[KindProvider] Constructor");
     this.drainedNodeNames = new Set();
   }
 
@@ -22,7 +24,7 @@ class KindProvider extends BaseProvider {
    * Provider initialization.
    */
   public async initialize(): Promise<void | Error> {
-    Loggers.base.debug("[KindProvider] Initialization");
+    Logger.debug("[KindProvider] Initialization");
     return;
   }
 
@@ -31,7 +33,7 @@ class KindProvider extends BaseProvider {
    */
   protected filterClusterState(nodes: Array<k8s.V1Node>, pods: Array<k8s.V1Pod>) {
     /* Filter unschedulable nodes. */
-    Loggers.base.debug("[KindProvider] Custom nodes filtering");
+    Logger.debug("[KindProvider] Custom nodes filtering");
     let uncordonedNodes: Array<k8s.V1Node> = [];
     for (let node of nodes) {
       let nodeName = node?.metadata?.name;
@@ -44,7 +46,7 @@ class KindProvider extends BaseProvider {
       }
       let unschedulableProp = nodeSpec.unschedulable;
       if (unschedulableProp == true) {
-        Loggers.base.debug("[KindProvider] Unschedulable node " + nodeName);
+        Logger.debug("[KindProvider] Unschedulable node " + nodeName);
         this.drainedNodeNames.add(nodeName);
         continue;
       }
@@ -57,13 +59,13 @@ class KindProvider extends BaseProvider {
    * Resizes cluster to given amount of nodes.
    */
   public async resizeCluster(workersNum: number) {
-    Loggers.base.debug("[KindProvider] Resizing cluster to " + workersNum.toString() + " workers");
+    Logger.debug("[KindProvider] Resizing cluster to " + workersNum.toString() + " workers");
     if (this.clusterState === undefined) {
       return Error("You have to fetch cluster state at first");
     }
 
     if (workersNum < 0) {
-      Loggers.base.error("Cluster size cannot be smaller than 0 worker.");
+      Logger.error("Cluster size cannot be smaller than 0 worker.");
       return Error("Cluster size cannot be smaller than 0 worker");
     }
 
@@ -79,7 +81,7 @@ class KindProvider extends BaseProvider {
 
     if (currentSize == workersNum) {
       // perfect num of nodes
-      Loggers.base.debug("[KindProvider] No action necessary.");
+      Logger.debug("[KindProvider] No action necessary.");
     } else if (currentSize < workersNum) {
       // add more nodes
       let cordonPromises: Promise<void | Error>[] = [];
@@ -93,7 +95,7 @@ class KindProvider extends BaseProvider {
       }, this);
       let cordonResult = await Promise.all(cordonPromises).catch((err) => { return Error("Unable to cordon: " + err.toString()) });
       if (cordonResult instanceof Error) {
-        Loggers.base.error("[KindProvider] Error: " + cordonResult.message);
+        Logger.error("[KindProvider] Error: " + cordonResult.message);
       }
     } else {
       // remove nodes
@@ -105,10 +107,10 @@ class KindProvider extends BaseProvider {
       }
       let drainResult = await Promise.all(drainPromises).catch((err) => { return Error("Unable to drain: " + err.toString()) });
       if (drainResult instanceof Error) {
-        Loggers.base.error("[KindProvider] Error: " + drainResult.message);
+        Logger.error("[KindProvider] Error: " + drainResult.message);
       }
     }
-    Loggers.base.debug("[KindProvider] Cluster resized to " + workersNum + " workers.");
+    Logger.debug("[KindProvider] Cluster resized to " + workersNum + " workers.");
 
     return;
   }
@@ -123,12 +125,12 @@ class KindProvider extends BaseProvider {
 
     let cmd = 'kubectl';
     let args = ['uncordon', nodeName];
-    Loggers.base.debug("[KindProvider] Executing " + cmd + " with following args: " + args.join(' '));
-    Loggers.scaling.info('{"event":"creatingNode", "value":"' + nodeName + '"}');
+    Logger.debug("[KindProvider] Executing " + cmd + " with following args: " + args.join(' '));
+    ScalingLogger.info('{"event":"creatingNode", "value":"' + nodeName + '"}');
     const { stdout, stderr } = await execFile(cmd, args); // exitCode is 0, otherwise exception is thrown
-    Loggers.scaling.info('{"event":"nodeReady", "value":"' + nodeName + '"}');
-    Loggers.base.debug("[KindProvider] drain stdout: " + stdout);
-    Loggers.base.debug("[KindProvider] drain stderr: " + stderr);
+    ScalingLogger.info('{"event":"nodeReady", "value":"' + nodeName + '"}');
+    Logger.debug("[KindProvider] drain stdout: " + stdout);
+    Logger.debug("[KindProvider] drain stderr: " + stderr);
 
     this.drainedNodeNames.delete(nodeName);
     return;
@@ -145,12 +147,12 @@ class KindProvider extends BaseProvider {
 
     let cmd = 'kubectl';
     let args = ['drain', '--ignore-daemonsets', nodeName];
-    Loggers.base.debug("[KindProvider] Executing " + cmd + " with following args: " + args.join(' '));
-    Loggers.scaling.info('{"event":"destroyingNode", "value":"' + nodeName + '"}');
+    Logger.debug("[KindProvider] Executing " + cmd + " with following args: " + args.join(' '));
+    ScalingLogger.info('{"event":"destroyingNode", "value":"' + nodeName + '"}');
     const { stdout, stderr } = await execFile(cmd, args); // exitCode is 0, otherwise exception is thrown
-    Loggers.scaling.info('{"event":"nodeDeleted", "value":"' + nodeName + '"}');
-    Loggers.base.debug("[KindProvider] drain stdout: " + stdout);
-    Loggers.base.debug("[KindProvider] drain stderr: " + stderr);
+    ScalingLogger.info('{"event":"nodeDeleted", "value":"' + nodeName + '"}');
+    Logger.debug("[KindProvider] drain stdout: " + stdout);
+    Logger.debug("[KindProvider] drain stderr: " + stderr);
 
     this.drainedNodeNames.add(nodeName);
     return;

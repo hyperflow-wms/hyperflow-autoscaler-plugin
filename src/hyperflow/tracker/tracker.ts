@@ -1,7 +1,9 @@
-import Loggers from '../../utils/logger';
+import { getBaseLogger } from '../../utils/logger';
 import Process from "./process";
 import Signal from "./signal";
 import Workflow from "./workflow";
+
+const Logger = getBaseLogger();
 
 class WorkflowTracker
 {
@@ -27,7 +29,7 @@ class WorkflowTracker
    */
   constructor(wfOrTracker: Workflow | WorkflowTracker) {
     if (wfOrTracker instanceof WorkflowTracker) {
-      Loggers.base.silly("[WorkflowTracker] Copy constructor");
+      Logger.silly("[WorkflowTracker] Copy constructor");
       let oldWT = wfOrTracker;
       this.executionStartTime = (oldWT.executionStartTime) ? new Date(oldWT.executionStartTime.getTime()) : undefined;
       oldWT.processesMap.forEach((val, key) => {
@@ -43,7 +45,7 @@ class WorkflowTracker
       this.runningProcesses = new Set(oldWT.runningProcesses);
       this.workflow = oldWT.workflow; // CAUTION: this is shared reference (const)
     } else {
-      Loggers.base.silly("[WorkflowTracker] Constructor");
+      Logger.silly("[WorkflowTracker] Constructor");
       let wf = wfOrTracker;
       this.runningProcesses = new Set();
       this.loadWorkflow(wf);
@@ -64,13 +66,13 @@ class WorkflowTracker
    * @param time event time
    */
   public notifyInitialSignal(sigId: number, time: Date) {
-    Loggers.base.debug("[WorkflowTracker] Notified about signal " + sigId.toString() + " emit");
+    Logger.debug("[WorkflowTracker] Notified about signal " + sigId.toString() + " emit");
     let signal = this.signalsMap.get(sigId);
     if (signal === undefined) {
       throw Error("Signal " + sigId.toString() + " not found");
     }
     if (signal.wasEmitted() == true) {
-      Loggers.base.warn("[WorkflowTracker] Signal " + sigId.toString() + " was already emitted");
+      Logger.warn("[WorkflowTracker] Signal " + sigId.toString() + " was already emitted");
       return;
     }
     signal.markEmit(time);
@@ -93,7 +95,7 @@ class WorkflowTracker
    * @param time event time
    */
   public notifyProcessFinished(procId: number, time: Date) {
-    Loggers.base.debug("[WorkflowTracker] Notified about process " + procId.toString() + " finish");
+    Logger.debug("[WorkflowTracker] Notified about process " + procId.toString() + " finish");
     let process = this.processesMap.get(procId);
     if (process === undefined) {
       throw Error("Process " + procId.toString() + " not found");
@@ -131,7 +133,7 @@ class WorkflowTracker
     let emitStates = prevSignalIds.map((sigId) => this.signalsMap.get(sigId)?.wasEmitted());
     let notEmittedSignals = emitStates.filter(x => x == false).length;
     if (notEmittedSignals == 0) {
-      Loggers.base.debug("[WorkflowTracker] Firing process " + procId.toString() + " - all ins are ready");
+      Logger.debug("[WorkflowTracker] Firing process " + procId.toString() + " - all ins are ready");
       process.markStart(time);
       this.runningProcesses.add(procId);
     }
@@ -143,7 +145,7 @@ class WorkflowTracker
    * TODO: remove.
    */
   public printState() {
-    Loggers.base.debug("[WorkflowTracker] Already running tasks: " + this.runningProcesses.size.toString());
+    Logger.debug("[WorkflowTracker] Already running tasks: " + this.runningProcesses.size.toString());
   }
 
   /**
@@ -157,7 +159,7 @@ class WorkflowTracker
     }
     this.workflow = wf;
 
-    Loggers.base.debug("[WorkflowTracker] Parsing workflow into graph");
+    Logger.debug("[WorkflowTracker] Parsing workflow into graph");
 
     let signals = wf.getSignals();
     let processes = wf.getProcesses();
