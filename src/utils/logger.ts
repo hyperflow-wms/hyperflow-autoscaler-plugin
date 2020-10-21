@@ -3,7 +3,7 @@ import path = require('path');
 import { format } from 'winston';
 let { combine, timestamp,  printf } = format;
 
-const logDir = path.join(__dirname, 'logs');
+const logDir = path.join(__dirname, '..', 'logs');
 
 const myBaseLogFormat = combine(
   timestamp(),
