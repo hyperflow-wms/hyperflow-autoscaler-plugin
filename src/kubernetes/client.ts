@@ -70,7 +70,9 @@ class Client
       workerNodesNames.push(nodeName);
     }
 
-    /* Filtering pods. */
+    /* Filtering pods.
+     * All pods on HF workers are included, plus pending pods.
+     * Pending pods might be restricted with custom job label. */
     let podsOnWorkers: Array<k8s.V1Pod> = [];
     for (let pod of pods) {
       let podName = pod?.metadata?.name;
@@ -78,13 +80,29 @@ class Client
         throw Error("Pod does not contain name");
       }
       let nodeName = pod?.spec?.nodeName;
-      if (nodeName == undefined) {
-        throw Error("Unable to get spec.nodeName from pod");
+      if (nodeName !== undefined) {
+        if (workerNodesNames.includes(nodeName) === false) {
+          Logger.silly("[Client] Skipping pod " + podName + " that is NOT placed on worker node");
+          continue;
+        }
       }
-      if (workerNodesNames.includes(nodeName) === false) {
-        Logger.silly("[Client] Skipping pod " + podName + " that is NOT placed on worker node");
-        continue;
+
+      /* Skip pods that don't have required label - if specified. */
+      if (nodeName === undefined) {
+        let jobLabel = process.env['HF_VAR_autoscalerJobLabel'];
+        if (jobLabel !== undefined) {
+          let labels = pod?.metadata?.labels;
+          if (labels === undefined) {
+            Logger.silly("[Client] Skipping pod " + podName + " - it has no labels, neither required " + jobLabel);
+            continue;
+          }
+          if (labels[jobLabel] === undefined) {
+            Logger.silly("[Client] Skipping pod " + podName + " - it has NOT required label " + jobLabel);
+            continue;
+          }
+        }
       }
+
       podsOnWorkers.push(pod);
     }
 

@@ -4,6 +4,7 @@ Autoscaler Change Log
 0.5.0 under development
 ------------------------
 
+- Fix filtering pods and add custom setting HF_VAR_autoscalerJobLabel
 
 0.4.0 October 22, 2020
 ------------------------

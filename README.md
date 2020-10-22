@@ -55,6 +55,12 @@ This applies to *gcp* provider only; specifies name of workers node pool.
 
 Default value: "default-pool"
 
+### HF_VAR_autoscalerJobLabel
+
+This applies to *gcp* provider only; specifies the label of job pods. Might be used when they are pending pods that are not HyperFlow jobs.
+
+Example value: "hyperflow"
+
 ## Usage
 
 ~~~
