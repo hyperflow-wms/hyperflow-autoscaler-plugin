@@ -26,10 +26,13 @@ class GCPProvider extends BaseProvider {
   private clusterName: string;
   private nodePoolName: string;
 
+  private initialized: boolean;
+
   constructor()
   {
     super();
     Logger.silly("[GCPProvider] Constructor");
+    this.initialized = false;
   }
 
   /**
@@ -77,6 +80,10 @@ class GCPProvider extends BaseProvider {
   }
 
   public async resizeCluster(workersNum: number) {
+    /* Make sure provider is initialized. */
+    if (this.initialized === false) {
+      throw Error("Provider was not intialized");
+    }
     Logger.silly("[GCPProvider] Resizing cluster to " + workersNum);
     const request = {
       projectId: this.projectId,
