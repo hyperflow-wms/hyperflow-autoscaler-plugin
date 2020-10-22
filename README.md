@@ -41,6 +41,14 @@ Possible values:
 - react *-- scale in reactive way, by adjusting cluster to current demand*
 - predict *-- scale cluster with workflow preditions*
 
+### HF_VAR_autoscalerEstimator
+
+This applies to *predict* policy; specifies estimator.
+
+Possible values:
+- process *-- per process estimations*
+- workflow *-- per workflow estimations (Token-like method)*
+
 ## Usage
 
 ~~~

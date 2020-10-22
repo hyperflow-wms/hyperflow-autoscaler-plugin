@@ -10,6 +10,7 @@ import MachineType from "../cloud/machine";
 import StaticProcessEstimator from "../hyperflow/estimators/staticProcessEstimator";
 import EstimatorInterface from "../hyperflow/estimators/estimatorInterface";
 import Plan from "../hyperflow/workflow/plan";
+import StaticWorkflowEstimator from "../hyperflow/estimators/staticWorkflowEstimator";
 
 const Logger = getBaseLogger();
 
@@ -27,7 +28,14 @@ class PredictPolicy extends Policy
     super(wfTracker, billingModel, machineType);
     Logger.silly("[PredictPolicy] Constructor");
     this.scaleCooldown = new CooldownTracker();
-    this.estimator = new StaticProcessEstimator();
+    let estimatorName = process.env['HF_VAR_autoscalerEstimator'];
+    if (estimatorName == "process") {
+      this.estimator = new StaticProcessEstimator();
+    } else if (estimatorName == "workflow") {
+      this.estimator = new StaticWorkflowEstimator();
+    } else {
+      throw Error("No valid estimator specified. Hint: use environmental vairable 'HF_VAR_autoscalerEstimator'.")
+    }
   }
 
   /**

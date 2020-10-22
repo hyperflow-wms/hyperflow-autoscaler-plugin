@@ -5,6 +5,7 @@ Autoscaler Change Log
 ------------------------
 
 - New estimator 'StaticWorkflow' for Token-like predictions
+- Allow to choose estimator with HF_VAR_autoscalerEstimator
 
 0.3.0
 -----------------------------
