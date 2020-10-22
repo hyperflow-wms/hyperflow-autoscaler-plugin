@@ -17,9 +17,9 @@ let lut = {
 const DELAYS_OVERHEAD = 2000;
 const RANDOM_DISTRIBUTION = 0.02;
 
-class StaticEstimator implements EstimatorInterface {
+class StaticProcessEstimator implements EstimatorInterface {
   public getName() {
-    return "Static";
+    return "StaticProcess";
   }
 
   public getEstimationMs(p: Process): number {
@@ -47,4 +47,4 @@ class StaticEstimator implements EstimatorInterface {
   }
 }
 
-export default StaticEstimator;
+export default StaticProcessEstimator;

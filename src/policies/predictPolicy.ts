@@ -7,7 +7,7 @@ import WorkflowTracker from "../hyperflow/tracker/tracker";
 import ScalingOptimizer from "../hyperflow/workflow/scalingOptimizer";
 import BillingModel from "../cloud/billingModel";
 import MachineType from "../cloud/machine";
-import StaticEstimator from "../hyperflow/estimators/staticEstimator";
+import StaticProcessEstimator from "../hyperflow/estimators/staticProcessEstimator";
 import EstimatorInterface from "../hyperflow/estimators/estimatorInterface";
 import Plan from "../hyperflow/workflow/plan";
 
@@ -27,7 +27,7 @@ class PredictPolicy extends Policy
     super(wfTracker, billingModel, machineType);
     Logger.silly("[PredictPolicy] Constructor");
     this.scaleCooldown = new CooldownTracker();
-    this.estimator = new StaticEstimator();
+    this.estimator = new StaticProcessEstimator();
   }
 
   /**

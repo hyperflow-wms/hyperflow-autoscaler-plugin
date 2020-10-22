@@ -143,7 +143,7 @@ export default ScalingOptimizer;
 
 
 import { GCPMachines, N1_HIGHCPU_4 } from "../../cloud/gcpMachines";
-import StaticEstimator from "../estimators/staticEstimator";
+import StaticProcessEstimator from "../estimators/staticProcessEstimator";
 import WorkflowTracker from "../tracker/tracker";
 import Workflow from "../tracker/workflow";
 import Plan from "./plan";
@@ -180,7 +180,7 @@ async function getDemandFrames() {
   //  tracker.notifyProcessFinished(procId, new Date());
   //}
 
-  let estimator = new StaticEstimator();
+  let estimator = new StaticProcessEstimator();
   let plan = new Plan(workflow, tracker, 50000, estimator);
   plan.run();
 

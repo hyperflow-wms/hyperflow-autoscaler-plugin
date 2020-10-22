@@ -2,7 +2,7 @@ import { getBaseLogger } from '../../utils/logger';
 import Workflow from "../tracker/workflow";
 import WorkflowTracker from "../tracker/tracker";
 import EstimatorInterface from '../estimators/estimatorInterface';
-import StaticEstimator from '../estimators/staticEstimator';
+import StaticProcessEstimator from '../estimators/staticProcessEstimator';
 import ResourceRequirements from '../../kubernetes/resourceRequirements';
 
 const Logger = getBaseLogger();
