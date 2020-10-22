@@ -13,10 +13,10 @@ class CooldownTracker {
     }
   }
 
-  public setNSeconds(n: number): void | Error {
+  public setNSeconds(n: number): void {
     let msNow = new Date().getTime();
     if (this.cooldownEndMsTimestamp !== undefined && this.cooldownEndMsTimestamp > msNow) {
-      return Error("Unable to set cooldown until previous is expired");
+      throw Error("Unable to set cooldown until previous is expired");
     }
     let targetTimestamp = msNow + (1000 * n);
     this.cooldownEndMsTimestamp = targetTimestamp;

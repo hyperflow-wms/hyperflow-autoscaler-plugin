@@ -23,7 +23,7 @@ class Client
   /**
    * Fetch all nodes.
    */
-  public async fetchNodes(): Promise<k8s.V1Node[] | Error> {
+  public async fetchNodes(): Promise<k8s.V1Node[]> {
     Logger.verbose('[Client] Fetching nodes');
     let response = await this.coreApi.listNode();
     let nodeList = response.body.items;
@@ -48,18 +48,18 @@ class Client
    *  - nodes containing hyperflow-worker label
    *  - pods placed on nodes with hyperflow-worker label
    */
-  public filterHFWorkerNodes(nodes: Array<k8s.V1Node>, pods: Array<k8s.V1Pod>): Error | [k8s.V1Node[], k8s.V1Pod[]] {
+  public filterHFWorkerNodes(nodes: Array<k8s.V1Node>, pods: Array<k8s.V1Pod>): [k8s.V1Node[], k8s.V1Pod[]] {
     /* Filtering nodes. */
     let workerNodes: Array<k8s.V1Node> = [];
     let workerNodesNames: Array<string> = [];
     for (let node of nodes) {
       let labels = node?.metadata?.labels;
       if (labels == undefined) {
-        return Error("Node does not contain labels");
+        throw Error("Node does not contain labels");
       }
       let nodeName = node?.metadata?.name;
       if (nodeName == undefined) {
-        return Error("Node does not contain name");
+        throw Error("Node does not contain name");
       }
       let workerLabel = labels[Client.hfWorkerLabel];
       if (workerLabel === undefined) {
@@ -75,11 +75,11 @@ class Client
     for (let pod of pods) {
       let podName = pod?.metadata?.name;
       if (podName == undefined) {
-        return Error("Pod does not contain name");
+        throw Error("Pod does not contain name");
       }
       let nodeName = pod?.spec?.nodeName;
       if (nodeName == undefined) {
-        return Error("Unable to get spec.nodeName from pod");
+        throw Error("Unable to get spec.nodeName from pod");
       }
       if (workerNodesNames.includes(nodeName) === false) {
         Logger.silly("[Client] Skipping pod " + podName + " that is NOT placed on worker node");

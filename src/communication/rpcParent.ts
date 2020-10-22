@@ -16,7 +16,7 @@ class ParentRPC extends RPC {
     this.child_process = child_process;
   }
 
-  protected sendRemote(data: object): void | Error {
+  protected sendRemote(data: object): void {
     Logger.debug('[ParentRPC] Sending remote: ' + JSON.stringify(data));
     this.child_process.send(data);
     return;

@@ -15,7 +15,7 @@ class DummyProvider extends BaseProvider {
   /**
    * Provider initialization.
    */
-  public async initialize(): Promise<void | Error> {
+  public async initialize(): Promise<void> {
     Logger.debug("[DummyProvider] Initialization mock");
     return;
   }
@@ -29,7 +29,7 @@ class DummyProvider extends BaseProvider {
     return;
   }
 
-  public async updateClusterState(): Promise<void | Error> {
+  public async updateClusterState(): Promise<void> {
     Logger.debug("[DummyProvider] Updating cluster mock");
     return;
   }

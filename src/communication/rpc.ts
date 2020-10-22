@@ -29,7 +29,7 @@ abstract class RPC {
     this.api_object = api_object;
   }
 
-  protected abstract sendRemote(data: object): void | Error;
+  protected abstract sendRemote(data: object): void;
 
   private handleRequest(req: RPCRequest): void {
     Logger.debug('[RPC] Handling request: ' + JSON.stringify(req));
@@ -85,7 +85,7 @@ abstract class RPC {
     return;
   }
 
-  public call(fn_name: string, args: Array<any>, cb: (data: any) => any): void | Error {
+  public call(fn_name: string, args: Array<any>, cb: (data: any) => any): void {
     let randomId = Math.random().toString(36).substr(2, 9);
     Logger.debug('[RPC] Calling ' + fn_name + ' (id: ' + randomId + ')');
     this.sendRemote({
@@ -95,7 +95,7 @@ abstract class RPC {
       args: args,
     });
     if (this.callback_map[randomId] !== undefined) {
-      return Error("Callback is already set!");
+      throw Error("Callback is already set!");
     }
     Logger.silly('[RPC] Saving callback for ' + randomId);
     this.callback_map[randomId] = cb;
@@ -105,7 +105,7 @@ abstract class RPC {
   /**
    * Promisified version of 'call'.
    */
-  public async callAsync(fn_name: string, args: Array<any>): Promise<any | Error> {
+  public async callAsync(fn_name: string, args: Array<any>): Promise<any> {
     let promise = new Promise((resolve, reject) => {
       try {
         this.call(fn_name, args, (data) => {

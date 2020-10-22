@@ -32,7 +32,7 @@ class API {
    * like to make some calls to autoscaler API.
    * @param rpc
    */
-  public assignRPC(rpc: RPC): void | Error {
+  public assignRPC(rpc: RPC): void {
     if (this.rpc !== undefined) {
       throw Error("RPC is already assigned");
     }

@@ -14,10 +14,10 @@ class ChildRPC extends RPC {
     this.parent_process = process;
   }
 
-  protected sendRemote(data: object): void | Error {
+  protected sendRemote(data: object): void {
     Logger.debug('[ChildRPC] Sending remote:' + JSON.stringify(data));
     if (process.send === undefined) {
-      return Error("ChildRPC cannot be used on root process");
+      throw Error("ChildRPC cannot be used on root process");
     }
     process.send(data);
     return;

@@ -20,9 +20,9 @@ abstract class BaseProvider {
     this.client = new Client();
   }
 
-  public abstract async initialize(): Promise<void | Error>;
+  public abstract async initialize(): Promise<void>;
 
-  public abstract async resizeCluster(nodes: number): Promise<void | Error>;
+  public abstract async resizeCluster(nodes: number): Promise<void>;
 
   protected filterClusterState(nodes: Array<k8s.V1Node>, pods: Array<k8s.V1Pod>) {
     return this.client.filterHFWorkerNodes(nodes, pods);
@@ -31,7 +31,7 @@ abstract class BaseProvider {
   /**
    * Saves cluster state into internal structure.
    */
-  public async updateClusterState(): Promise<void | Error> {
+  public async updateClusterState(): Promise<void> {
     Logger.info("[BaseProvider] Updating cluster state");
     let currentTime = new Date();
     let promise1 = this.client.fetchNodes();
@@ -39,9 +39,11 @@ abstract class BaseProvider {
     let nodes;
     let pods;
     [nodes, pods] = await Promise.all([promise1, promise2]);
-    let hfView = this.filterClusterState(nodes, pods);
-    if (hfView instanceof Error) {
-      return Error("Unable to get hyperflow view on cluster: " + hfView.message);
+    let hfView: [k8s.V1Node[], k8s.V1Pod[]];
+    try {
+      hfView = this.filterClusterState(nodes, pods);
+    } catch (err) {
+      throw Error("Unable to get hyperflow view on cluster: " + err.message);
     }
     this.clusterState = {
       lastUpdate: currentTime,
@@ -154,16 +156,16 @@ abstract class BaseProvider {
   /**
    * Gets list of worker nodes' names.
    */
-  public getWorkerNodesNames(): string[] | Error {
+  public getWorkerNodesNames(): string[] {
     if (this.clusterState === undefined) {
-      return Error("You have to fetch cluster state at first");
+      throw Error("You have to fetch cluster state at first");
     }
     let nodesNames: string[] = [];
     let workerNodes = this.clusterState.workerNodes;
     for (let node of workerNodes) {
       let nodeName = node?.metadata?.name;
       if (nodeName == undefined) {
-        return Error("Node does not contain name");
+        throw Error("Node does not contain name");
       }
       nodesNames.push(nodeName);
     }
@@ -174,9 +176,9 @@ abstract class BaseProvider {
   /**
    * Gets number of worker nodes.
    */
-  public getNumNodeWorkers(): number | Error {
+  public getNumNodeWorkers(): number {
     if (this.clusterState === undefined) {
-      return Error("You have to fetch cluster state at first");
+      throw Error("You have to fetch cluster state at first");
     }
     let numWorkers = this.clusterState.workerNodes.length;
     return numWorkers;

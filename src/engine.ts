@@ -77,14 +77,16 @@ class Engine {
     this.reactLoop();
   }
 
-  private async reactLoop(): Promise<void | Error> {
+  private async reactLoop(): Promise<void> {
     Logger.verbose("[Engine] React loop started");
     await this.provider.updateClusterState();
     Logger.verbose("[Engine] Cluster state updated");
 
-    let numWorkers = this.provider.getNumNodeWorkers();
-    if (numWorkers instanceof Error) {
-      return Error("Unable to get number of workers: " + numWorkers.message);
+    let numWorkers: number;
+    try {
+      numWorkers = this.provider.getNumNodeWorkers();
+    } catch (err) {
+      throw Error("Unable to get number of workers: " + err.message);
     }
     let supply = this.provider.getSupply();
     let demand = this.provider.getDemand();
