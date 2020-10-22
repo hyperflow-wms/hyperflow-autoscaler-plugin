@@ -6,6 +6,8 @@ import container = require('@google-cloud/container');
 
 const Logger = getBaseLogger();
 
+const DEFAULT_NODE_POOL_NAME = "default-pool"
+
 /**
  * Google Cloud Provider
  *
@@ -63,16 +65,13 @@ class GCPProvider extends BaseProvider {
     if (nodePools === undefined || nodePools === null) {
       throw Error("Unable to fetch nodePools");
     }
-    if (nodePools.length != 1) {
-      throw Error("There must be exactly one node pool in cluster - found " + nodePools.length.toString());
+    let expecteNodePoolName = process.env['HF_VAR_autoscalerGKEPool'] || DEFAULT_NODE_POOL_NAME;
+    Logger.silly("[GCPProvider] Looking for node pool with name " + expecteNodePoolName);
+    let nodePoolIndex = nodePools.findIndex(x => x.name == expecteNodePoolName);
+    if (nodePoolIndex === -1) {
+      throw Error("'" + expecteNodePoolName + "' node pool not found.");
     }
-    let nodePool = nodePools[0];
-    let nodePoolName = nodePool.name;
-    if (nodePoolName === undefined || nodePoolName === null) {
-      throw Error("Unable to extract node pool name");
-    }
-    Logger.silly("[GCPProvider] Fetched nodePoolName: " + nodePoolName);
-    this.nodePoolName = nodePoolName;
+    this.nodePoolName = expecteNodePoolName;
 
     return;
   }
@@ -92,6 +91,8 @@ class GCPProvider extends BaseProvider {
       Logger.silly("[GCPProvider] setNodePoolSize response" + JSON.stringify(result));
 
     } catch (err) {
+      // NOTE here we might get following error:
+      //   Unable to set node pool size: {"code":9,"details":"Operation operation-1603376477524-a0fbd518 is currently operating on cluster standard-cluster-2. Please wait and try again once it is done.","metadata":{"internalRepr":{},"options":{}}}
       throw Error("Unable to set node pool size: " + JSON.stringify(err));
     }
     return;

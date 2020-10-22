@@ -49,6 +49,12 @@ Possible values:
 - process *-- per process estimations*
 - workflow *-- per workflow estimations (Token-like method)*
 
+### HF_VAR_autoscalerGKEPool
+
+This applies to *gcp* provider only; specifies name of workers node pool.
+
+Default value: "default-pool"
+
 ## Usage
 
 ~~~

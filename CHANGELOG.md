@@ -7,6 +7,7 @@ Autoscaler Change Log
 - New estimator 'StaticWorkflow' for Token-like predictions
 - Allow to choose estimator with HF_VAR_autoscalerEstimator
 - Throw instead of returning errors to avoid hidden failures
+- Allow to specify node pool name with HF_VAR_autoscalerGKEPool
 
 0.3.0
 -----------------------------
