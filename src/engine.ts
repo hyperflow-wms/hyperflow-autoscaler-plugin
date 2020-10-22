@@ -31,8 +31,6 @@ class Engine {
   private provider: BaseProvider;
   private billingModel: BillingModel;
   private rpc: RPCChild;
-  private scaleUpCooldown: CooldownTracker;
-  private scaleDownCooldown: CooldownTracker;
   private workflow: Workflow;
   private workflowTracker: WorkflowTracker;
   private machineType: MachineType;
@@ -51,8 +49,6 @@ class Engine {
       throw Error("Provider " + providerName + " not found!");
     }
     this.billingModel = new GCPBillingModel();
-    this.scaleUpCooldown = new CooldownTracker();
-    this.scaleDownCooldown = new CooldownTracker();
     this.rpc = new RPCChild(this);
 
     let machineTypeName = process.env['HF_VAR_autoscalerMachineType'];
