@@ -1,7 +1,11 @@
 Autoscaler Change Log
 =====================
 
-0.4.0 under development
+0.5.0 under development
+------------------------
+
+
+0.4.0 October 22, 2020
 ------------------------
 
 - New estimator 'StaticWorkflow' for Token-like predictions
@@ -9,7 +13,7 @@ Autoscaler Change Log
 - Throw instead of returning errors to avoid hidden failures
 - Allow to specify node pool name with HF_VAR_autoscalerGKEPool
 
-0.3.0
+0.3.0 October 21, 2020
 -----------------------------
 
 - Initial release
