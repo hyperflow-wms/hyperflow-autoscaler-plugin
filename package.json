@@ -5,7 +5,8 @@
   "main": "./dist/main.js",
   "scripts": {
     "test": "mocha -r ts-node/register --timeout 999999 --colors './src/**/*-spec.ts'",
-    "coverage": "nyc -r lcov -e .ts -x \"**/*-spec.ts\" npm run test"
+    "coverage": "nyc -r lcov -e .ts -x \"**/*-spec.ts\" npm run test",
+    "compile": "tsc"
   },
   "repository": {
     "type": "git",
