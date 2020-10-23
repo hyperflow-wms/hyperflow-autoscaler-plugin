@@ -61,6 +61,12 @@ This applies to *gcp* provider only; specifies the label of job pods. Might be u
 
 Example value: "hyperflow"
 
+### HF_VAR_autoscalerInitialDelay
+
+This applies to *gcp* provider only; specifies the inital delay for engine, in seconds.
+
+Default value: "30"
+
 ## Usage
 
 ~~~

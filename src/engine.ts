@@ -19,6 +19,8 @@ import PredictPolicy from './policies/predictPolicy';
 
 const Logger = getBaseLogger();
 
+const INITIAL_DELAY = 30; // seconds
+
 const REACT_INTERVAL = 10000;
 const SCALE_UP_UTILIZATION = 0.9;
 const SCALE_DOWN_UTILIZATION = 0.5;
@@ -73,8 +75,30 @@ class Engine {
     //this.rpc.call('addNumbers', [21, 15], (data) => { console.log('Got RPC response:', data); });
     //let sum = await this.rpc.callAsync('addNumbers', [21, 15]);
     await this.provider.initialize();
-
+    await this.waitInitialDelay();
     this.reactLoop();
+  }
+
+  /**
+   * Initial (configured) delay for engine start.
+   * It is important to wait until cluster change state, before
+   * we take any action.
+   */
+  private async waitInitialDelay() {
+    let engineInitialDelay = INITIAL_DELAY;
+    let engineInitialDelaySetting = process.env['HF_VAR_autoscalerInitialDelay'];
+    if (engineInitialDelaySetting != undefined) {
+      let val = parseInt(engineInitialDelaySetting);
+      if (isNaN(val) === true) {
+        throw Error("Invalid value of HF_VAR_autoscalerInitialDelay, must be number");
+      }
+      engineInitialDelay = val;
+    }
+    if (engineInitialDelay > 0) {
+      Logger.verbose("[Engine] Waiting " + engineInitialDelay.toString() + " seconds (initial delay)");
+      await new Promise((res, rej) => setTimeout(res, engineInitialDelay * 1000));
+    }
+    return;
   }
 
   private async reactLoop(): Promise<void> {
