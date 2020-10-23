@@ -76,6 +76,9 @@ class GCPProvider extends BaseProvider {
     }
     this.nodePoolName = expecteNodePoolName;
 
+    /* Mark provider as initialized. */
+    this.initialized = true;
+
     return;
   }
 

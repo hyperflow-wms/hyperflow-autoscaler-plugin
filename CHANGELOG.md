@@ -5,6 +5,7 @@ Autoscaler Change Log
 ------------------------
 
 - Fix filtering pods and add custom setting HF_VAR_autoscalerJobLabel
+- Fix missing intialization set in GCP provider
 
 0.4.0 October 22, 2020
 ------------------------
