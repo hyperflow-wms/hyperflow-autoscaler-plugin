@@ -78,9 +78,9 @@ class ScalingOptimizer
     let timeScaledAndReadyMs = scalingTime + this.provisioningTimeMs;
     demandBaseline.forEach((demand, timeKeyMs) => {
       if (timeKeyMs >= timeScaledAndReadyMs) {
-        scalingResult.addFrame(supplyBeforeScaling, demand);
-      } else {
         scalingResult.addFrame(supplyAfterScaling, demand);
+      } else {
+        scalingResult.addFrame(supplyBeforeScaling, demand);
       }
     });
 
