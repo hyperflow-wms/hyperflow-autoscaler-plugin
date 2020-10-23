@@ -93,10 +93,7 @@ abstract class BaseProvider {
     let pods = this.clusterState.pods;
     let resArr: ResourceRequirements[] = [];
     for (let pod of pods) {
-      let nodeName = pod?.spec?.nodeName;
-      if (nodeName == undefined) {
-        throw Error("Unable to get spec.nodeName from pod");
-      }
+      // nodeName does not have to be defined - pod might be pending
       let containers = pod?.spec?.containers;
       if (containers == undefined) {
         throw Error("Unable to get spec.containers from pod");
