@@ -60,9 +60,7 @@ class ScalingOptimizer
     /* Calculate total price. */
     let machinesUnscaled = this.runningMachines;
     let machinesScaled = this.runningMachines + machinesDiff;
-    let priceUnscaled = this.billingModel.getPriceForInterval(this.machineType, startTime, scalingTime) * machinesUnscaled;
-    let priceScaled = this.billingModel.getPriceForInterval(this.machineType, scalingTime, endTime) * machinesScaled;
-    let totalPrice = priceUnscaled + priceScaled;
+    let totalPrice = this.billingModel.getPriceForDynamicInterval(this.machineType, startTime, machinesUnscaled, scalingTime, machinesScaled, endTime);
     scalingResult.setPrice(totalPrice);
 
     /* Calculate total score (based on under/overprovision). */

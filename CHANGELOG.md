@@ -7,6 +7,7 @@ Autoscaler Change Log
 - Add configurable engine initial delay (HF_VAR_autoscalerInitialDelay)
 - Fix policy initialization (after workflow was started)
 - Add function for calulating billing in resize cases
+- Fix scalingOptimizer price calucations (use new billing function)
 
 0.4.1 October 23, 2020
 ------------------------
