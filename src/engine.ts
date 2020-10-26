@@ -17,6 +17,8 @@ import { GCPMachines } from './cloud/gcpMachines';
 import MachineType from './cloud/machine';
 import PredictPolicy from './policies/predictPolicy';
 
+type timestamp = number;
+
 const Logger = getBaseLogger();
 
 const INITIAL_DELAY = 30; // seconds
@@ -160,7 +162,7 @@ class Engine {
       Logger.warn("[Engine] Incorrect event's values length: " + name);
       return;
     }
-    let eventTime = new Date(values[0]);
+    let eventTime: timestamp = values[0];
     let details = values[1];
 
     // A. Event send just before running WF
@@ -175,7 +177,7 @@ class Engine {
       } else {
         throw Error("Received duplicate of start event info - tracker cannot be re-initialized");
       }
-      this.workflowTracker.notifyStart(eventTime);
+      this.workflowTracker.notifyStart(new Date(eventTime));
     }
     // B. Event sent on execution beginning (initial signals)
     else if (details[0] == "input") {
@@ -186,7 +188,7 @@ class Engine {
       if (isNaN(signalId)) {
         throw Error("Received invalid input event, with signal " + details[1]._id.toString());
       }
-      this.workflowTracker.notifyInitialSignal(signalId, eventTime);
+      this.workflowTracker.notifyInitialSignal(signalId, new Date(eventTime));
     }
     // C. Event sent on execution beginning (initial signals)
     else if (details[0] == "fired") {
@@ -194,7 +196,7 @@ class Engine {
       if (typeof processId !== "number") {
         throw Error("Received invalid fired event, with process " + processId.toString());
       }
-      this.workflowTracker.notifyProcessFinished(processId, eventTime);
+      this.workflowTracker.notifyProcessFinished(processId, new Date(eventTime));
     } else {
       Logger.warn("[Engine] Unknown event details' type: " + details[0]);
     }
