@@ -69,7 +69,7 @@ class Process {
 
   public markEnd(time: Date): void {
     if (this.endTime !== undefined) {
-      throw Error('Process already marked as ended');
+      throw Error('Process ' + this.id.toString() + ' already marked as ended');
     }
     this.endTime = time;
     return;
