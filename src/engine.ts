@@ -24,6 +24,7 @@ const Logger = getBaseLogger();
 const INITIAL_DELAY = 30; // seconds
 
 const REACT_INTERVAL = 10000;
+const POLICY_INIT_CHECK_INTERVAL = 1000;
 const SCALE_UP_UTILIZATION = 0.9;
 const SCALE_DOWN_UTILIZATION = 0.5;
 
@@ -38,7 +39,7 @@ class Engine {
   private workflow: Workflow;
   private workflowTracker: WorkflowTracker;
   private machineType: MachineType;
-  private policy: Policy;
+  private policy?: Policy;
 
   constructor(providerName: string) {
     Logger.info("[Engine] Trying to create provider " + providerName);
@@ -60,16 +61,6 @@ class Engine {
       throw Error('No machine type specified. Hint: use env var HF_VAR_autoscalerMachineType');
     }
     this.machineType = GCPMachines.makeObject(machineTypeName);
-
-    let policyName = process.env['HF_VAR_autoscalerPolicy'];
-    Logger.info("[Engine] Trying to create policy '" + policyName + "'");
-    if (policyName == "react") {
-      this.policy = new ReactPolicy(this.workflowTracker, this.billingModel, this.machineType);
-    } else if (policyName == "predict") {
-      this.policy = new PredictPolicy(this.workflowTracker, this.billingModel, this.machineType);
-    } else {
-      throw Error('No valid policy specified. Hint: use env var HF_VAR_autoscalerPolicy');
-    }
   }
 
   public async run(): Promise<void> {
@@ -105,6 +96,13 @@ class Engine {
 
   private async reactLoop(): Promise<void> {
     Logger.verbose("[Engine] React loop started");
+
+    if (this.policy === undefined) {
+      Logger.verbose("[Engine] Policy still not ready");
+      setTimeout(() => { this.reactLoop(); }, POLICY_INIT_CHECK_INTERVAL);
+      return;
+    }
+
     await this.provider.updateClusterState();
     Logger.verbose("[Engine] Cluster state updated");
 
@@ -148,6 +146,34 @@ class Engine {
   }
 
   /**
+   * Notify engine about started workflow, so policies can
+   * be assigned.
+   *
+   * @param wfDir workflow directory
+   * @param eventTime when workflow was started
+   */
+  private wfInstanceStarted(wfDir: string, eventTime: timestamp): void {
+    if (this.workflowTracker !== undefined) {
+      throw Error("Tracker cannot be re-initialized: only one running workflow is supported");
+    }
+    this.workflow = Workflow.createFromFile(wfDir);
+    this.workflowTracker = new WorkflowTracker(this.workflow);
+    let printInterval = setInterval(() => {
+      this.workflowTracker.printState();
+    }, 100);
+    let policyName = process.env['HF_VAR_autoscalerPolicy'];
+    Logger.info("[Engine] Trying to create policy '" + policyName + "'");
+    if (policyName == "react") {
+      this.policy = new ReactPolicy(this.workflowTracker, this.billingModel, this.machineType);   /// workflowTracker might be not initialized heree...!
+    } else if (policyName == "predict") {
+      this.policy = new PredictPolicy(this.workflowTracker, this.billingModel, this.machineType);
+    } else {
+      throw Error('No valid policy specified. Hint: use env var HF_VAR_autoscalerPolicy');
+    }
+    this.workflowTracker.notifyStart(new Date(eventTime));
+  }
+
+  /**
    * This function should be invoked when HyperFlow event is emitted.
    * @param name event name
    * @param values event values
@@ -167,17 +193,8 @@ class Engine {
 
     // A. Event send just before running WF
     if (details[0] == "info") {
-      if (this.workflowTracker === undefined) {
-        let wfDir = details[1];
-        this.workflow = Workflow.createFromFile(wfDir);
-        this.workflowTracker = new WorkflowTracker(this.workflow);
-        let printInterval = setInterval(() => {
-          this.workflowTracker.printState();
-        }, 100);
-      } else {
-        throw Error("Received duplicate of start event info - tracker cannot be re-initialized");
-      }
-      this.workflowTracker.notifyStart(new Date(eventTime));
+      let wfDir = details[1];
+      this.wfInstanceStarted(wfDir, eventTime);
     }
     // B. Event sent on execution beginning (initial signals)
     else if (details[0] == "input") {
