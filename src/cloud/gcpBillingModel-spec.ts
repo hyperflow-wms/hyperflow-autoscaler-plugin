@@ -49,6 +49,26 @@ describe('GCPBillingModel object', function() {
       expect(price1).to.equal(price2);
       expect(price2).to.equal(price3);
     });
+
+    it('handle scaling down calculations', function() {
+      let price1 = model.getPriceForDynamicInterval(makeMachine(N1_HIGHCPU_16), 0, 5, 20*1000, 3, 130*1000);
+      let price2 = model.getPriceForDynamicInterval(makeMachine(N1_HIGHCPU_16), 0, 5, 30*1000, 3, 130*1000);
+      let basePrice = 5 * model.getPriceForTime(makeMachine(N1_HIGHCPU_16), 60*1000) + 3 * model.getPriceForTime(makeMachine(N1_HIGHCPU_16), 70*1000);
+      expect(price1).to.equal(price2);
+      expect(price2).to.equal(basePrice);
+
+      let price4 = model.getPriceForDynamicInterval(makeMachine(N1_HIGHCPU_16), 0, 5, 70*1000, 3, 130*1000);
+      expect(price4).to.greaterThan(basePrice);
+    });
+
+    it('handle scaling up calculations', function() {
+      let price1 = model.getPriceForDynamicInterval(makeMachine(N1_HIGHCPU_16), 0, 3, 20*1000, 5, 130*1000);
+      let price2 = model.getPriceForDynamicInterval(makeMachine(N1_HIGHCPU_16), 0, 3, 30*1000, 5, 130*1000);
+
+      let price3 = model.getPriceForDynamicInterval(makeMachine(N1_HIGHCPU_16), 0, 3, 80*1000, 5, 200*1000);
+      let basePrice = 3 * model.getPriceForTime(makeMachine(N1_HIGHCPU_16), 80*1000) + 5 * model.getPriceForTime(makeMachine(N1_HIGHCPU_16), 120*1000);
+      expect(price3).to.equal(basePrice);
+    });
   });
 
   context('Additional utils', function() {

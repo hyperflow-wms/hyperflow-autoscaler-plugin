@@ -52,6 +52,33 @@ class GCPBillingModel extends BillingModel
     }
     throw Error("Unknown price for machine " + name);
   }
+
+  /**
+   * @inheritdoc
+   */
+  public getPriceForDynamicInterval(machine: MachineType, timeStart: timestamp, numBefore: number, resizeTime: timestamp, numAfter: number, timeEnd: timestamp): number {
+    /* Calulate price for machines that are before and after resize. */
+    let numCommonMachines = Math.min(numBefore, numAfter);
+    let offset = Math.abs(numBefore - numAfter);
+    let commonMachinesPrice = numCommonMachines * this.getPriceForInterval(machine, timeStart, timeEnd);
+    if (offset == 0) {
+      return commonMachinesPrice;
+    }
+
+    /* Resize-down case. */
+    let restMachinesPrice = 0;
+    if (numBefore > numAfter) {
+      restMachinesPrice = offset * this.getPriceForInterval(machine, timeStart, resizeTime);
+    }
+
+    /* Resize-up case. */
+    if (numBefore < numAfter) {
+      restMachinesPrice = offset * this.getPriceForInterval(machine, resizeTime, timeEnd);
+    }
+
+    let totalPrice = commonMachinesPrice + restMachinesPrice;
+    return totalPrice;
+  }
 }
 
 export default GCPBillingModel;

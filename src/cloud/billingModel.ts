@@ -28,6 +28,11 @@ abstract class BillingModel
    * @param machine MachineType
    */
   public abstract getHourlyPrice(machine: MachineType): number;
+
+  /**
+   * Get total price of machines with resize between time.
+   */
+  public abstract getPriceForDynamicInterval(machine: MachineType, timeStart: timestamp, numBefore: number, resizeTime: timestamp, numAfter: number, timeEnd: timestamp): number;
 }
 
 export default BillingModel;
