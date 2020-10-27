@@ -42,8 +42,10 @@ class PredictPolicy extends Policy
    * @inheritdoc
    */
   public getDecision(demand: ResourceRequirements, supply: ResourceRequirements, workers: number): ScalingDecision {
-    /* Run planning to find future demand, then use scaling optimizer. */
-    let plan = new Plan(this.wfTracker.getWorkflow(), this.wfTracker, PLAN_TIME_MS, this.estimator);
+    /* Run planning to find future demand, then use scaling optimizer.
+     * We use a copy of wfTracker to avoid messing up original one. */
+    let wfTrackerCopy = new WorkflowTracker(this.wfTracker);
+    let plan = new Plan(this.wfTracker.getWorkflow(), wfTrackerCopy, PLAN_TIME_MS, this.estimator);
     plan.run();
     let demandFrames = plan.getDemandFrames();
     let msNow: timestamp = new Date().getTime();
