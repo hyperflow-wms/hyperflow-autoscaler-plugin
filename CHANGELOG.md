@@ -1,7 +1,11 @@
 Autoscaler Change Log
 =====================
 
-0.5.0 under development
+0.6.0 under development
+------------------------
+
+
+0.5.0 October 27, 2020
 ------------------------
 
 - Add configurable engine initial delay (HF_VAR_autoscalerInitialDelay)
