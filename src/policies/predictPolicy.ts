@@ -18,6 +18,7 @@ type timestamp = number;
 
 const SCALE_COOLDOWN_S = 10 * 60;
 const PLAN_TIME_MS = 50 * 1000;
+const PROVISIONING_MACHINE_AVG_TIME = 120 * 1000;
 
 class PredictPolicy extends Policy
 {
@@ -49,7 +50,7 @@ class PredictPolicy extends Policy
     plan.run();
     let demandFrames = plan.getDemandFrames();
     let msNow: timestamp = new Date().getTime();
-    let optimizer = new ScalingOptimizer(workers, this.machineType, 0, 1, this.billingModel);
+    let optimizer = new ScalingOptimizer(workers, this.machineType, PROVISIONING_MACHINE_AVG_TIME, 1, this.billingModel);
     let bestDecision = optimizer.findBestDecision(msNow, demandFrames);
     return bestDecision;
   }
