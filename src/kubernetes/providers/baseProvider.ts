@@ -6,8 +6,10 @@ import k8s = require('@kubernetes/client-node');
 
 const Logger = getBaseLogger();
 
+type timestamp = number;
+
 interface ClusterState {
-  lastUpdate: Date;
+  lastUpdateTime: timestamp;
   workerNodes: k8s.V1Node[];
   pods: k8s.V1Pod[];
 }
@@ -33,7 +35,7 @@ abstract class BaseProvider {
    */
   public async updateClusterState(): Promise<void> {
     Logger.info("[BaseProvider] Updating cluster state");
-    let currentTime = new Date();
+    let currentTime = new Date().getTime();
     let promise1 = this.client.fetchNodes();
     let promise2 = this.client.fetchPods();
     let nodes;
@@ -46,7 +48,7 @@ abstract class BaseProvider {
       throw Error("Unable to get hyperflow view on cluster: " + err.message);
     }
     this.clusterState = {
-      lastUpdate: currentTime,
+      lastUpdateTime: currentTime,
       workerNodes: hfView[0],
       pods: hfView[1],
     };

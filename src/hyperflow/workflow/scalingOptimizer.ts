@@ -91,9 +91,8 @@ class ScalingOptimizer
    * @param startTime
    * @param demandFrames
    */
-  findBestDecision(startTime: Date, demandFrames: Map<number, ResourceRequirements[]>): ScalingDecision {
+  findBestDecision(startTimeMs: timestamp, demandFrames: Map<number, ResourceRequirements[]>): ScalingDecision {
     /* Get average supply over equal time frames - this is our baseline for calculations. */
-    let startTimeMs = startTime.getTime();
     let maxTimeMs = startTimeMs + this.analyzedTimeMs;
     let demandBaseline = this.getDemandBaseline(demandFrames, startTimeMs, maxTimeMs, SCALING_PROBE_TIME_MS);
 
@@ -151,7 +150,7 @@ import GCPBillingModel from "../../cloud/gcpBillingModel";
 import ScalingResult from "./scalingResult";
 import ScalingDecision from "./scalingDecision";
 
-let wfStart: Date | undefined;
+let wfStart: timestamp | undefined;
 
 function mapToString(map: Map<any,any>) {
   var obj = {}
@@ -167,15 +166,15 @@ async function getDemandFrames() {
   let tracker = new WorkflowTracker(workflow);
 
   //// Optionals steps
-  //let startTime = new Date();
+  //let startTime = new Date().getTime();
   //tracker.notifyStart(startTime);
   //for (let sigId of [1,4,5,8,11,14,17,20,23,26,29,32,33,68,70,92,94]) {
-  //  tracker.notifyInitialSignal(sigId, new Date());
+  //  tracker.notifyInitialSignal(sigId, new Date().getTime());
   //}
   //for (let procId of [1,2,3,4,5,6,7,8,9,10,11,12,14]) {
   //  let randDelay = Math.floor(Math.random() * 500);
   //  await new Promise((res, rej) => { setTimeout(res, randDelay); });
-  //  tracker.notifyProcessFinished(procId, new Date());
+  //  tracker.notifyProcessFinished(procId, new Date().getTime());
   //}
 
   let estimator = new StaticProcessEstimator();
@@ -194,7 +193,7 @@ async function test() {
   let demandFrames = await getDemandFrames();
   let machineType = GCPMachines.makeObject(N1_HIGHCPU_4);
   let optimizer = new ScalingOptimizer(1, machineType, 10*1000, 50*1000, new GCPBillingModel());
-  let bestDecision = optimizer.findBestDecision(wfStart || new Date(), demandFrames);
+  let bestDecision = optimizer.findBestDecision(wfStart || new Date().getTime(), demandFrames);
   Logger.debug('BEST DECISION: ' + bestDecision.getMachinesDiff().toString() + ' at ' + bestDecision.getTime().toString());
   Logger.debug("Done!");
 }

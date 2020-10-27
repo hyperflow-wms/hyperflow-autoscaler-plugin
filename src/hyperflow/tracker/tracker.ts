@@ -5,12 +5,14 @@ import Workflow from "./workflow";
 
 const Logger = getBaseLogger();
 
+type timestamp = number;
+
 class WorkflowTracker
 {
   // CAUTION: this is shared across object copies
   private workflow: Workflow;
 
-  private executionStartTime?: Date;
+  private executionStartTime?: timestamp;
 
   private processesMap: Map<number, Process> = new Map;
   private signalsMap: Map<number, Signal> = new Map;
@@ -31,7 +33,7 @@ class WorkflowTracker
     if (wfOrTracker instanceof WorkflowTracker) {
       Logger.silly("[WorkflowTracker] Copy constructor");
       let oldWT = wfOrTracker;
-      this.executionStartTime = (oldWT.executionStartTime) ? new Date(oldWT.executionStartTime.getTime()) : undefined;
+      this.executionStartTime = (oldWT.executionStartTime) ? oldWT.executionStartTime : undefined;
       oldWT.processesMap.forEach((val, key) => {
         this.processesMap.set(key, new Process(val));
       });
@@ -56,7 +58,7 @@ class WorkflowTracker
    * Notifies tracker about execution start.
    * @param time event time
    */
-  public notifyStart(time: Date) {
+  public notifyStart(time: timestamp) {
     this.executionStartTime = time;
   }
 
@@ -65,7 +67,7 @@ class WorkflowTracker
    * @param sigId signal ID
    * @param time event time
    */
-  public notifyInitialSignal(sigId: number, time: Date) {
+  public notifyInitialSignal(sigId: number, time: timestamp) {
     Logger.debug("[WorkflowTracker] Notified about signal " + sigId.toString() + " emit");
     let signal = this.signalsMap.get(sigId);
     if (signal === undefined) {
@@ -94,7 +96,7 @@ class WorkflowTracker
    * @param procId process ID
    * @param time event time
    */
-  public notifyProcessFinished(procId: number, time: Date) {
+  public notifyProcessFinished(procId: number, time: timestamp) {
     Logger.debug("[WorkflowTracker] Notified about process " + procId.toString() + " finish");
     let process = this.processesMap.get(procId);
     if (process === undefined) {
@@ -121,7 +123,7 @@ class WorkflowTracker
    * @param procId process ID
    * @param time start time
    */
-  private startProcessIfReady(procId: number, time: Date) {
+  private startProcessIfReady(procId: number, time: timestamp) {
     let process = this.processesMap.get(procId);
     if (process === undefined) {
       throw Error("Process " + procId.toString() + " not found");
@@ -188,7 +190,7 @@ class WorkflowTracker
     return;
   }
 
-  public getExecutionStartTime(): Date | undefined {
+  public getExecutionStartTime(): timestamp | undefined {
     return this.executionStartTime;
   }
 

@@ -15,7 +15,7 @@ describe('ReactPolicy object', function() {
   let wfDir = './assets/wf_example';
   let workflow = Workflow.createFromFile(wfDir);
   let wfTracker = new WorkflowTracker(workflow);
-  let startTime = new Date();
+  let startTime = new Date().getTime();
   wfTracker.notifyStart(startTime);
 
   let billingModel = new GCPBillingModel()
@@ -31,9 +31,9 @@ describe('ReactPolicy object', function() {
       // scaling up
       expect(scalingDecision.getMachinesDiff()).to.greaterThan(0);
       // scaling ASAP
-      let timeNow = new Date();
-      expect(scalingDecision.getTime() >= startTime.getTime()).to.be.true;
-      expect(scalingDecision.getTime() <= timeNow.getTime()).to.be.true;
+      let timeNow = new Date().getTime();
+      expect(scalingDecision.getTime() >= startTime).to.be.true;
+      expect(scalingDecision.getTime() <= timeNow).to.be.true;
     });
   });
 });

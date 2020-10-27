@@ -1,5 +1,7 @@
 import { HFSignal } from "../types";
 
+type timestamp = number;
+
 class Signal {
 
   public readonly id: number;
@@ -7,7 +9,7 @@ class Signal {
 
   private name: string;
 
-  private emitTime?: Date;
+  private emitTime?: timestamp;
 
   /**
    * Constructor - it also allows copying object .
@@ -17,7 +19,7 @@ class Signal {
       this.id = signal.id;
       this.initial = signal.initial;
       this.name = signal.name;
-      this.emitTime = (signal.emitTime) ? new Date(signal.emitTime.getTime()) : undefined;
+      this.emitTime = (signal.emitTime) ? signal.emitTime : undefined;
     } else {
       if (id === undefined) {
         throw Error("ID is required for Signal");
@@ -33,7 +35,7 @@ class Signal {
     }
   }
 
-  public markEmit(time: Date): void {
+  public markEmit(time: timestamp): void {
     if (this.emitTime !== undefined) {
       throw Error('Signal already marked as emitted');
     }

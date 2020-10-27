@@ -8,6 +8,7 @@ Autoscaler Change Log
 - Fix policy initialization (after workflow was started)
 - Add function for calulating billing in resize cases
 - Fix scalingOptimizer price calucations (use new billing function)
+- Change all Date objects with plain number (timestamp type)
 
 0.4.1 October 23, 2020
 ------------------------

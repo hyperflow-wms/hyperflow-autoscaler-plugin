@@ -1,5 +1,7 @@
 import { HFProcess } from "../types";
 
+type timestamp = number;
+
 class Process {
 
   public readonly id: number;
@@ -10,8 +12,8 @@ class Process {
   private cpuRequest: string = "";
   private memRequest: string = "";
 
-  private startTime?: Date;
-  private endTime?: Date;
+  private startTime?: timestamp;
+  private endTime?: timestamp;
 
   /**
    * Constructor - it also allows copying object .
@@ -24,8 +26,8 @@ class Process {
       this.outs = [...process.outs];
       this.cpuRequest = process.cpuRequest;
       this.memRequest = process.memRequest;
-      this.startTime = (process.startTime) ? new Date(process.startTime.getTime()) : undefined;
-      this.endTime = (process.endTime) ? new Date(process.endTime.getTime()) : undefined;
+      this.startTime = (process.startTime) ? process.startTime : undefined;
+      this.endTime = (process.endTime) ? process.endTime : undefined;
     } else {
       if (id === undefined) {
         throw Error("ID is required for Process");
@@ -59,7 +61,7 @@ class Process {
     return;
   }
 
-  public markStart(time: Date): void {
+  public markStart(time: timestamp): void {
     if (this.startTime !== undefined) {
       throw Error('Process already marked as started');
     }
@@ -67,7 +69,7 @@ class Process {
     return;
   }
 
-  public markEnd(time: Date): void {
+  public markEnd(time: timestamp): void {
     if (this.endTime !== undefined) {
       throw Error('Process ' + this.id.toString() + ' already marked as ended');
     }
@@ -83,11 +85,11 @@ class Process {
     return this.memRequest;
   }
 
-  public getStartTime(): Date | undefined {
+  public getStartTime(): timestamp | undefined {
     return this.startTime;
   }
 
-  public getEndTime(): Date | undefined {
+  public getEndTime(): timestamp | undefined {
     return this.endTime;
   }
 }

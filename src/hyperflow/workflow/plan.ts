@@ -7,6 +7,8 @@ import ResourceRequirements from '../../kubernetes/resourceRequirements';
 
 const Logger = getBaseLogger();
 
+type timestamp = number;
+
 class Plan
 {
   private wf: Workflow;
@@ -42,7 +44,7 @@ class Plan
         let inputSigIds = this.wf.getWfInsSigIds();
         intitialSigIds.concat(inputSigIds);
       }
-      let timeNow = new Date();
+      let timeNow = new Date().getTime();
       this.tracker.notifyStart(timeNow);
       intitialSigIds.forEach(el => this.tracker.notifyInitialSignal(el, timeNow));
     }
@@ -74,14 +76,14 @@ class Plan
           if (processStartTime === undefined) {
             throw Error("Running process must have 'start time'");
           }
-          Logger.debug("[Plan] Saving start of " + processId.toString() + " " + processStartTime);
+          Logger.debug("[Plan] Saving start of " + processId.toString() + " " + processStartTime.toString());
           this.saveProcessStartEvent(processId, processStartTime);
 
           /* Stop if we go further in time than it was allowed. */
           if (executionStartTime == undefined) {
             throw Error("Fatal error - no execution start time defined");
           }
-          let totalPlanningTime = processStartTime.getTime() - executionStartTime.getTime();
+          let totalPlanningTime = processStartTime - executionStartTime;
           if (totalPlanningTime > this.timeForwardMs) {
             Logger.debug("[Plan] Stopping analyze - we reached " + totalPlanningTime.toString() + " ms");
             throw BreakException;
@@ -89,7 +91,7 @@ class Plan
 
           /* Calculate estimated end time and update map. */
           let estimatedMs = this.estimator.getEstimationMs(process);
-          let expectedEndTimeMs = processStartTime.getTime() + estimatedMs;
+          let expectedEndTimeMs = processStartTime + estimatedMs;
           if (endedProcessesMap.has(expectedEndTimeMs) == false) {
             endedProcessesMap.set(expectedEndTimeMs, []);
           }
@@ -101,10 +103,10 @@ class Plan
         * so we sort them by end time and pick only
         * those with first end time. */
         let sortedKeys = Array.from(endedProcessesMap.keys()).sort();
-        let endTimeMsKey = sortedKeys[0];
+        let endTimeMsKey: timestamp = sortedKeys[0];
         let procIdArr = endedProcessesMap.get(endTimeMsKey);
         procIdArr?.forEach((procId) => {
-          let endTime = new Date(endTimeMsKey);
+          let endTime = endTimeMsKey;
           Logger.debug("[Plan] Notifying about expected process " + procId.toString() + " finish at " + endTime.toString());
           this.tracker.notifyProcessFinished(procId, endTime);
           this.saveProcessEndEvent(procId, endTime);
@@ -123,8 +125,7 @@ class Plan
   /**
    * Stores process start time as positive number.
    */
-  private saveProcessStartEvent(processId: number, processStartTime: Date): void {
-    let timeMs = processStartTime.getTime();
+  private saveProcessStartEvent(processId: number, timeMs: timestamp): void {
     if (this.procHistory.has(timeMs) == false) {
       this.procHistory.set(timeMs, new Set());
     }
@@ -135,8 +136,7 @@ class Plan
   /**
    * Stores process end time as negative number (mulitplied with -1).
    */
-  private saveProcessEndEvent(processId: number, processEndTime: Date): void {
-    let timeMs = processEndTime.getTime();
+  private saveProcessEndEvent(processId: number, timeMs: timestamp): void {
     if (this.procHistory.has(timeMs) == false) {
       this.procHistory.set(timeMs, new Set());
     }

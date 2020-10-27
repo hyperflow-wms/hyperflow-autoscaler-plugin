@@ -46,9 +46,9 @@ class PredictPolicy extends Policy
     let plan = new Plan(this.wfTracker.getWorkflow(), this.wfTracker, PLAN_TIME_MS, this.estimator);
     plan.run();
     let demandFrames = plan.getDemandFrames();
-    let timeNow = new Date();
+    let msNow: timestamp = new Date().getTime();
     let optimizer = new ScalingOptimizer(workers, this.machineType, 0, 1, this.billingModel);
-    let bestDecision = optimizer.findBestDecision(timeNow, demandFrames);
+    let bestDecision = optimizer.findBestDecision(msNow, demandFrames);
     return bestDecision;
   }
 

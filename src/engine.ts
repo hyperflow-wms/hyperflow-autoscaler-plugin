@@ -170,7 +170,7 @@ class Engine {
     } else {
       throw Error('No valid policy specified. Hint: use env var HF_VAR_autoscalerPolicy');
     }
-    this.workflowTracker.notifyStart(new Date(eventTime));
+    this.workflowTracker.notifyStart(eventTime);
   }
 
   /**
@@ -205,7 +205,7 @@ class Engine {
       if (isNaN(signalId)) {
         throw Error("Received invalid input event, with signal " + details[1]._id.toString());
       }
-      this.workflowTracker.notifyInitialSignal(signalId, new Date(eventTime));
+      this.workflowTracker.notifyInitialSignal(signalId, eventTime);
     }
     // C. Event sent on execution beginning (initial signals)
     else if (details[0] == "fired") {
@@ -213,7 +213,7 @@ class Engine {
       if (typeof processId !== "number") {
         throw Error("Received invalid fired event, with process " + processId.toString());
       }
-      this.workflowTracker.notifyProcessFinished(processId, new Date(eventTime));
+      this.workflowTracker.notifyProcessFinished(processId, eventTime);
     } else {
       Logger.warn("[Engine] Unknown event details' type: " + details[0]);
     }
