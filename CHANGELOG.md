@@ -6,6 +6,7 @@ Autoscaler Change Log
 
 - Fix predict policy: do not mess original workflow tracker
 - Fix missing provisioning time in predict policy
+- Predict policy - use analyze time specified in HF_VAR_autoscalerPredictTime
 
 0.5.0 October 27, 2020
 ------------------------

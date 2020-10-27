@@ -17,13 +17,14 @@ const Logger = getBaseLogger();
 type timestamp = number;
 
 const SCALE_COOLDOWN_S = 10 * 60;
-const PLAN_TIME_MS = 50 * 1000;
 const PROVISIONING_MACHINE_AVG_TIME = 120 * 1000;
 
 class PredictPolicy extends Policy
 {
   private scaleCooldown: CooldownTracker;
   private estimator: EstimatorInterface;
+
+  private planTimeMs: number;
 
   public constructor(wfTracker: WorkflowTracker, billingModel: BillingModel, machineType: MachineType) {
     super(wfTracker, billingModel, machineType);
@@ -37,6 +38,12 @@ class PredictPolicy extends Policy
     } else {
       throw Error("No valid estimator specified. Hint: use environmental vairable 'HF_VAR_autoscalerEstimator'.")
     }
+
+    this.planTimeMs = 5*60*1000; // 5 minutes default
+    let planTimeMs = parseInt(process.env['HF_VAR_autoscalerPredictTime'] || "none");
+    if (isNaN(planTimeMs) == false) {
+      this.planTimeMs = planTimeMs;
+    }
   }
 
   /**
@@ -46,11 +53,11 @@ class PredictPolicy extends Policy
     /* Run planning to find future demand, then use scaling optimizer.
      * We use a copy of wfTracker to avoid messing up original one. */
     let wfTrackerCopy = new WorkflowTracker(this.wfTracker);
-    let plan = new Plan(this.wfTracker.getWorkflow(), wfTrackerCopy, PLAN_TIME_MS, this.estimator);
+    let plan = new Plan(this.wfTracker.getWorkflow(), wfTrackerCopy, this.planTimeMs, this.estimator);
     plan.run();
     let demandFrames = plan.getDemandFrames();
     let msNow: timestamp = new Date().getTime();
-    let optimizer = new ScalingOptimizer(workers, this.machineType, PROVISIONING_MACHINE_AVG_TIME, 1, this.billingModel);
+    let optimizer = new ScalingOptimizer(workers, this.machineType, PROVISIONING_MACHINE_AVG_TIME, this.planTimeMs, this.billingModel);
     let bestDecision = optimizer.findBestDecision(msNow, demandFrames);
     return bestDecision;
   }
