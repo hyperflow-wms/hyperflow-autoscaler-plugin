@@ -207,7 +207,7 @@ class Engine {
       }
       this.workflowTracker.notifyInitialSignal(signalId, eventTime);
     }
-    // C. Event sent on execution beginning (initial signals)
+    // C. Event sent when process execution was finished
     else if (details[0] == "fired") {
       let processId = details[2];
       if (typeof processId !== "number") {
