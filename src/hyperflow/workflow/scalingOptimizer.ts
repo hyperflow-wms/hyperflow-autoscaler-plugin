@@ -128,6 +128,8 @@ class ScalingOptimizer
         }
       }
     }
+    Logger.debug("[ScalingOptimizer] Best descision found: " + bestScalingDecision.getMachinesDiff().toString()
+                + " at " + bestScalingDecision.getTime().toString() + " with score " + bestScalingScore.toString());
 
     return bestScalingDecision;
   }
