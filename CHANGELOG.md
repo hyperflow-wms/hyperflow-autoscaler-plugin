@@ -1,7 +1,11 @@
 Autoscaler Change Log
 =====================
 
-0.6.0 under development
+0.7.0 under development
+------------------------
+
+
+0.6.0 October 28, 2020
 ------------------------
 
 - Fix predict policy: do not mess original workflow tracker
