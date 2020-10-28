@@ -67,6 +67,12 @@ This applies to *gcp* provider only; specifies the inital delay for engine, in s
 
 Default value: "30"
 
+### HF_VAR_autoscalerPredictTime
+
+This applies to *predict* policy only; specifies the time of planning and analyzing, in milliseconds.
+
+Default value: 5 minutes
+
 ## Usage
 
 ~~~
