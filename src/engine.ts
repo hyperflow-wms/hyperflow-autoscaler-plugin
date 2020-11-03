@@ -164,7 +164,7 @@ class Engine {
     let policyName = process.env['HF_VAR_autoscalerPolicy'];
     Logger.info("[Engine] Trying to create policy '" + policyName + "'");
     if (policyName == "react") {
-      this.policy = new ReactPolicy(this.workflowTracker, this.billingModel, this.machineType);   /// workflowTracker might be not initialized heree...!
+      this.policy = new ReactPolicy(this.workflowTracker, this.billingModel, this.machineType);
     } else if (policyName == "predict") {
       this.policy = new PredictPolicy(this.workflowTracker, this.billingModel, this.machineType);
     } else {
