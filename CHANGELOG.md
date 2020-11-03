@@ -4,6 +4,7 @@ Autoscaler Change Log
 0.7.0 under development
 ------------------------
 
+- Fix MaxListenersExceededWarning in logger
 
 0.6.0 October 28, 2020
 ------------------------

@@ -22,6 +22,13 @@ const commonFileErrorTransport = new winston.transports.File({ filename: path.jo
 const commonFileSillyTransport =  new winston.transports.File({ filename: path.join(logDir, 'silly.log'), options: {}, level: 'silly' });
 const commonConsoleInfoTransport = new winston.transports.Console({ level: 'info' });
 
+/* Above transports can be used in several dozen loggers (currently ~50),
+ * so we want to increase max listeners to avoid MaxListenersExceededWarning. */
+commonFileDebugTransport.setMaxListeners(100);
+commonFileErrorTransport.setMaxListeners(100);
+commonFileSillyTransport.setMaxListeners(100);
+commonConsoleInfoTransport.setMaxListeners(100);
+
 let baseLoggers = new Map<string, winston.Logger>();
 
 function getBaseLogger(name?: string): winston.Logger {
