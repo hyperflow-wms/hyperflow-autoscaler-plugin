@@ -123,13 +123,14 @@ class Engine {
       if (this.policy.isReady(scalingDecision) === false) {
         Logger.info("[Engine] No action, due to policy condition: not_ready");
       } else {
+        let targetPoolSize = numWorkers + machinesDiff;
         if (machinesDiff > 0) {
-          Logger.info("[Engine] Scaling up");
+          Logger.info("[Engine] Scaling up to " + targetPoolSize.toString() + " machines");
         } else {
-          Logger.info("[Engine] Scaling down");
+          Logger.info("[Engine] Scaling down to " + targetPoolSize.toString() + " machines");
         }
         // TODO: postpone scaling to appropriate time
-        this.provider.resizeCluster(numWorkers + machinesDiff);
+        this.provider.resizeCluster(targetPoolSize);
         // TODO: notify about new time (updated decision)
         this.policy.actionTaken(scalingDecision);
       }
