@@ -82,7 +82,7 @@ class GCPProvider extends BaseProvider {
     return;
   }
 
-  public async resizeCluster(workersNum: number) {
+  public async resizeCluster(workersNum: number): Promise<void> {
     /* Make sure provider is initialized. */
     if (this.initialized === false) {
       throw Error("Provider was not intialized");
