@@ -6,6 +6,7 @@ Autoscaler Change Log
 
 - Skip completed/failed pods when getting cluster state
 - Fix GCP machines specification with allocatable values instead of capacity
+- Add n1_highmem machines' specifications
 
 0.7.0 November 4, 2020
 ------------------------
