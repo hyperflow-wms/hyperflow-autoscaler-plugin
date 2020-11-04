@@ -9,6 +9,7 @@ Autoscaler Change Log
 - Allow to skip overprovision cost in calculating score
 - Fix react policy, by skipping overprovision cost
 - Adjust engine react time and precit policy cooldown
+- Fill staticProcessEstimator with SoyKB, Montage, KINC and Ellipsoids estimations
 
 0.6.0 October 28, 2020
 ------------------------
