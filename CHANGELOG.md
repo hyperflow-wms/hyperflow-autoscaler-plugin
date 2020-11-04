@@ -5,6 +5,7 @@ Autoscaler Change Log
 ------------------------
 
 - Skip completed/failed pods when getting cluster state
+- Fix GCP machines specification with allocatable values instead of capacity
 
 0.7.0 November 4, 2020
 ------------------------

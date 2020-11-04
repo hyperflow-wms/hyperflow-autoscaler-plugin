@@ -9,14 +9,16 @@ const N1_HIGHCPU_32 = "n1_highcpu_32";
 const N1_HIGHCPU_64 = "n1_highcpu_64";
 const N1_HIGHCPU_96 = "n1_highcpu_96";
 
+/* Table of allocatable resources.
+ * See: https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-architecture */
 const specsMap: MachinesSpecsMap = {
-  [N1_HIGHCPU_2]: {cpu: "2", memory: "1.8G"},
-  [N1_HIGHCPU_4]: {cpu: "4", memory: "3.6G"},
-  [N1_HIGHCPU_8]: {cpu: "8", memory: "7.2G"},
-  [N1_HIGHCPU_16]: {cpu: "16", memory: "14.4G"},
-  [N1_HIGHCPU_32]: {cpu: "32", memory: "28.8G"},
-  [N1_HIGHCPU_64]: {cpu: "64", memory: "57.6G"},
-  [N1_HIGHCPU_96]: {cpu: "96", memory: "86.4G"},
+  [N1_HIGHCPU_2]: {cpu: "1.93", memory: "1.3G"},
+  [N1_HIGHCPU_4]: {cpu: "3.92", memory: "2.6G"},
+  [N1_HIGHCPU_8]: {cpu: "7.91", memory: "5.5G"},
+  [N1_HIGHCPU_16]: {cpu: "15.89", memory: "11.9G"},
+  [N1_HIGHCPU_32]: {cpu: "31.85", memory: "25.3G"},
+  [N1_HIGHCPU_64]: {cpu: "63.77", memory: "52.5"},
+  [N1_HIGHCPU_96]: {cpu: "95.69", memory: "79.6"},
 }
 
 class GCPMachines
