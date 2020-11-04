@@ -111,7 +111,7 @@ class ScalingOptimizer
     /* Try every possible scaling decision at given probe interval,
      * and find best option. */
     for (let t = startTimeMs; t < maxTimeMs; t += SCALING_PROBE_TIME_MS) {
-      for (let n = (possbileLessMachines*(-1)); n < possibleMoreMachines; n++) {
+      for (let n = (possbileLessMachines*(-1)); n <= possibleMoreMachines; n++) {
         /* No-scaling action was already calculated. */
         if (n == 0) {
           continue;
