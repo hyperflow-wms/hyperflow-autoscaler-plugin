@@ -39,6 +39,10 @@ class ReactPolicy extends Policy
      * mocked demand frame, 0 ms bootstraping time and 1 ms
      * analysis - because we only care about current cluster state.
      *
+     * skipOverProvision is set, because we care only about providing
+     * enough space, without caring about budget - that is similar
+     * behavior to Kubernetes Autoscaler.
+     *
      * CAUTION: supply is simply ignored, because we have number of workers
      * and their specifications - TODO think about removing it. */
     let demandFrames = new Map<timestamp, ResourceRequirements[]>();
@@ -46,6 +50,7 @@ class ReactPolicy extends Policy
     demandFrames.set(msNow, [demand]);
     Logger.debug("[ReactPolicy] Running scaling optimizer (workers: " + workers.toString() + "x " + this.machineType.getName() + ", demand:" + demand.toString())
     let optimizer = new ScalingOptimizer(workers, this.machineType, 0, 1, this.billingModel);
+    optimizer.setScoreOptions({skipOverProvision: true});
     let bestDecision = optimizer.findBestDecision(msNow, demandFrames);
     return bestDecision;
   }
