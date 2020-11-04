@@ -44,6 +44,7 @@ class ReactPolicy extends Policy
     let demandFrames = new Map<timestamp, ResourceRequirements[]>();
     let msNow: timestamp = new Date().getTime();
     demandFrames.set(msNow, [demand]);
+    Logger.debug("[ReactPolicy] Running scaling optimizer (workers: " + workers.toString() + "x " + this.machineType.getName() + ", demand:" + demand.toString())
     let optimizer = new ScalingOptimizer(workers, this.machineType, 0, 1, this.billingModel);
     let bestDecision = optimizer.findBestDecision(msNow, demandFrames);
     return bestDecision;
