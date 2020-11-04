@@ -12,8 +12,9 @@ const Logger = getBaseLogger();
 
 type timestamp = number;
 
-const SCALE_UP_UTILIZATION = 0.9;
-const SCALE_DOWN_UTILIZATION = 0.5;
+// Percent of utilization is not used - we use scoring
+//const SCALE_UP_UTILIZATION = 0.9;
+//const SCALE_DOWN_UTILIZATION = 0.5;
 
 const SCALE_UP_COOLDOWN_S = 3 * 60;
 const SCALE_DOWN_COOLDOWN_S = 3 * 60;
