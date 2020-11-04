@@ -6,6 +6,7 @@ Autoscaler Change Log
 
 - Fix MaxListenersExceededWarning in logger
 - Fix number of machines included in scaling loop, use '<= MAX'
+- Allow to skip overprovision cost in calculating score
 
 0.6.0 October 28, 2020
 ------------------------

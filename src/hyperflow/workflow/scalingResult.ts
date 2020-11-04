@@ -1,5 +1,9 @@
 import ResourceRequirements from "../../kubernetes/resourceRequirements";
 
+interface ScoreOptions {
+  skipOverProvision?: boolean;
+}
+
 class ScalingResult
 {
   private price?: number;
@@ -78,14 +82,14 @@ class ScalingResult
    *
    * TODO: Think if 0 is great default value
    */
-  public getScore(): number {
+  public getScore({skipOverProvision = false}: ScoreOptions): number {
     /* Base scores. */
     let cpuUnderWaste = 0; // percentage of missing demand
     if (this.totalCpuUnderprovisionDemand != 0) {
       cpuUnderWaste = ((this.totalCpuSupply / this.totalCpuUnderprovisionDemand) - 1) * -1;
     }
     let cpuOverWaste = 0; // percentage of too much supply
-    if (this.totalCpuOverprovisionDemand != 0) {
+    if (this.totalCpuOverprovisionDemand != 0 && skipOverProvision == false) {
       cpuOverWaste = (this.totalCpuSupply / this.totalCpuOverprovisionDemand) - 1;
     }
     let memUnderWaste = 0; // percentage of missing demand
@@ -93,7 +97,7 @@ class ScalingResult
       memUnderWaste = ((this.totalMemSupply / this.totalMemUnderprovisionDemand) - 1) * -1;
     }
     let memOverWaste = 0; // percentage of too much supply
-    if (this.totalMemOverprovisionDemand != 0) {
+    if (this.totalMemOverprovisionDemand != 0 && skipOverProvision == false) {
       memOverWaste = (this.totalMemSupply / this.totalMemOverprovisionDemand) - 1;
     }
 
@@ -108,4 +112,4 @@ class ScalingResult
   }
 }
 
-export default ScalingResult;
+export { ScoreOptions, ScalingResult };

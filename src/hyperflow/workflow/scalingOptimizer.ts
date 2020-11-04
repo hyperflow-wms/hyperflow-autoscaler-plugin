@@ -1,6 +1,7 @@
 import { getBaseLogger } from "../../utils/logger";
 import ResourceRequirements from "../../kubernetes/resourceRequirements";
 import Timeframe from "../../utils/timeframe";
+import { ScalingResult, ScoreOptions } from "./scalingResult";
 
 const Logger = getBaseLogger();
 
@@ -17,6 +18,7 @@ class ScalingOptimizer
   private provisioningTimeMs: number;
   private analyzedTimeMs: number;
   private billingModel: BillingModel;
+  private scoreOptions: ScoreOptions
 
   constructor(runningMachines: number, machineType: MachineType, provisioningTimeMs: number, analyzedTimeMs: number, billingModel: BillingModel) {
     this.runningMachines = runningMachines;
@@ -24,6 +26,12 @@ class ScalingOptimizer
     this.provisioningTimeMs = provisioningTimeMs;
     this.analyzedTimeMs = analyzedTimeMs;
     this.billingModel = billingModel;
+    this.scoreOptions = {skipOverProvision: false}
+  }
+
+  public setScoreOptions(opts: ScoreOptions): void {
+    this.scoreOptions = opts;
+    return;
   }
 
   /**
@@ -105,8 +113,8 @@ class ScalingOptimizer
     let bestScalingDecision = new ScalingDecision(0, startTimeMs);
     let scalingRes = this.calculateScalingResult(demandBaseline, startTimeMs, maxTimeMs, bestScalingDecision.getMachinesDiff(), bestScalingDecision.getTime());
     let bestScalingPrice = scalingRes.getPrice();
-    let bestScalingScore = scalingRes.getScore();
-    //Logger.debug('Scaling res for no action at ' + startTimeMs.toString() + ': ' + scalingRes.getPrice().toString() + '$, score ' + scalingRes.getScore().toString());
+    let bestScalingScore = scalingRes.getScore(this.scoreOptions);
+    //Logger.debug('Scaling res for no action at ' + startTimeMs.toString() + ': ' + scalingRes.getPrice().toString() + '$, score ' + scalingRes.getScore({}).toString());
 
     /* Try every possible scaling decision at given probe interval,
      * and find best option. */
@@ -118,9 +126,9 @@ class ScalingOptimizer
         }
         /* Calculate result; update best one if we get higher score, or same with less price. */
         scalingRes = this.calculateScalingResult(demandBaseline, startTimeMs, maxTimeMs, n, t);
-        //Logger.debug('Scaling res for ' + (n.toString().padStart(3, ' ') + ' machines at ' + t.toString() + ': ' + scalingRes.getPrice().toString().padStart(12, ' ') + ' $, score ' + scalingRes.getScore().toFixed(6).toString().padStart(8, ' '));
+        //Logger.debug('Scaling res for ' + (n.toString().padStart(3, ' ') + ' machines at ' + t.toString() + ': ' + scalingRes.getPrice().toString().padStart(12, ' ') + ' $, score ' + scalingRes.getScore({}).toFixed(6).toString().padStart(8, ' '));
         let scalingPrice = scalingRes.getPrice(); // 'C' in math equation
-        let scalingScore = scalingRes.getScore();
+        let scalingScore = scalingRes.getScore(this.scoreOptions);
         if (scalingScore > bestScalingScore || (scalingScore == bestScalingScore && scalingPrice < bestScalingPrice)) {
           bestScalingDecision = new ScalingDecision(n, t);
           bestScalingPrice = scalingPrice;
@@ -149,7 +157,6 @@ import Plan from "./plan";
 import MachineType from "../../cloud/machine";
 import BillingModel from "../../cloud/billingModel";
 import GCPBillingModel from "../../cloud/gcpBillingModel";
-import ScalingResult from "./scalingResult";
 import ScalingDecision from "./scalingDecision";
 
 let wfStart: timestamp | undefined;

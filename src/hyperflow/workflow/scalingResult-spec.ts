@@ -1,6 +1,6 @@
 
 import ResourceRequirements from '../../kubernetes/resourceRequirements';
-import ScalingResult from './scalingResult';
+import { ScalingResult } from './scalingResult';
 const expect = require('chai').expect;
 
 describe('ScalingResult class', function() {
@@ -8,7 +8,7 @@ describe('ScalingResult class', function() {
     it('default score for no frames', function() {
       let object = new ScalingResult();
       expect(object.getFramesAmount()).to.equal(0);
-      expect(object.getScore()).to.equal(Infinity);
+      expect(object.getScore({})).to.equal(Infinity);
     });
 
     it('count frames', function() {
@@ -26,9 +26,9 @@ describe('ScalingResult class', function() {
       let supply = new ResourceRequirements({cpu: "8", mem: "8G"});
       let demand = new ResourceRequirements({cpu: "10", mem: "10G"});
       object.addFrame(supply, demand); // -20%
-      expect(object.getScore()).to.be.closeTo(5, 0.001);
+      expect(object.getScore({})).to.be.closeTo(5, 0.001);
       object.addFrame(supply, demand); // -20%
-      expect(object.getScore()).to.be.closeTo(5, 0.001);
+      expect(object.getScore({})).to.be.closeTo(5, 0.001);
     });
 
     it('decrease score both for under/overprovision', function() {
@@ -36,9 +36,9 @@ describe('ScalingResult class', function() {
       let supply = new ResourceRequirements({cpu: "8", mem: "8G"});
       let demand = new ResourceRequirements({cpu: "10", mem: "10G"});
       object.addFrame(supply, demand); // -20%
-      expect(object.getScore()).to.be.closeTo(5, 0.001);
+      expect(object.getScore({})).to.be.closeTo(5, 0.001);
       object.addFrame(demand, supply); // +25%
-      expect(object.getScore()).to.be.closeTo(2.222, 0.001);
+      expect(object.getScore({})).to.be.closeTo(2.222, 0.001);
     });
 
     it('handle completely empty case', function() {
@@ -46,7 +46,7 @@ describe('ScalingResult class', function() {
       let supply1 = new ResourceRequirements({cpu: "0", mem: "0"});
       let demand1 = new ResourceRequirements({cpu: "0", mem: "0"});
       object1.addFrame(supply1, demand1);
-      let score1 = object1.getScore();
+      let score1 = object1.getScore({});
       expect(score1).to.equal(Infinity);
     });
 
@@ -59,13 +59,13 @@ describe('ScalingResult class', function() {
       let supply1 = new ResourceRequirements({cpu: "3", mem: "500Mi"});
       let demand1 = new ResourceRequirements({cpu: "6", mem: "200Mi"});
       object1.addFrame(supply1, demand1);
-      let score1 = object1.getScore();
+      let score1 = object1.getScore({});
 
       let object2 = new ScalingResult();
       let supply2 = new ResourceRequirements({cpu: "3", mem: "400Mi"});
       let demand2 = new ResourceRequirements({cpu: "6", mem: "200Mi"});
       object2.addFrame(supply2, demand2);
-      let score2 = object2.getScore();
+      let score2 = object2.getScore({});
 
       expect(score2).greaterThan(score1);
     });
@@ -75,13 +75,13 @@ describe('ScalingResult class', function() {
       let supply1 = new ResourceRequirements({cpu: "3", mem: "0"});
       let demand1 = new ResourceRequirements({cpu: "6", mem: "0"});
       object1.addFrame(supply1, demand1);
-      let score1 = object1.getScore();
+      let score1 = object1.getScore({});
 
       let object2 = new ScalingResult();
       let supply2 = new ResourceRequirements({cpu: "4", mem: "0"});
       let demand2 = new ResourceRequirements({cpu: "6", mem: "0"});
       object2.addFrame(supply2, demand2);
-      let score2 = object2.getScore();
+      let score2 = object2.getScore({});
 
       expect(score2).greaterThan(score1);
     });
