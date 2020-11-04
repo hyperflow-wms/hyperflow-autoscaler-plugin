@@ -4,6 +4,7 @@ Autoscaler Change Log
 0.8.0 under development
 ------------------------
 
+- Skip completed/failed pods when getting cluster state
 
 0.7.0 November 4, 2020
 ------------------------

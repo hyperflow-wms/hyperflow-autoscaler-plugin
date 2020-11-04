@@ -72,6 +72,7 @@ class Client
 
     /* Filtering pods.
      * All pods on HF workers are included, plus pending pods.
+     * Completed and failed pods are excluded.
      * Pending pods might be restricted with custom job label. */
     let podsOnWorkers: Array<k8s.V1Pod> = [];
     for (let pod of pods) {
@@ -101,6 +102,13 @@ class Client
             continue;
           }
         }
+      }
+
+      /* Skip completed and failed pods. */
+      let phase = pod?.status?.phase;
+      if (phase === "Succeeded" || phase === "Failed") {
+        Logger.silly("[Client] Skipping pod " + podName + " - in phase " + phase);
+        continue;
       }
 
       podsOnWorkers.push(pod);
