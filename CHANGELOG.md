@@ -8,6 +8,7 @@ Autoscaler Change Log
 - Fix number of machines included in scaling loop, use '<= MAX'
 - Allow to skip overprovision cost in calculating score
 - Fix react policy, by skipping overprovision cost
+- Adjust engine react time and precit policy cooldown
 
 0.6.0 October 28, 2020
 ------------------------

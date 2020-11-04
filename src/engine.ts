@@ -23,7 +23,7 @@ const Logger = getBaseLogger();
 
 const INITIAL_DELAY = 30; // seconds
 
-const REACT_INTERVAL = 10000;
+const REACT_INTERVAL = 30000; // milliseconds
 const POLICY_INIT_CHECK_INTERVAL = 1000;
 
 class Engine {

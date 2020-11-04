@@ -16,7 +16,7 @@ const Logger = getBaseLogger();
 
 type timestamp = number;
 
-const SCALE_COOLDOWN_S = 10 * 60;
+const SCALE_COOLDOWN_S = 4 * 60;
 const PROVISIONING_MACHINE_AVG_TIME = 120 * 1000;
 
 class PredictPolicy extends Policy
