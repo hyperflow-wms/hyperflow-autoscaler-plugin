@@ -130,9 +130,13 @@ class Engine {
           Logger.info("[Engine] Scaling down to " + targetPoolSize.toString() + " machines");
         }
         // TODO: postpone scaling to appropriate time
-        this.provider.resizeCluster(targetPoolSize);
-        // TODO: notify about new time (updated decision)
-        this.policy.actionTaken(scalingDecision);
+        try {
+          await this.provider.resizeCluster(targetPoolSize);
+          // TODO: notify about new time (updated decision)
+          this.policy.actionTaken(scalingDecision);
+        } catch (err) {
+          Logger.error("[Engine] Unable to resize cluster: " + err);
+        }
       }
     }
 
