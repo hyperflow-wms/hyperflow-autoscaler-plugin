@@ -25,11 +25,6 @@ const INITIAL_DELAY = 30; // seconds
 
 const REACT_INTERVAL = 10000;
 const POLICY_INIT_CHECK_INTERVAL = 1000;
-const SCALE_UP_UTILIZATION = 0.9;
-const SCALE_DOWN_UTILIZATION = 0.5;
-
-const SCALE_UP_COOLDOWN_S = 3 * 60;
-const SCALE_DOWN_COOLDOWN_S = 3 * 60;
 
 class Engine {
 
