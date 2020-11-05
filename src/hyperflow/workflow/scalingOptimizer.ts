@@ -5,7 +5,7 @@ import { ScalingResult, ScoreOptions } from "./scalingResult";
 
 const Logger = getBaseLogger();
 
-const SCALING_PROBE_TIME_MS = 100;
+const DEFAULT_SCALING_PROBE_TIME_MS = 100;
 const MAX_MACHINES = 8;
 
 type timestamp = number;
@@ -19,6 +19,7 @@ class ScalingOptimizer
   private analyzedTimeMs: number;
   private billingModel: BillingModel;
   private scoreOptions: ScoreOptions
+  private scalingProbeTime: milliseconds;
 
   constructor(runningMachines: number, machineType: MachineType, provisioningTimeMs: number, analyzedTimeMs: number, billingModel: BillingModel) {
     this.runningMachines = runningMachines;
@@ -27,6 +28,11 @@ class ScalingOptimizer
     this.analyzedTimeMs = analyzedTimeMs;
     this.billingModel = billingModel;
     this.scoreOptions = {skipOverProvision: false}
+    this.scalingProbeTime = DEFAULT_SCALING_PROBE_TIME_MS;
+  }
+
+  public setScalingProbeTime(ms: milliseconds): void {
+    this.scalingProbeTime = ms;
   }
 
   public setScoreOptions(opts: ScoreOptions): void {
@@ -102,7 +108,7 @@ class ScalingOptimizer
   findBestDecision(startTimeMs: timestamp, demandFrames: Map<number, ResourceRequirements[]>): ScalingDecision {
     /* Get average supply over equal time frames - this is our baseline for calculations. */
     let maxTimeMs = startTimeMs + this.analyzedTimeMs;
-    let demandBaseline = this.getDemandBaseline(demandFrames, startTimeMs, maxTimeMs, SCALING_PROBE_TIME_MS);
+    let demandBaseline = this.getDemandBaseline(demandFrames, startTimeMs, maxTimeMs, this.scalingProbeTime);
 
     /* Get space of possible machines, there must at least 1 running,
      * and we cannot exceed our provider's quota. */
@@ -118,7 +124,7 @@ class ScalingOptimizer
 
     /* Try every possible scaling decision at given probe interval,
      * and find best option. */
-    for (let t = startTimeMs; t < maxTimeMs; t += SCALING_PROBE_TIME_MS) {
+    for (let t = startTimeMs; t < maxTimeMs; t += this.scalingProbeTime) {
       for (let n = (possbileLessMachines*(-1)); n <= possibleMoreMachines; n++) {
         /* No-scaling action was already calculated. */
         if (n == 0) {
