@@ -44,5 +44,13 @@ describe('ReactPolicy object', function() {
       expect(scalingDecision.getMachinesDiff()).to.greaterThan(0);
       expect(scalingDecision.getMachinesDiff()).to.equal(5);
     });
+
+    it('scale down when supply is too high', function() {
+      let workerNodes = 3;
+      let demand = new RR({cpu: "0.1", mem: "100M"});
+      let supply = new RR({cpu: "0", mem: "0"});
+      let scalingDecision = policy.getDecision(demand, supply, workerNodes);
+      expect(scalingDecision.getMachinesDiff()).to.equal(-2);
+    });
   });
 });
