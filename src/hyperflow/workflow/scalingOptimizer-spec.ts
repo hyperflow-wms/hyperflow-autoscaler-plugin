@@ -19,7 +19,6 @@ describe('ScalingOptimizer class', function() {
         let score = res.getScore({skipOverProvision: true});
         expect(score).to.greaterThan(previousScore);
         previousScore = score;
-        console.log(score);
       }
     });
   });
