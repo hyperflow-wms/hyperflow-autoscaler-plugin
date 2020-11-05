@@ -135,11 +135,21 @@ class ScalingOptimizer
         //Logger.debug('Scaling res for ' + (n.toString().padStart(3, ' ') + ' machines at ' + t.toString() + ': ' + scalingRes.getPrice().toString().padStart(12, ' ') + ' $, score ' + scalingRes.getScore({}).toFixed(6).toString().padStart(8, ' '));
         let scalingPrice = scalingRes.getPrice(); // 'C' in math equation
         let scalingScore = scalingRes.getScore(this.scoreOptions);
-        if (scalingScore > bestScalingScore || (scalingScore == bestScalingScore && scalingPrice < bestScalingPrice)) {
-          bestScalingDecision = new ScalingDecision(n, t);
-          bestScalingPrice = scalingPrice;
-          bestScalingScore = scalingScore;
+
+        /* Ignore all solutions where we get strictly lower score. */
+        if (scalingScore < bestScalingScore) {
+          continue;
         }
+
+        /* Handle case when we reached same score (eg. Infinity),
+         * but we might get lower price. */
+        if (scalingScore == bestScalingScore && scalingPrice >= bestScalingPrice) {
+          continue;
+        }
+
+        bestScalingDecision = new ScalingDecision(n, t);
+        bestScalingPrice = scalingPrice;
+        bestScalingScore = scalingScore;
       }
     }
     Logger.debug("[ScalingOptimizer] Best descision found: " + bestScalingDecision.getMachinesDiff().toString()

@@ -8,6 +8,7 @@ Autoscaler Change Log
 - Fix GCP machines specification with allocatable values instead of capacity
 - Add n1_highmem machines' specifications
 - Allow to set optimizer probing time
+- Improve scaling optimizer - look for same score with less machines/price
 
 0.7.0 November 4, 2020
 ------------------------
