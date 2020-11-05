@@ -9,6 +9,7 @@ Autoscaler Change Log
 - Add n1_highmem machines' specifications
 - Allow to set optimizer probing time
 - Improve scaling optimizer - look for same score with less machines/price
+- Improve react policy - use longer analysis time to avoid 'in advance' paying in price calculation
 
 0.7.0 November 4, 2020
 ------------------------

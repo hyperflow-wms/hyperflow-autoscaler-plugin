@@ -36,8 +36,10 @@ class ReactPolicy extends Policy
    */
   public getDecision(demand: ResourceRequirements, supply: ResourceRequirements, workers: number): ScalingDecision {
     /* We use ScalingOptimizer in a smart way: with single
-     * mocked demand frame, 0 ms bootstraping time and 1 ms
-     * analysis - because we only care about current cluster state.
+     * mocked demand frame, 0 ms bootstraping time because
+     * we only care about current cluster state.
+     * 10 minutes is analyzed because we want to avoid 'in advance'
+     * paying in price calcuation.
      *
      * skipOverProvision is set, because we care only about providing
      * enough space, without caring about budget - that is similar
@@ -48,8 +50,10 @@ class ReactPolicy extends Policy
     let demandFrames = new Map<timestamp, ResourceRequirements[]>();
     let msNow: timestamp = new Date().getTime();
     demandFrames.set(msNow, [demand]);
-    Logger.debug("[ReactPolicy] Running scaling optimizer (workers: " + workers.toString() + "x " + this.machineType.getName() + ", demand:" + demand.toString())
-    let optimizer = new ScalingOptimizer(workers, this.machineType, 0, 1, this.billingModel);
+    Logger.debug("[ReactPolicy] Running scaling optimizer (workers: " + workers.toString() + "x " + this.machineType.getName() + ", demand:" + demand.toString());
+    let analyzeTimeMs = 10*60*1000; // 10 min.
+    let optimizer = new ScalingOptimizer(workers, this.machineType, 0, analyzeTimeMs, this.billingModel);
+    optimizer.setScalingProbeTime(analyzeTimeMs);
     optimizer.setScoreOptions({skipOverProvision: true});
     let bestDecision = optimizer.findBestDecision(msNow, demandFrames);
     return bestDecision;
