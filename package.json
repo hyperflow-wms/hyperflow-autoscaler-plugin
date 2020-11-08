@@ -1,6 +1,6 @@
 {
   "name": "hyperflow-autoscaler-plugin",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Autoscaler plugin for HyperFlow",
   "main": "./dist/main.js",
   "scripts": {

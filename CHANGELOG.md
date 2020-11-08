@@ -1,7 +1,11 @@
 Autoscaler Change Log
 =====================
 
-0.9.0 under development
+0.10.0 under development
+------------------------
+
+
+0.9.0 November 8, 2020
 ------------------------
 
 - Add prices of n1_highmem machines
