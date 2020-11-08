@@ -57,6 +57,7 @@ class PredictPolicy extends Policy
     plan.run();
     let demandFrames = plan.getDemandFrames();
     let msNow: timestamp = new Date().getTime();
+    Logger.debug("[PredictPolicy] Running scaling optimizer (workers: " + workers.toString() + "x " + this.machineType.getName() + ", plan time:" + this.planTimeMs.toString());
     let optimizer = new ScalingOptimizer(workers, this.machineType, PROVISIONING_MACHINE_AVG_TIME, this.planTimeMs, this.billingModel);
     let bestDecision = optimizer.findBestDecision(msNow, demandFrames);
     return bestDecision;
@@ -69,7 +70,7 @@ class PredictPolicy extends Policy
     let machinesDiff = action.getMachinesDiff();
 
     if (machinesDiff != 0 && this.scaleCooldown.isExpired() === false) {
-      Logger.info("[ReactPolicy] Not ready due to cooldown");
+      Logger.info("[PredictPolicy] Not ready due to cooldown");
       return false;
     }
 

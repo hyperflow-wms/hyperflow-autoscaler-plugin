@@ -132,9 +132,13 @@ class ScalingOptimizer
         }
         /* Calculate result; update best one if we get higher score, or same with less price. */
         scalingRes = this.calculateScalingResult(demandBaseline, startTimeMs, maxTimeMs, n, t);
-        //Logger.debug('Scaling res for ' + (n.toString().padStart(3, ' ') + ' machines at ' + t.toString() + ': ' + scalingRes.getPrice().toString().padStart(12, ' ') + ' $, score ' + scalingRes.getScore({}).toFixed(6).toString().padStart(8, ' '));
         let scalingPrice = scalingRes.getPrice(); // 'C' in math equation
         let scalingScore = scalingRes.getScore(this.scoreOptions);
+
+        /* Debug logging for scaling at first time frame. */
+        if (t == startTimeMs) {
+          Logger.debug('[ScalingOptimizer] Scaling result for ' + (n.toString().padStart(3, ' ') + ' machines at ' + t.toString() + ': ' + scalingRes.getPrice().toString().padStart(12, ' ') + ' $, score ' + scalingRes.getScore({}).toFixed(6).toString().padStart(8, ' ')));
+        }
 
         /* Ignore all solutions where we get strictly lower score. */
         if (scalingScore < bestScalingScore) {
