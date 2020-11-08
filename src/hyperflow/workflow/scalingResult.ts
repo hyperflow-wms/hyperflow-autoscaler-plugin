@@ -86,19 +86,19 @@ class ScalingResult
     /* Base scores. */
     let cpuUnderWaste = 0; // percentage of missing demand
     if (this.totalCpuUnderprovisionDemand != 0) {
-      cpuUnderWaste = ((this.totalCpuSupply / this.totalCpuUnderprovisionDemand) - 1) * -1;
+      cpuUnderWaste = (this.totalCpuUnderprovisionDemand - this.totalCpuSupply) / this.totalCpuUnderprovisionDemand; // equivalent: (supply / demand) - 1) * -1
     }
     let cpuOverWaste = 0; // percentage of too much supply
     if (this.totalCpuOverprovisionDemand != 0 && skipOverProvision == false) {
-      cpuOverWaste = (this.totalCpuSupply / this.totalCpuOverprovisionDemand) - 1;
+      cpuOverWaste = (this.totalCpuSupply - this.totalCpuOverprovisionDemand) / this.totalCpuOverprovisionDemand; // equivalent: (supply / demand) - 1)
     }
     let memUnderWaste = 0; // percentage of missing demand
     if (this.totalMemUnderprovisionDemand != 0) {
-      memUnderWaste = ((this.totalMemSupply / this.totalMemUnderprovisionDemand) - 1) * -1;
+      memUnderWaste = (this.totalMemUnderprovisionDemand - this.totalMemSupply) / this.totalMemUnderprovisionDemand; // equivalent: (supply / demand) - 1) * -1
     }
     let memOverWaste = 0; // percentage of too much supply
     if (this.totalMemOverprovisionDemand != 0 && skipOverProvision == false) {
-      memOverWaste = (this.totalMemSupply / this.totalMemOverprovisionDemand) - 1;
+      memOverWaste = (this.totalMemSupply - this.totalMemOverprovisionDemand) / this.totalMemOverprovisionDemand; // equivalent: (supply / demand) - 1)
     }
 
     /* Grouped scores - average of both percentages. */
