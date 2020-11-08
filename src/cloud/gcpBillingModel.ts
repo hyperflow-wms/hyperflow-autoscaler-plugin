@@ -1,5 +1,5 @@
 import BillingModel from "./billingModel";
-import { N1_HIGHCPU_2, N1_HIGHCPU_4, N1_HIGHCPU_8, N1_HIGHCPU_16, N1_HIGHCPU_32, N1_HIGHCPU_64, N1_HIGHCPU_96 } from './gcpMachines';
+import { N1_HIGHCPU_2, N1_HIGHCPU_4, N1_HIGHCPU_8, N1_HIGHCPU_16, N1_HIGHCPU_32, N1_HIGHCPU_64, N1_HIGHCPU_96, N1_HIGHMEM_2, N1_HIGHMEM_4, N1_HIGHMEM_8, N1_HIGHMEM_16, N1_HIGHMEM_32, N1_HIGHMEM_64, N1_HIGHMEM_96 } from './gcpMachines';
 import MachineType from "./machine";
 
 type timestamp = number;
@@ -48,6 +48,20 @@ class GCPBillingModel extends BillingModel
         return 2.2671552;
       case N1_HIGHCPU_96:
         return 3.4007328;
+      case N1_HIGHMEM_2:
+        return 0.118303;
+      case N1_HIGHMEM_4:
+        return 0.236606;
+      case N1_HIGHMEM_8:
+        return 0.473212;
+      case N1_HIGHMEM_16:
+        return 0.946424;
+      case N1_HIGHMEM_32:
+        return 1.892848;
+      case N1_HIGHMEM_64:
+        return 3.785696;
+      case N1_HIGHMEM_96:
+        return 5.678544;
       default:
     }
     throw Error("Unknown price for machine " + name);
