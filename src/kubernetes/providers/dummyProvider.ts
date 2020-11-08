@@ -24,13 +24,7 @@ class DummyProvider extends BaseProvider {
    * Resizes cluster to given amount of nodes.
    */
   public async resizeCluster(workersNum: number): Promise<void> {
-    Logger.debug("[DummyProvider] Resizing cluster mock");
-
-    return;
-  }
-
-  public async updateClusterState(): Promise<void> {
-    Logger.debug("[DummyProvider] Updating cluster mock");
+    Logger.debug("[DummyProvider] Resizing cluster mock " + workersNum.toString());
     return;
   }
 }

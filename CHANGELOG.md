@@ -5,6 +5,7 @@ Autoscaler Change Log
 ------------------------
 
 - Add prices of n1_highmem machines
+- Fix dummy provider - use base provider implementation instead of mock
 
 0.8.0 November 5, 2020
 ------------------------
