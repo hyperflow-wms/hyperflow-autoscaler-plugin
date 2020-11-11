@@ -1,0 +1,2 @@
+/wf_montage-2mass_1.0/workflow.json filter=lfs diff=lfs merge=lfs -text
+/wf_montage-2mass_2.0/workflow.json filter=lfs diff=lfs merge=lfs -text
