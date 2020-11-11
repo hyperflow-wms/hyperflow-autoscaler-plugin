@@ -192,7 +192,8 @@ class Plan
         let memRequest = process.getMemRequest();
         resArr.push(new ResourceRequirements({cpu: cpuRequest, mem: memRequest}));
       });
-      frames.set(timeKeyMs, resArr);
+      let totalRes = [ResourceRequirements.Utils.getSum(resArr)]; // We are wrapping it with array to preserve compatibility with existing code
+      frames.set(timeKeyMs, totalRes);
     });
 
     return frames;

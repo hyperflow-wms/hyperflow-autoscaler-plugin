@@ -4,6 +4,7 @@ Autoscaler Change Log
 0.10.0 under development
 ------------------------
 
+- Fix getDemandFrames usage - sum resources before packing them into equal intervals
 
 0.9.0 November 8, 2020
 ------------------------
