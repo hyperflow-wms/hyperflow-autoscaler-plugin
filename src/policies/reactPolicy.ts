@@ -48,14 +48,14 @@ class ReactPolicy extends Policy
      * CAUTION: supply is simply ignored, because we have number of workers
      * and their specifications - TODO think about removing it. */
     let demandFrames = new Map<timestamp, ResourceRequirements[]>();
-    let msNow: timestamp = new Date().getTime();
-    demandFrames.set(msNow, [demand]);
+    let getDecisionTime: timestamp = new Date().getTime();
+    demandFrames.set(getDecisionTime, [demand]);
     Logger.debug("[ReactPolicy] Running scaling optimizer (workers: " + workers.toString() + "x " + this.machineType.getName() + ", demand:" + demand.toString());
     let analyzeTimeMs = 10*60*1000; // 10 min.
     let optimizer = new ScalingOptimizer(workers, this.machineType, 0, analyzeTimeMs, this.billingModel);
     optimizer.setScalingProbeTime(analyzeTimeMs);
     optimizer.setScoreOptions({skipOverProvision: true});
-    let bestDecision = optimizer.findBestDecision(msNow, demandFrames);
+    let bestDecision = optimizer.findBestDecision(getDecisionTime, demandFrames);
     return bestDecision;
   }
 

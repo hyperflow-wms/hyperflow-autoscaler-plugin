@@ -51,15 +51,17 @@ class PredictPolicy extends Policy
    */
   public getDecision(demand: ResourceRequirements, supply: ResourceRequirements, workers: number): ScalingDecision {
     /* Run planning to find future demand, then use scaling optimizer.
-     * We use a copy of wfTracker to avoid messing up original one. */
+     * We use a copy of wfTracker to avoid messing up original one.
+     * Current time must be saved BEFORE running plan, to make sure all
+     * events are analyzed by optimizer. */
+    let getDecisionTime: timestamp = new Date().getTime();
     let wfTrackerCopy = new WorkflowTracker(this.wfTracker);
     let plan = new Plan(this.wfTracker.getWorkflow(), wfTrackerCopy, this.planTimeMs, this.estimator);
     plan.run();
     let demandFrames = plan.getDemandFrames();
-    let msNow: timestamp = new Date().getTime();
     Logger.debug("[PredictPolicy] Running scaling optimizer (workers: " + workers.toString() + "x " + this.machineType.getName() + ", plan time:" + this.planTimeMs.toString());
     let optimizer = new ScalingOptimizer(workers, this.machineType, PROVISIONING_MACHINE_AVG_TIME, this.planTimeMs, this.billingModel);
-    let bestDecision = optimizer.findBestDecision(msNow, demandFrames);
+    let bestDecision = optimizer.findBestDecision(getDecisionTime, demandFrames);
     return bestDecision;
   }
 
