@@ -27,18 +27,16 @@ describe('ScalingResult class', function() {
       let demand = new ResourceRequirements({cpu: "10", mem: "10G"});
       object.addFrame(supply, demand); // -20%
       expect(object.getScore({})).to.be.closeTo(5, 0.001);
-      object.addFrame(supply, demand); // -20%
-      expect(object.getScore({})).to.be.closeTo(5, 0.001);
     });
 
-    it('decrease score both for under/overprovision', function() {
+    it('accumulate missing supply', function() {
       let object = new ScalingResult();
       let supply = new ResourceRequirements({cpu: "8", mem: "8G"});
       let demand = new ResourceRequirements({cpu: "10", mem: "10G"});
       object.addFrame(supply, demand); // -20%
       expect(object.getScore({})).to.be.closeTo(5, 0.001);
       object.addFrame(demand, supply); // +25%
-      expect(object.getScore({})).to.be.closeTo(2.222, 0.001);
+      expect(object.getScore({})).to.be.closeTo(5, 0.001);
     });
 
     it('handle completely empty case', function() {

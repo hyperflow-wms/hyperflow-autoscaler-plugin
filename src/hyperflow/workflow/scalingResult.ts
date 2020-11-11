@@ -8,15 +8,20 @@ class ScalingResult
 {
   private price?: number;
 
-  private totalCpuSupply: number = 0;
+  private totalCpuUnderprovisionSupply: number = 0;
   private totalCpuUnderprovisionDemand: number = 0;
+  private totalCpuOverprovisionSupply: number = 0;
   private totalCpuOverprovisionDemand: number = 0;
 
-  private totalMemSupply: number = 0;
+  private totalMemUnderprovisionSupply: number = 0;
   private totalMemUnderprovisionDemand: number = 0;
+  private totalMemOverprovisionSupply: number = 0;
   private totalMemOverprovisionDemand: number = 0;
 
   private totalFrames: number;
+
+  private workloadCpuBuffer: number = 0;
+  private workloadMemBuffer: number = 0;
 
   public constructor() {
     this.totalFrames = 0;
@@ -55,22 +60,35 @@ class ScalingResult
    */
   public addFrame(supply: ResourceRequirements, demand: ResourceRequirements): void {
 
+    /* We have to account missing supply from previous frames
+     * to simulate workload being executed later due to missing
+     * supply. */
+    let adjustedDemand = new ResourceRequirements({
+      cpu: (demand.getCpuMillis() + this.workloadCpuBuffer).toString() + "m",
+      mem: (demand.getMemBytes() + this.workloadMemBuffer).toString()
+    });
+    /* Update missing workload buffer with new value. */
+    this.workloadCpuBuffer = Math.max(0, adjustedDemand.getCpuMillis() - supply.getCpuMillis());
+    this.workloadMemBuffer = Math.max(0, adjustedDemand.getMemBytes() - supply.getMemBytes());
+
     /* Increase total counters. */
-    this.totalCpuSupply += supply.getCpuMillis();
-    this.totalMemSupply += supply.getMemBytes();
     this.totalFrames += 1;
 
     /* Count CPU under/overprovisioning. */
-    if (demand.getCpuMillis() > supply.getCpuMillis()) {
-      this.totalCpuUnderprovisionDemand += demand.getCpuMillis();
-    } else if (demand.getCpuMillis() < supply.getCpuMillis()) {
-      this.totalCpuOverprovisionDemand += demand.getCpuMillis();
+    if (adjustedDemand.getCpuMillis() > supply.getCpuMillis()) {
+      this.totalCpuUnderprovisionDemand += adjustedDemand.getCpuMillis();
+      this.totalCpuUnderprovisionSupply += supply.getCpuMillis();
+    } else if (adjustedDemand.getCpuMillis() < supply.getCpuMillis()) {
+      this.totalCpuOverprovisionDemand += adjustedDemand.getCpuMillis();
+      this.totalCpuOverprovisionSupply += supply.getCpuMillis();
     }
     /* Count memory under/overprovisioning. */
-    if (demand.getMemBytes() > supply.getMemBytes()) {
-      this.totalMemUnderprovisionDemand += demand.getMemBytes();
-    } else if (demand.getMemBytes() < supply.getMemBytes()) {
-      this.totalMemOverprovisionDemand += demand.getMemBytes();
+    if (adjustedDemand.getMemBytes() > supply.getMemBytes()) {
+      this.totalMemUnderprovisionDemand += adjustedDemand.getMemBytes();
+      this.totalMemUnderprovisionSupply += supply.getMemBytes();
+    } else if (adjustedDemand.getMemBytes() < supply.getMemBytes()) {
+      this.totalMemOverprovisionDemand += adjustedDemand.getMemBytes();
+      this.totalMemOverprovisionSupply += supply.getMemBytes();
     }
 
     return;
@@ -86,19 +104,19 @@ class ScalingResult
     /* Base scores. */
     let cpuUnderWaste = 0; // percentage of missing demand
     if (this.totalCpuUnderprovisionDemand != 0) {
-      cpuUnderWaste = (this.totalCpuUnderprovisionDemand - this.totalCpuSupply) / this.totalCpuUnderprovisionDemand; // equivalent: (supply / demand) - 1) * -1
+      cpuUnderWaste = (this.totalCpuUnderprovisionDemand - this.totalCpuUnderprovisionSupply) / this.totalCpuUnderprovisionDemand; // equivalent: (supply / demand) - 1) * -1
     }
     let cpuOverWaste = 0; // percentage of too much supply
     if (this.totalCpuOverprovisionDemand != 0 && skipOverProvision == false) {
-      cpuOverWaste = (this.totalCpuSupply - this.totalCpuOverprovisionDemand) / this.totalCpuOverprovisionDemand; // equivalent: (supply / demand) - 1)
+      cpuOverWaste = (this.totalCpuOverprovisionSupply - this.totalCpuOverprovisionDemand) / this.totalCpuOverprovisionDemand; // equivalent: (supply / demand) - 1)
     }
     let memUnderWaste = 0; // percentage of missing demand
     if (this.totalMemUnderprovisionDemand != 0) {
-      memUnderWaste = (this.totalMemUnderprovisionDemand - this.totalMemSupply) / this.totalMemUnderprovisionDemand; // equivalent: (supply / demand) - 1) * -1
+      memUnderWaste = (this.totalMemUnderprovisionDemand - this.totalMemUnderprovisionSupply) / this.totalMemUnderprovisionDemand; // equivalent: (supply / demand) - 1) * -1
     }
     let memOverWaste = 0; // percentage of too much supply
     if (this.totalMemOverprovisionDemand != 0 && skipOverProvision == false) {
-      memOverWaste = (this.totalMemSupply - this.totalMemOverprovisionDemand) / this.totalMemOverprovisionDemand; // equivalent: (supply / demand) - 1)
+      memOverWaste = (this.totalMemOverprovisionSupply - this.totalMemOverprovisionDemand) / this.totalMemOverprovisionDemand; // equivalent: (supply / demand) - 1)
     }
 
     /* Grouped scores - average of both percentages. */
