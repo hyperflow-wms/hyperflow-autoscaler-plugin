@@ -190,7 +190,7 @@ function mapToString(map: Map<any,any>) {
 }
 
 async function getDemandFrames() {
-  let wfDir = './assets/wf_example';
+  let wfDir = './assets/wf_montage_0.25';
   let workflow = Workflow.createFromFile(wfDir);
   let tracker = new WorkflowTracker(workflow);
 

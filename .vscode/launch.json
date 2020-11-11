@@ -14,7 +14,7 @@
       "program": "${workspaceFolder}/../source/bin/hflow",
       "args": [
         "run",
-        "${workspaceFolder}/assets/wf_example",
+        "${workspaceFolder}/assets/wf_montage_0.25",
         "-p", "${workspaceFolder}/dist/main.js",
       ],
       "env": {

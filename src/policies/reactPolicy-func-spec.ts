@@ -12,7 +12,7 @@ const expect = require('chai').expect;
 
 describe('ReactPolicy object', function() {
 
-  let wfDir = './assets/wf_example';
+  let wfDir = './assets/wf_montage_0.25';
   let workflow = Workflow.createFromFile(wfDir);
   let wfTracker = new WorkflowTracker(workflow);
   let startTime = new Date().getTime();
