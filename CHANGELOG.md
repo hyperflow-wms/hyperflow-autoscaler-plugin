@@ -5,6 +5,7 @@ Autoscaler Change Log
 ------------------------
 
 - Replace winston logger with pino - console logging, without memory leaks
+- Fix sendAllInputs (concat without effect)
 
 0.9.1 November 12, 2020
 ------------------------

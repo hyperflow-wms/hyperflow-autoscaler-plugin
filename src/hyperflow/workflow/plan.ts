@@ -42,7 +42,7 @@ class Plan
       let intitialSigIds = this.wf.getInitialSigIds();
       if (sendAllInputs == true) {
         let inputSigIds = this.wf.getWfInsSigIds();
-        intitialSigIds.concat(inputSigIds);
+        intitialSigIds = intitialSigIds.concat(inputSigIds);
       }
       let timeNow = new Date().getTime();
       this.tracker.notifyStart(timeNow);
