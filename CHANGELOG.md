@@ -6,6 +6,7 @@ Autoscaler Change Log
 
 - Replace winston logger with pino - console logging, without memory leaks
 - Fix sendAllInputs (concat without effect)
+- Improve very unefficient Plan.run - now it works in linear time
 
 0.9.1 November 12, 2020
 ------------------------

@@ -16,6 +16,7 @@ class Plan
   private timeForwardMs: number;
   private estimator: EstimatorInterface;
 
+  // History of processes' start and stop; not sorted
   private procHistory: Map<number, Set<number>>;
 
   constructor(wf: Workflow, tracker: WorkflowTracker, timeForwardMs: number, estimator: EstimatorInterface) {
@@ -58,16 +59,11 @@ class Plan
     /* Cyclic: grab running processes and fast-forward them with estimations. */
     const BreakException = {};
     try {
-      while (true) {
+      let REF_runningProcessIds = this.tracker.getRunningProcessIds();
+      while (REF_runningProcessIds.size > 0) {
         /* Predict end time of each process. */
-        let endedProcessesMap = new Map<number, number[]>();
-        let processIds = this.tracker.getRunningProcessIds();
-        if (processIds.size == 0) {
-          Logger.debug("[Plan] No more processes - stopping analyze");
-          break;
-        }
-        Logger.debug("[Plan] Looking for first expected execution among processes " + Array.from(processIds.values()).join(","));
-        processIds.forEach((processId) => {
+        Logger.debug("[Plan] Fast-forwarding execution of processes " + Array.from(REF_runningProcessIds.values()).join(","));
+        REF_runningProcessIds.forEach((processId) => {
           let process = this.tracker.getProcessById(processId);
           if (process === undefined) {
             throw Error("Process " + processId.toString() + " not found");
@@ -89,28 +85,15 @@ class Plan
             throw BreakException;
           }
 
-          /* Calculate estimated end time and update map. */
+          /* Calculate estimated end time and notify tracker
+           * about finished process(es). We do not care about
+           * order, as events will be sorted later. */
           let estimatedMs = this.estimator.getEstimationMs(process);
           let expectedEndTimeMs = processStartTime + estimatedMs;
-          if (endedProcessesMap.has(expectedEndTimeMs) == false) {
-            endedProcessesMap.set(expectedEndTimeMs, []);
-          }
-          endedProcessesMap.get(expectedEndTimeMs)?.push(processId);
-        });
-
-        /* Notify tracker about finished process(es),
-        * we want to preserve order of fired signals,
-        * so we sort them by end time and pick only
-        * those with first end time. */
-        let sortedKeys = Array.from(endedProcessesMap.keys()).sort();
-        let endTimeMsKey: timestamp = sortedKeys[0];
-        let procIdArr = endedProcessesMap.get(endTimeMsKey);
-        procIdArr?.forEach((procId) => {
-          let endTime = endTimeMsKey;
-          Logger.debug("[Plan] Notifying about expected process " + procId.toString() + " finish at " + endTime.toString());
-          this.tracker.notifyProcessFinished(procId, endTime);
-          this.saveProcessEndEvent(procId, endTime);
-          Logger.debug("[Plan] Saving end of " + procId.toString() + " " + endTime);
+          Logger.debug("[Plan] Notifying about expected process " + processId.toString() + " finish at " + expectedEndTimeMs.toString());
+          this.tracker.notifyProcessFinished(processId, expectedEndTimeMs); // NOTE: We do not care about newProcIds because we use tracker reference to get running pid
+          this.saveProcessEndEvent(processId, expectedEndTimeMs);
+          Logger.debug("[Plan] Saving end of " + processId.toString() + " " + expectedEndTimeMs);
         });
       }
     } catch (e) {
