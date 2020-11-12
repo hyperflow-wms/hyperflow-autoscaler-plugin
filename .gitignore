@@ -1,6 +1,3 @@
-# ignore log directories, located anywhere
-logs
-
 # dependencies
 /node_modules
 

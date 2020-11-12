@@ -13,7 +13,7 @@ class Client
 
   constructor()
   {
-    Logger.silly('[Client] Constructor');
+    Logger.trace('[Client] Constructor');
     let kubeConfig = new k8s.KubeConfig();
     kubeConfig.loadFromDefault();
 
@@ -63,7 +63,7 @@ class Client
       }
       let workerLabel = labels[Client.hfWorkerLabel];
       if (workerLabel === undefined) {
-        Logger.silly('[Client] Skipping node ' + nodeName + ' (no worker label)');
+        Logger.trace('[Client] Skipping node ' + nodeName + ' (no worker label)');
         continue;
       }
       workerNodes.push(node);
@@ -83,7 +83,7 @@ class Client
       let nodeName = pod?.spec?.nodeName;
       if (nodeName !== undefined) {
         if (workerNodesNames.includes(nodeName) === false) {
-          Logger.silly("[Client] Skipping pod " + podName + " that is NOT placed on worker node");
+          Logger.trace("[Client] Skipping pod " + podName + " that is NOT placed on worker node");
           continue;
         }
       }
@@ -94,11 +94,11 @@ class Client
         if (jobLabel !== undefined) {
           let labels = pod?.metadata?.labels;
           if (labels === undefined) {
-            Logger.silly("[Client] Skipping pod " + podName + " - it has no labels, neither required " + jobLabel);
+            Logger.trace("[Client] Skipping pod " + podName + " - it has no labels, neither required " + jobLabel);
             continue;
           }
           if (labels[jobLabel] === undefined) {
-            Logger.silly("[Client] Skipping pod " + podName + " - it has NOT required label " + jobLabel);
+            Logger.trace("[Client] Skipping pod " + podName + " - it has NOT required label " + jobLabel);
             continue;
           }
         }
@@ -107,7 +107,7 @@ class Client
       /* Skip completed and failed pods. */
       let phase = pod?.status?.phase;
       if (phase === "Succeeded" || phase === "Failed") {
-        Logger.silly("[Client] Skipping pod " + podName + " - in phase " + phase);
+        Logger.trace("[Client] Skipping pod " + podName + " - in phase " + phase);
         continue;
       }
 

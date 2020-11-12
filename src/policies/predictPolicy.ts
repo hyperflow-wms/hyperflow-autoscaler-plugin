@@ -28,7 +28,7 @@ class PredictPolicy extends Policy
 
   public constructor(wfTracker: WorkflowTracker, billingModel: BillingModel, machineType: MachineType) {
     super(wfTracker, billingModel, machineType);
-    Logger.silly("[PredictPolicy] Constructor");
+    Logger.trace("[PredictPolicy] Constructor");
     this.scaleCooldown = new CooldownTracker();
     let estimatorName = process.env['HF_VAR_autoscalerEstimator'];
     if (estimatorName == "process") {

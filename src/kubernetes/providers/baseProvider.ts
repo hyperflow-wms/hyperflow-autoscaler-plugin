@@ -18,7 +18,7 @@ abstract class BaseProvider {
   protected clusterState: ClusterState;
 
   constructor() {
-    Logger.silly("[BaseProvider] Constructor");
+    Logger.trace("[BaseProvider] Constructor");
     this.client = new Client();
   }
 
@@ -168,7 +168,7 @@ abstract class BaseProvider {
       }
       nodesNames.push(nodeName);
     }
-    Logger.silly("[BaseProvider] Found " + nodesNames.length.toString() + ' worker nodes\' names');
+    Logger.trace("[BaseProvider] Found " + nodesNames.length.toString() + ' worker nodes\' names');
     return nodesNames;
   }
 

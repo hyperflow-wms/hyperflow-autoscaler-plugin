@@ -9,7 +9,7 @@ class DummyProvider extends BaseProvider {
   constructor()
   {
     super();
-    Logger.silly("[DummyProvider] Constructor");
+    Logger.trace("[DummyProvider] Constructor");
   }
 
   /**

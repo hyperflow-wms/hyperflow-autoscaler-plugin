@@ -24,7 +24,7 @@ abstract class RPC {
   private api_object: any;
 
   constructor(api_object: any) {
-    Logger.silly('[RPC] Constructor');
+    Logger.trace('[RPC] Constructor');
     this.callback_map = {};
     this.api_object = api_object;
   }
@@ -45,7 +45,7 @@ abstract class RPC {
     }
     let result = fn.apply(this.api_object, req.args);
     let callId = req.id;
-    Logger.silly('[RPC] Sending result with callId ' + callId + ': ' + JSON.stringify(result));
+    Logger.trace('[RPC] Sending result with callId ' + callId + ': ' + JSON.stringify(result));
     this.sendRemote({
       id: callId,
       type: MESSAGE_TYPE_REPLY,
@@ -55,7 +55,7 @@ abstract class RPC {
   }
 
   private handleReply(rep: RPCReply): void {
-    Logger.silly('[RPC] Handling reply: ' + JSON.stringify(rep));
+    Logger.trace('[RPC] Handling reply: ' + JSON.stringify(rep));
     let callId = rep.id;
     if (this.callback_map[callId] === undefined) {
       Logger.error('[RPC] Callback for call-' + callId + ' is not set');
@@ -64,12 +64,12 @@ abstract class RPC {
     let cb_copy = this.callback_map[callId];
     delete this.callback_map[callId];
     let content = rep.content;
-    Logger.silly('[RPC] Running callback');
+    Logger.trace('[RPC] Running callback');
     cb_copy(content);
   }
 
   protected handleMessage(data: object): void {
-    Logger.silly('[RPC] Handling message: ' + JSON.stringify(data));
+    Logger.trace('[RPC] Handling message: ' + JSON.stringify(data));
     if (typeof data !== 'object') {
       Logger.warn('[RPC] No valid RPC message - skipping');
       return;
@@ -97,7 +97,7 @@ abstract class RPC {
     if (this.callback_map[randomId] !== undefined) {
       throw Error("Callback is already set!");
     }
-    Logger.silly('[RPC] Saving callback for ' + randomId);
+    Logger.trace('[RPC] Saving callback for ' + randomId);
     this.callback_map[randomId] = cb;
     return;
   }

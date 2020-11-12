@@ -26,7 +26,7 @@ class ReactPolicy extends Policy
 
   public constructor(wfTracker: WorkflowTracker, billingModel: BillingModel, machineType: MachineType) {
     super(wfTracker, billingModel, machineType);
-    Logger.silly("[ReactPolicy] Constructor");
+    Logger.trace("[ReactPolicy] Constructor");
     this.scaleUpCooldown = new CooldownTracker();
     this.scaleDownCooldown = new CooldownTracker();
   }

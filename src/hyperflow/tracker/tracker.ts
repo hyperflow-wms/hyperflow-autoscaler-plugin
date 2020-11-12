@@ -31,7 +31,7 @@ class WorkflowTracker
    */
   constructor(wfOrTracker: Workflow | WorkflowTracker) {
     if (wfOrTracker instanceof WorkflowTracker) {
-      Logger.silly("[WorkflowTracker] Copy constructor");
+      Logger.trace("[WorkflowTracker] Copy constructor");
       let oldWT = wfOrTracker;
       this.executionStartTime = (oldWT.executionStartTime) ? oldWT.executionStartTime : undefined;
       oldWT.processesMap.forEach((val, key) => {
@@ -47,7 +47,7 @@ class WorkflowTracker
       this.runningProcesses = new Set(oldWT.runningProcesses);
       this.workflow = oldWT.workflow; // CAUTION: this is shared reference (const)
     } else {
-      Logger.silly("[WorkflowTracker] Constructor");
+      Logger.trace("[WorkflowTracker] Constructor");
       let wf = wfOrTracker;
       this.runningProcesses = new Set();
       this.loadWorkflow(wf);

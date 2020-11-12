@@ -16,7 +16,7 @@ class KindProvider extends BaseProvider {
   constructor()
   {
     super();
-    Logger.silly("[KindProvider] Constructor");
+    Logger.trace("[KindProvider] Constructor");
     this.drainedNodeNames = new Set();
   }
 

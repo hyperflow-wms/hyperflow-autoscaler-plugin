@@ -26,13 +26,13 @@
   "dependencies": {
     "@google-cloud/container": "^2.1.1",
     "@kubernetes/client-node": "^0.12.2",
-    "redis": "^3.0.2",
-    "stack-trace": "^0.0.10",
-    "winston": "^3.3.3"
+    "pino": "^6.7.0",
+    "redis": "^3.0.2"
   },
   "devDependencies": {
     "@types/chai": "^4.2.14",
     "@types/mocha": "^8.0.3",
+    "@types/pino": "^6.3.3",
     "@types/redis": "^2.8.28",
     "@types/sinon": "^9.0.8",
     "@types/stack-trace": "^0.0.29",

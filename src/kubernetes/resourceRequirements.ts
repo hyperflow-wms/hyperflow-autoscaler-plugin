@@ -40,7 +40,7 @@ class ResourceRequirements {
    * @return number of bytes
    */
   private static parseMemString(mem: string): number  {
-    //Logger.silly('[Resources] memoryStringToBytes(' + mem + ')');
+    //Logger.trace('[Resources] memoryStringToBytes(' + mem + ')');
     let format1 = mem.match(/^(?<num>\d+)$/);
     if (format1 != null) {
       // @ts-ignore: Object is possibly 'undefined'.
@@ -137,7 +137,7 @@ class ResourceRequirements {
    * @return number of millis
    */
   private static parseCpuString(cpu: string): number {
-    //Logger.silly('[Resources] parseCpuString(' + cpu + ')');
+    //Logger.trace('[Resources] parseCpuString(' + cpu + ')');
     let format1 = cpu.match(/^(?<num>\d+)m$/);
     if (format1 != null) {
       // @ts-ignore: Object is possibly 'undefined'.

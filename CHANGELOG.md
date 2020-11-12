@@ -4,6 +4,7 @@ Autoscaler Change Log
 0.10.0 under development
 ------------------------
 
+- Replace winston logger with pino - console logging, without memory leaks
 
 0.9.1 November 12, 2020
 ------------------------

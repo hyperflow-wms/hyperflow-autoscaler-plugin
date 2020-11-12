@@ -63,7 +63,7 @@ describe('Timeframe class', function() {
       expectedResult.set(170, []);
       expectedResult.set(180, []);
       expectedResult.set(190, []);
-      let warnSpy = sinon.spy(getBaseLogger('timeframe'), 'warn');
+      let warnSpy = sinon.spy(getBaseLogger(), 'warn');
       expect(Timeframe.packEqualIntervals(data, 100, 200, 10)).to.deep.equal(expectedResult);
       warnSpy.restore();
       sinon.assert.called(warnSpy);
@@ -86,7 +86,7 @@ describe('Timeframe class', function() {
       expectedResult.set(170, []);
       expectedResult.set(180, []);
       expectedResult.set(190, ["A", "B"]);
-      let warnSpy = sinon.spy(getBaseLogger('timeframe'), 'warn');
+      let warnSpy = sinon.spy(getBaseLogger(), 'warn');
       expect(Timeframe.packEqualIntervals(data, 100, 200, 10)).to.deep.equal(expectedResult);
       warnSpy.restore();
       sinon.assert.called(warnSpy);

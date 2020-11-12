@@ -19,7 +19,7 @@ class Plan
   private procHistory: Map<number, Set<number>>;
 
   constructor(wf: Workflow, tracker: WorkflowTracker, timeForwardMs: number, estimator: EstimatorInterface) {
-    Logger.silly("[Plan] Constructor");
+    Logger.trace("[Plan] Constructor");
     this.wf = wf;
     this.tracker = tracker;
     this.timeForwardMs = timeForwardMs;

@@ -7,7 +7,7 @@ class CooldownTracker {
   private cooldownEndMsTimestamp: number;
 
   constructor(seconds?: number) {
-    Logger.silly("[CountdownTracker] Constructor");
+    Logger.trace("[CountdownTracker] Constructor");
     if (seconds) {
       this.setNSeconds(seconds);
     }

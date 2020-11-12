@@ -27,7 +27,7 @@ const Logger = getBaseLogger();
  * You will lose 'this' context, so this helpers seems to be not useful at all...
  */
 const withTimeout = <R, P extends any, T extends (...args: P[]) => Promise<R>>(logic: T, ms: number) => {
-  Logger.silly('[Helpers] Running function with timeout ' + ms.toString() + 'ms');
+  Logger.trace('[Helpers] Running function with timeout ' + ms.toString() + 'ms');
   return (...args: Parameters<T>) => {
     // create a promise that rejects in <ms> milliseconds; https://italonascimento.github.io/applying-a-timeout-to-your-promises/
     const timeout = new Promise((resolve, reject) => {

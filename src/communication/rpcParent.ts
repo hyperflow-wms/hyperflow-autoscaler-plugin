@@ -12,7 +12,7 @@ class ParentRPC extends RPC {
 
   constructor(child_process: child_process.ChildProcess, api_object: any) {
     super(api_object);
-    Logger.silly('[ParentRPC] Constructor');
+    Logger.trace('[ParentRPC] Constructor');
     this.child_process = child_process;
   }
 

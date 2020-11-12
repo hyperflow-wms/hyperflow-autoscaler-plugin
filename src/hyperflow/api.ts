@@ -12,7 +12,7 @@ class API {
   private rpc?: RPC;
 
   constructor(rcl: RedisClient, wflib: HFWflib, engine: HFEngine) {
-    Logger.silly('[API] Constructor called');
+    Logger.trace('[API] Constructor called');
     this.rcl = rcl;
     this.wflib = wflib;
     this.engine = engine;

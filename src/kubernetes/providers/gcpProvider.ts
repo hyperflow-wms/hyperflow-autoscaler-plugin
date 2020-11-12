@@ -31,7 +31,7 @@ class GCPProvider extends BaseProvider {
   constructor()
   {
     super();
-    Logger.silly("[GCPProvider] Constructor");
+    Logger.trace("[GCPProvider] Constructor");
     this.initialized = false;
   }
 
@@ -56,20 +56,20 @@ class GCPProvider extends BaseProvider {
     if (clusterName === undefined || clusterName === null) {
       throw Error("Unable to extract name from cluster");
     }
-    Logger.silly("[GCPProvider] Fetched clusterName: " + clusterName);
+    Logger.trace("[GCPProvider] Fetched clusterName: " + clusterName);
     this.clusterName = clusterName;
     let location = cluster.location;
     if (location === undefined || location === null) {
       throw Error("Unable to location from cluster");
     }
-    Logger.silly("[GCPProvider] Fetched location: " + location);
+    Logger.trace("[GCPProvider] Fetched location: " + location);
     this.zone = location;
     let nodePools = cluster.nodePools;
     if (nodePools === undefined || nodePools === null) {
       throw Error("Unable to fetch nodePools");
     }
     let expecteNodePoolName = process.env['HF_VAR_autoscalerGKEPool'] || DEFAULT_NODE_POOL_NAME;
-    Logger.silly("[GCPProvider] Looking for node pool with name " + expecteNodePoolName);
+    Logger.trace("[GCPProvider] Looking for node pool with name " + expecteNodePoolName);
     let nodePoolIndex = nodePools.findIndex(x => x.name == expecteNodePoolName);
     if (nodePoolIndex === -1) {
       throw Error("'" + expecteNodePoolName + "' node pool not found.");
@@ -87,7 +87,7 @@ class GCPProvider extends BaseProvider {
     if (this.initialized === false) {
       throw Error("Provider was not intialized");
     }
-    Logger.silly("[GCPProvider] Resizing cluster to " + workersNum);
+    Logger.trace("[GCPProvider] Resizing cluster to " + workersNum);
     const request = {
       projectId: this.projectId,
       zone: this.zone,
@@ -96,9 +96,9 @@ class GCPProvider extends BaseProvider {
       nodeCount: workersNum,
     };
     try {
-      Logger.silly("[GCPProvider] Resize request " + JSON.stringify(request));
+      Logger.trace("[GCPProvider] Resize request " + JSON.stringify(request));
       let result = await this.clusterClient.setNodePoolSize(request);
-      Logger.silly("[GCPProvider] setNodePoolSize response" + JSON.stringify(result));
+      Logger.trace("[GCPProvider] setNodePoolSize response" + JSON.stringify(result));
 
     } catch (err) {
       // NOTE here we might get following error:
