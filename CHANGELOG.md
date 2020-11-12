@@ -4,6 +4,10 @@ Autoscaler Change Log
 0.10.0 under development
 ------------------------
 
+
+0.9.1 November 12, 2020
+------------------------
+
 - Fix getDemandFrames usage - sum resources before packing them into equal intervals
 - Fix time passed to scalingOptimizer in predictPolicy (make sure no event is skipped)
 - Fix scaling result calculation (fix equation + consider pending workload)
