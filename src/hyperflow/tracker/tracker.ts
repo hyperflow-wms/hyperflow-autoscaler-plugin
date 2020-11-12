@@ -66,8 +66,9 @@ class WorkflowTracker
    * Notifies tracker about emitted input signal.
    * @param sigId signal ID
    * @param time event time
+   * @return array of newly started processes
    */
-  public notifyInitialSignal(sigId: number, time: timestamp) {
+  public notifyInitialSignal(sigId: number, time: timestamp): number[] {
     Logger.debug("[WorkflowTracker] Notified about signal " + sigId.toString() + " emit");
     let signal = this.signalsMap.get(sigId);
     if (signal === undefined) {
@@ -75,7 +76,7 @@ class WorkflowTracker
     }
     if (signal.wasEmitted() == true) {
       Logger.warn("[WorkflowTracker] Signal " + sigId.toString() + " was already emitted");
-      return;
+      return [];
     }
     signal.markEmit(time);
 
@@ -84,19 +85,24 @@ class WorkflowTracker
     if (nextProcessIds === undefined) {
       throw Error("No mapping found - even empty array must be specified!");
     }
+    let startedProcessIds: number[] = [];
     for (let processId of nextProcessIds) {
-      this.startProcessIfReady(processId, time);
+      let started = this.startProcessIfReady(processId, time);
+      if (started === true) {
+        startedProcessIds.push(processId);
+      }
     }
 
-    return;
+    return startedProcessIds;
   }
 
   /**
    * Notifies tracker about finished process.
    * @param procId process ID
    * @param time event time
+   * @return array of newly started processes (consequence of passing signal)
    */
-  public notifyProcessFinished(procId: number, time: timestamp) {
+  public notifyProcessFinished(procId: number, time: timestamp): number[] {
     Logger.debug("[WorkflowTracker] Notified about process " + procId.toString() + " finish");
     let process = this.processesMap.get(procId);
     if (process === undefined) {
@@ -111,19 +117,22 @@ class WorkflowTracker
     if (nextSignalIds === undefined) {
       throw Error("No mapping found - even empty array must be specified!");
     }
+    let startedProcessIds: number[] = [];
     for (let signalId of nextSignalIds) {
-      this.notifyInitialSignal(signalId, time);
+      let sigStartedProcessIds = this.notifyInitialSignal(signalId, time);
+      startedProcessIds = startedProcessIds.concat(sigStartedProcessIds);
     }
 
-    return;
+    return startedProcessIds;
   }
 
   /**
    * Starts process, only if all input signals are ready.
    * @param procId process ID
    * @param time start time
+   * @return whether process was started
    */
-  private startProcessIfReady(procId: number, time: timestamp) {
+  private startProcessIfReady(procId: number, time: timestamp): boolean {
     let process = this.processesMap.get(procId);
     if (process === undefined) {
       throw Error("Process " + procId.toString() + " not found");
@@ -138,8 +147,9 @@ class WorkflowTracker
       Logger.debug("[WorkflowTracker] Firing process " + procId.toString() + " - all ins are ready");
       process.markStart(time);
       this.runningProcesses.add(procId);
+      return true;
     }
-    return;
+    return false;
   }
 
   /**
