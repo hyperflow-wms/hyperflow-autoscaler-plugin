@@ -5,7 +5,7 @@ import { ScalingResult, ScoreOptions } from "./scalingResult";
 
 const Logger = getBaseLogger();
 
-const DEFAULT_SCALING_PROBE_TIME_MS = 100;
+const DEFAULT_SCALING_PROBE_TIME_MS = 10000; // 10 seconds scaling precision is completely enough
 const MAX_MACHINES = 8;
 
 type timestamp = number;

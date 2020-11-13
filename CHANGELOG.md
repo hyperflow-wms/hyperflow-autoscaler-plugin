@@ -4,6 +4,7 @@ Autoscaler Change Log
 0.11.0 under development
 ------------------------
 
+- Update default scaling probing to more reasonable value (10 seconds)
 
 0.10.0 November 13, 2020
 ------------------------
