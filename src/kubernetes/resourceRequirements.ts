@@ -132,6 +132,33 @@ class ResourceRequirements {
   }
 
   /**
+   * Increases resource with values from another one.
+   * Useful for calculating multiple resources without
+   * constructing new objects.
+   * @param cpuMillis
+   * @param memBytes
+   */
+  public add(cpuMillis: number, memBytes: number): void {
+    this.cpuMillis += cpuMillis;
+    this.memBytes += memBytes;
+    if (this.cpuMillis < 0 || this.memBytes < 0) {
+      throw Error("ResourceRequirements' values must not fall below zero")
+    }
+    return;
+  }
+
+  /**
+   * Clones current object.
+   * @return copied object
+   */
+  public clone(): ResourceRequirements {
+    let res = new ResourceRequirements({cpu: "0", mem: "0"});
+    res.cpuMillis = this.cpuMillis;
+    res.memBytes = this.memBytes;
+    return res;
+  }
+
+  /**
    * Converts CPU string.
    * @param cpu string, eg. "4.5"
    * @return number of millis
