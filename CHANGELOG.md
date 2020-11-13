@@ -5,6 +5,7 @@ Autoscaler Change Log
 ------------------------
 
 - Update default scaling probing to more reasonable value (10 seconds)
+- Add missing verbose level in pino logger
 
 0.10.0 November 13, 2020
 ------------------------
