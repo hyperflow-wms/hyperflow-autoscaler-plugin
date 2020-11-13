@@ -1,10 +1,24 @@
-
-import GCPBillingModel from '../../cloud/gcpBillingModel';
-import { GCPMachines, N1_HIGHCPU_4 } from '../../cloud/gcpMachines';
-import ResourceRequirements from '../../kubernetes/resourceRequirements';
-import ScalingOptimizer from './scalingOptimizer';
+import GCPBillingModel from "../../cloud/gcpBillingModel";
+import { GCPMachines, N1_HIGHCPU_4 } from "../../cloud/gcpMachines";
+import ResourceRequirements from "../../kubernetes/resourceRequirements";
+import StaticProcessEstimator from "../estimators/staticProcessEstimator";
+import WorkflowTracker from "../tracker/tracker";
+import Workflow from "../tracker/workflow";
+import Plan from "./plan";
+import ScalingOptimizer from "./scalingOptimizer";
 
 const expect = require('chai').expect;
+
+type timestamp = number;
+
+let wfDir = './assets/wf_montage-2mass_2.0';
+let workflow = Workflow.createFromFile(wfDir);
+
+let wfTracker = new WorkflowTracker(workflow);
+let maxPlanTimeMs: number = 300000;
+let estimator = new StaticProcessEstimator();
+let machineType = GCPMachines.makeObject(N1_HIGHCPU_4);
+let PROVISIONING_MACHINE_AVG_TIME = 120 * 1000;
 
 describe('ScalingOptimizer class', function() {
   context('Score calculation', function() {
@@ -21,5 +35,25 @@ describe('ScalingOptimizer class', function() {
         previousScore = score;
       }
     });
+  });
+
+  context('find optimal action for very heavy and long workload', function() {
+    // prepare plan
+    let beforePlanTime: timestamp = new Date().getTime();
+    let plan = new Plan(workflow, wfTracker, maxPlanTimeMs, estimator);
+    plan.run();
+    let demandFrames = plan.getDemandFrames();
+
+    // test optimizer for 1 worker
+    let optimizerA = new ScalingOptimizer(1, machineType, PROVISIONING_MACHINE_AVG_TIME, maxPlanTimeMs, new GCPBillingModel());
+    optimizerA.setScalingProbeTime(30000);
+    let bestDecisionA = optimizerA.findBestDecision(beforePlanTime, demandFrames);
+    expect(bestDecisionA.getMachinesDiff()).to.equal(7);
+
+    // test optimizer for 8 workers
+    let optimizerB = new ScalingOptimizer(8, machineType, PROVISIONING_MACHINE_AVG_TIME, maxPlanTimeMs, new GCPBillingModel());
+    optimizerB.setScalingProbeTime(30000);
+    let bestDecisionB = optimizerB.findBestDecision(beforePlanTime, demandFrames);
+    expect(bestDecisionB.getMachinesDiff()).to.equal(0);
   });
 });
