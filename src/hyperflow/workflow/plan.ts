@@ -144,6 +144,8 @@ class Plan
    * Returns state history - time frames and corresponding running
    * process ids.
    * It's sorted by default.
+   * CAUTION: This function is heavy for memory, eg. it takes
+   *  0.5GB of memory for montage-2mass_2.0.
    */
   public getStateHistory(): Map<number, Set<number>> {
     let states = new Map<number, Set<number>>();
