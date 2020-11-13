@@ -163,23 +163,32 @@ class Plan
   }
 
   public getDemandFrames(): Map<number, ResourceRequirements[]> {
+
     let frames = new Map<number, ResourceRequirements[]>();
 
-    let stateHistory = this.getStateHistory();
-    stateHistory.forEach((procIds, timeKeyMs) => {
-      let resArr: ResourceRequirements[] = [];
-      procIds.forEach((procId) => {
+    let currentUsage = new ResourceRequirements({cpu: "0", mem: "0"});
+    let history = this.getChangeHistory();
+    history.forEach((procMarkers, timeKey) => {
+      /* Positive value means process started working at given time,
+       * negative that it finished. */
+      procMarkers.forEach((procMarker) => {
+        let procId = Math.abs(procMarker)
         let process = this.tracker.getProcessById(procId);
         if (process == undefined) {
           throw Error("Process " + procId.toString() + " not found");
         }
-        let cpuRequest = process.getCpuRequest();
-        let memRequest = process.getMemRequest();
-        resArr.push(new ResourceRequirements({cpu: cpuRequest, mem: memRequest}));
+        let cpuVal = ResourceRequirements.Utils.parseCpuString(process.getCpuRequest());
+        let memVal = ResourceRequirements.Utils.parseMemString(process.getMemRequest());
+        if (procMarker > 0) {
+          currentUsage.add(cpuVal, memVal);
+        } else {
+          currentUsage.add(cpuVal * (-1), memVal * (-1));
+        }
       });
-      let totalRes = [ResourceRequirements.Utils.getSum(resArr)]; // We are wrapping it with array to preserve compatibility with existing code
-      frames.set(timeKeyMs, totalRes);
+      let frameVal = [currentUsage.clone()]; // We wrap object with array to preserve compatibility with existing code
+      frames.set(timeKey, frameVal);
     });
+
 
     return frames;
   }

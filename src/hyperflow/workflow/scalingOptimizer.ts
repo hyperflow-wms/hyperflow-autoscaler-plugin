@@ -212,7 +212,7 @@ async function getDemandFrames() {
 
   wfStart = tracker.getExecutionStartTime();
 
-  Logger.debug(mapToString(plan.getStateHistory()));
+  //Logger.debug(mapToString(plan.getStateHistory()));
   let demandFrames = plan.getDemandFrames();
   Logger.debug(mapToString(demandFrames));
   return demandFrames;

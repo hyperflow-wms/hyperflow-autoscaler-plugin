@@ -7,6 +7,7 @@ Autoscaler Change Log
 - Replace winston logger with pino - console logging, without memory leaks
 - Fix sendAllInputs (concat without effect)
 - Improve very unefficient Plan.run - now it works in linear time
+- Improve Plan.getDemandFrames (eg. memory for montage2-2mass_2.0 was reduced from 500 MB to 3 KB)
 
 0.9.1 November 12, 2020
 ------------------------
