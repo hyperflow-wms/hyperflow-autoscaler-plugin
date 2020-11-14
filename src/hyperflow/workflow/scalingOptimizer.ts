@@ -131,7 +131,8 @@ class ScalingOptimizer
     //Logger.debug('Scaling res for no action at ' + startTimeMs.toString() + ': ' + scalingRes.getPrice().toString() + '$, score ' + scalingRes.getScore({}).toString());
 
     /* Try every possible scaling decision at given probe interval,
-     * and find best option. */
+     * and find best option.
+     * TODO: we should limit loop max time to reactInterval, further analysis is not necessary. */
     for (let t = startTimeMs; t < maxTimeMs; t += this.scalingProbeTime) {
       for (let n = (possbileLessMachines*(-1)); n <= possibleMoreMachines; n++) {
         /* No-scaling action was already calculated. */
