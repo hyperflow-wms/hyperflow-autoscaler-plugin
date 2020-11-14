@@ -115,31 +115,47 @@ class Engine {
     Logger.verbose('[Engine] Supply: ' + supply);
 
     let scalingDecision = this.policy.getDecision(demand, supply, numWorkers);
-    Logger.debug("[Engine] Recomended action: " + scalingDecision.getMachinesDiff().toString() + " at " + scalingDecision.getTime());
     let machinesDiff = scalingDecision.getMachinesDiff();
+    let delayMs = Math.max(0, scalingDecision.getTime() - (new Date()).getTime()); // Cap delay at 0ms.
+    Logger.debug("[Engine] Recomended action: " + scalingDecision.getMachinesDiff().toString() + " after " + delayMs.toString() + " ms.");
     if (machinesDiff == 0) {
       Logger.info("[Engine] No action necessary");
+      setTimeout(() => { this.reactLoop(); }, REACT_INTERVAL);
+      return;
+    }
+
+    /* During MAPE loop we can only "schedule" soon scaling decisions. */
+    if (delayMs > REACT_INTERVAL) {
+      Logger.info("[Engine] Action is too far from now, skipping execution");
+      setTimeout(() => { this.reactLoop(); }, REACT_INTERVAL);
+      return;
+    }
+
+    /* Wait some time, if there we get delayed decision. */
+    if (delayMs > 0) {
+      Logger.info("[Engine] Waiting " + delayMs + " ms. before performing action");
+      await new Promise((res, rej) => { setTimeout(res, delayMs); });
+    }
+
+    /* Perform scaling action. */
+    if (this.policy.isReady(scalingDecision) === false) {
+      Logger.info("[Engine] No action, due to policy condition: not_ready");
     } else {
-      if (this.policy.isReady(scalingDecision) === false) {
-        Logger.info("[Engine] No action, due to policy condition: not_ready");
+      let targetPoolSize = numWorkers + machinesDiff;
+      if (machinesDiff > 0) {
+        Logger.info("[Engine] Scaling up from " + numWorkers.toString() + " to " + targetPoolSize.toString() + " machines");
       } else {
-        let targetPoolSize = numWorkers + machinesDiff;
-        if (machinesDiff > 0) {
-          Logger.info("[Engine] Scaling up from " + numWorkers.toString() + " to " + targetPoolSize.toString() + " machines");
-        } else {
-          Logger.info("[Engine] Scaling down from " + numWorkers.toString() + " to " + targetPoolSize.toString() + " machines");
-        }
-        // TODO: postpone scaling to appropriate time
-        try {
-          await this.provider.resizeCluster(targetPoolSize);
-          // TODO: notify about new time (updated decision)
-          this.policy.actionTaken(scalingDecision);
-        } catch (err) {
-          Logger.error("[Engine] Unable to resize cluster: " + err);
-        }
+        Logger.info("[Engine] Scaling down from " + numWorkers.toString() + " to " + targetPoolSize.toString() + " machines");
+      }
+      try {
+        await this.provider.resizeCluster(targetPoolSize);
+        this.policy.actionTaken(scalingDecision);
+      } catch (err) {
+        Logger.error("[Engine] Unable to resize cluster: " + err);
       }
     }
 
+    /* Schedule next loop. */
     setTimeout(() => { this.reactLoop(); }, REACT_INTERVAL);
 
     return;

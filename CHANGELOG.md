@@ -7,6 +7,7 @@ Autoscaler Change Log
 - Update default scaling probing to more reasonable value (10 seconds)
 - Add missing verbose level in pino logger
 - Skip provisioning time, when calculating result of down-scale
+- Add missing delay for executing postponed actions
 
 0.10.0 November 13, 2020
 ------------------------
