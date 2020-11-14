@@ -119,6 +119,16 @@ class ScalingResult
       memOverWaste = (this.totalMemOverprovisionSupply - this.totalMemOverprovisionDemand) / this.totalMemOverprovisionDemand; // equivalent: (supply / demand) - 1)
     }
 
+    /* Temporary idea - aggresive minimization of underProvision: ignore
+     * single resource overProvision, to make sure we provide enough
+     * resources. */
+    if (cpuUnderWaste > 0 && memOverWaste > 0) {
+      memOverWaste = 0;
+    }
+    if (cpuOverWaste > 0 && memUnderWaste > 0) {
+      cpuOverWaste = 0;
+    }
+
     /* Grouped scores - average of both percentages. */
     let underWaste = (cpuUnderWaste + memUnderWaste) / 2;
     let overWaste = (cpuOverWaste + memOverWaste) / 2;

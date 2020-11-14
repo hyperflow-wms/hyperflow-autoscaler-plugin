@@ -8,6 +8,7 @@ Autoscaler Change Log
 - Add missing verbose level in pino logger
 - Skip provisioning time, when calculating result of down-scale
 - Add missing delay for executing postponed actions
+- Score calculation change: overprovision is ignored when other resource is underutilized
 
 0.10.0 November 13, 2020
 ------------------------

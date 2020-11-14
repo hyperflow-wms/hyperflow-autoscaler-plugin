@@ -54,34 +54,68 @@ describe('ScalingResult class', function() {
 
     it('calculate higher score for less overprovision', function() {
       let object1 = new ScalingResult();
-      let supply1 = new ResourceRequirements({cpu: "3", mem: "500Mi"});
+      let supply1 = new ResourceRequirements({cpu: "6", mem: "500Mi"});
+      let demand1 = new ResourceRequirements({cpu: "3", mem: "200Mi"});
+      object1.addFrame(supply1, demand1);
+      let score1 = object1.getScore({});
+
+      let object2 = new ScalingResult();
+      let supply2 = new ResourceRequirements({cpu: "6", mem: "400Mi"});
+      let demand2 = new ResourceRequirements({cpu: "3", mem: "200Mi"});
+      object2.addFrame(supply2, demand2);
+      let score2 = object2.getScore({});
+      expect(score2).greaterThan(score1);
+
+      let object3 = new ScalingResult();
+      let supply3 = new ResourceRequirements({cpu: "5", mem: "400Mi"});
+      let demand3 = new ResourceRequirements({cpu: "3", mem: "200Mi"});
+      object3.addFrame(supply3, demand3);
+      let score3 = object3.getScore({});
+      expect(score3).greaterThan(score1);
+    });
+
+    it('calculate higher score for less underprovisioning', function() {
+      let object1 = new ScalingResult();
+      let supply1 = new ResourceRequirements({cpu: "3", mem: "100Mi"});
       let demand1 = new ResourceRequirements({cpu: "6", mem: "200Mi"});
       object1.addFrame(supply1, demand1);
       let score1 = object1.getScore({});
 
       let object2 = new ScalingResult();
-      let supply2 = new ResourceRequirements({cpu: "3", mem: "400Mi"});
+      let supply2 = new ResourceRequirements({cpu: "4", mem: "100Mi"});
       let demand2 = new ResourceRequirements({cpu: "6", mem: "200Mi"});
       object2.addFrame(supply2, demand2);
       let score2 = object2.getScore({});
-
       expect(score2).greaterThan(score1);
+
+      let object3 = new ScalingResult();
+      let supply3 = new ResourceRequirements({cpu: "4", mem: "150Mi"});
+      let demand3 = new ResourceRequirements({cpu: "6", mem: "200Mi"});
+      object3.addFrame(supply3, demand3);
+      let score3 = object3.getScore({});
+      expect(score3).greaterThan(score1);
     });
 
-    it('calculate higher score for less underprovisioning', function() {
+    it('[temporary idea] ignore overprovision when other resource is underutilized', function() {
       let object1 = new ScalingResult();
-      let supply1 = new ResourceRequirements({cpu: "3", mem: "0"});
-      let demand1 = new ResourceRequirements({cpu: "6", mem: "0"});
+      let supply1 = new ResourceRequirements({cpu: "3", mem: "400Mi"});
+      let demand1 = new ResourceRequirements({cpu: "6", mem: "200Mi"});
       object1.addFrame(supply1, demand1);
       let score1 = object1.getScore({});
 
       let object2 = new ScalingResult();
-      let supply2 = new ResourceRequirements({cpu: "4", mem: "0"});
-      let demand2 = new ResourceRequirements({cpu: "6", mem: "0"});
+      let supply2 = new ResourceRequirements({cpu: "3", mem: "500Mi"});
+      let demand2 = new ResourceRequirements({cpu: "6", mem: "200Mi"});
       object2.addFrame(supply2, demand2);
       let score2 = object2.getScore({});
+      expect(score2).to.equal(score1);
 
-      expect(score2).greaterThan(score1);
+      let object3 = new ScalingResult();
+      let supply3 = new ResourceRequirements({cpu: "4", mem: "500Mi"});
+      let demand3 = new ResourceRequirements({cpu: "6", mem: "200Mi"});
+      object3.addFrame(supply3, demand3);
+      let score3 = object3.getScore({});
+      expect(score3).greaterThan(score2);
     });
   });
 
