@@ -125,9 +125,9 @@ class Engine {
       } else {
         let targetPoolSize = numWorkers + machinesDiff;
         if (machinesDiff > 0) {
-          Logger.info("[Engine] Scaling up to " + targetPoolSize.toString() + " machines");
+          Logger.info("[Engine] Scaling up from " + numWorkers.toString() + " to " + targetPoolSize.toString() + " machines");
         } else {
-          Logger.info("[Engine] Scaling down to " + targetPoolSize.toString() + " machines");
+          Logger.info("[Engine] Scaling down from " + numWorkers.toString() + " to " + targetPoolSize.toString() + " machines");
         }
         // TODO: postpone scaling to appropriate time
         try {
