@@ -87,7 +87,15 @@ class ScalingOptimizer
       mem: (machinesScaled * this.machineType.getMemBytes()).toString(),
     });
 
-    let timeScaledAndReadyMs = scalingTime + this.provisioningTimeMs;
+    /* If scaling up, then we have to wait some time until nodes are ready.
+     * When scaling down, we can consider it as immediate action. */
+    let timeScaledAndReadyMs: number;
+    if (machinesDiff > 0) {
+      timeScaledAndReadyMs = scalingTime + this.provisioningTimeMs;
+    } else {
+      timeScaledAndReadyMs = scalingTime;
+    }
+
     demandBaseline.forEach((demand, timeKeyMs) => {
       if (timeKeyMs >= timeScaledAndReadyMs) {
         scalingResult.addFrame(supplyAfterScaling, demand);
