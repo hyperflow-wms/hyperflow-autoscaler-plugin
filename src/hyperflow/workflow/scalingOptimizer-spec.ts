@@ -35,25 +35,25 @@ describe('ScalingOptimizer class', function() {
         previousScore = score;
       }
     });
-  });
 
-  context('find optimal action for very heavy and long workload', function() {
-    // prepare plan
-    let beforePlanTime: timestamp = new Date().getTime();
-    let plan = new Plan(workflow, wfTracker, maxPlanTimeMs, estimator);
-    plan.run();
-    let demandFrames = plan.getDemandFrames();
+    it('find optimal action for very heavy and long workload', function() {
+      // prepare plan
+      let beforePlanTime: timestamp = new Date().getTime();
+      let plan = new Plan(workflow, wfTracker, maxPlanTimeMs, estimator);
+      plan.run();
+      let demandFrames = plan.getDemandFrames();
 
-    // test optimizer for 1 worker
-    let optimizerA = new ScalingOptimizer(1, machineType, PROVISIONING_MACHINE_AVG_TIME, maxPlanTimeMs, new GCPBillingModel());
-    optimizerA.setScalingProbeTime(30000);
-    let bestDecisionA = optimizerA.findBestDecision(beforePlanTime, demandFrames);
-    expect(bestDecisionA.getMachinesDiff()).to.equal(7);
+      // test optimizer for 1 worker
+      let optimizerA = new ScalingOptimizer(1, machineType, PROVISIONING_MACHINE_AVG_TIME, maxPlanTimeMs, new GCPBillingModel());
+      optimizerA.setScalingProbeTime(30000);
+      let bestDecisionA = optimizerA.findBestDecision(beforePlanTime, demandFrames);
+      expect(bestDecisionA.getMachinesDiff()).to.equal(7);
 
-    // test optimizer for 8 workers
-    let optimizerB = new ScalingOptimizer(8, machineType, PROVISIONING_MACHINE_AVG_TIME, maxPlanTimeMs, new GCPBillingModel());
-    optimizerB.setScalingProbeTime(30000);
-    let bestDecisionB = optimizerB.findBestDecision(beforePlanTime, demandFrames);
-    expect(bestDecisionB.getMachinesDiff()).to.equal(0);
+      // test optimizer for 8 workers
+      let optimizerB = new ScalingOptimizer(8, machineType, PROVISIONING_MACHINE_AVG_TIME, maxPlanTimeMs, new GCPBillingModel());
+      optimizerB.setScalingProbeTime(30000);
+      let bestDecisionB = optimizerB.findBestDecision(beforePlanTime, demandFrames);
+      expect(bestDecisionB.getMachinesDiff()).to.equal(0);
+    });
   });
 });
