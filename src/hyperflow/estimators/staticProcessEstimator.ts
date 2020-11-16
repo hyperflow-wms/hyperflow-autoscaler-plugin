@@ -62,7 +62,7 @@ let lut = {
   "realign_target_creator": 128.5 * 1000,
   "indel_realign": 3.7 * 1000,
   "haplotype_caller": 54.7 * 1000,
-  "merge_gcvf": 96.0 * 1000,
+  "merge_gcvf": 5805.0 * 1000,
   "genotype_gvcfs": 67.1 * 1000,
   "combine_variants": 4.9 * 1000,
   "select_variants_snp": 38.8 * 1000,
