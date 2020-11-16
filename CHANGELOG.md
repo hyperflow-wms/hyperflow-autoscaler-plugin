@@ -4,6 +4,7 @@ Autoscaler Change Log
 0.12.0 under development
 ------------------------
 
+- Fix logic of filling empty values in demand baseline
 
 0.11.0 November 14, 2020
 ------------------------

@@ -63,21 +63,62 @@ class Timeframe
   }
 
   /**
-   * Filling empty map's data with last non-empty value.
+   * Filling empty array (gaps) in map's data with last non-empty value.
    * @param data map with timestamp as key
-   * @param defaultStart default value used until first non-empty row
    *
-   * CAUTION: data must be sorted by key (time).
+   * CAUTION: gap is something between two non-empty positions
    */
-  public static fillEmptyWithLast<T extends { toString(): String }>(data: Map<timestamp, T>, defaultStart: T): Map<timestamp, T> {
-    let filledData = new Map<timestamp, T>();
-    let lastValue: T = defaultStart;
-    data.forEach((value, timeKey) => {
-      if (value.toString() != "") {
-        lastValue = value;
+  public static fillArrayGapsWithLast<T>(data: Map<timestamp, T[]>): Map<timestamp, T[]> {
+    let filledData = new Map<timestamp, T[]>();
+    let sortedKeys = Array.from(data.keys()).sort();
+
+    /* Find first non-empty key. */
+    let firstNonEmptyKey: number | null = null;
+    for (let key of sortedKeys) {
+      let REF_value = data.get(key);
+      // @ts-ignore: Object is possibly 'undefined'.
+      if (REF_value.length != 0) {
+        firstNonEmptyKey = key;
+        break;
       }
-      filledData.set(timeKey, lastValue);
-    });
+    }
+
+    /* Find last non-empty key. */
+    let lastNonEmptyKey: number | null = null;
+    for (let key of sortedKeys) {
+      let REF_value = data.get(key);
+      // @ts-ignore: Object is possibly 'undefined'.
+      if (REF_value.length != 0) {
+        lastNonEmptyKey = key;
+      }
+    }
+
+    /* No data to fill. */
+    if (firstNonEmptyKey === null || lastNonEmptyKey === null) {
+      return filledData;
+    }
+
+    /* Fill gaps. */
+    let lastValue: T[] | null = null;
+    for (let key of sortedKeys) {
+      let REF_value = data.get(key);
+      // @ts-ignore: Object is possibly 'undefined'.
+      if (REF_value.length != 0) {
+        // @ts-ignore: Object is possibly 'undefined'.
+        lastValue = REF_value;
+      }
+
+      if (key < firstNonEmptyKey) {
+        lastValue = [];
+      }
+      if (key > lastNonEmptyKey) {
+        lastValue = [];
+      }
+      if (lastValue === null) {
+        throw Error('Unable to fill last value');
+      }
+      filledData.set(key, lastValue);
+    }
 
     return filledData;
   }

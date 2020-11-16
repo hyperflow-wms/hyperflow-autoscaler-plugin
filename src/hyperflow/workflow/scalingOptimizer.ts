@@ -50,7 +50,7 @@ class ScalingOptimizer
    */
   getDemandBaseline(demandFrames: Map<timestamp, ResourceRequirements[]>, startTime: timestamp, endTime: timestamp, interval: milliseconds): Map<timestamp, ResourceRequirements> {
     let equalizedData = Timeframe.packEqualIntervals(demandFrames, startTime, endTime, interval);
-    let filledData: Map<timestamp, ResourceRequirements[]> = Timeframe.fillEmptyWithLast(equalizedData, [new ResourceRequirements({cpu: "0", mem: "0"})]);
+    let filledData: Map<timestamp, ResourceRequirements[]> = Timeframe.fillArrayGapsWithLast(equalizedData);
     let baseLine: Map<timestamp, ResourceRequirements> = new Map();
     filledData.forEach((resArr, key) => {
       baseLine.set(key, ResourceRequirements.Utils.getAverage(resArr));

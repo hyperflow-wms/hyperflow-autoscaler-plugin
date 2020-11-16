@@ -94,20 +94,6 @@ describe('Timeframe class', function() {
   });
 
   context('Filling non-empty rows', function() {
-    it('handle empty data with default', function() {
-      let data: Map<number, string[]> = new Map();
-      data.set(100, []);
-      data.set(110, []);
-      data.set(120, []);
-      data.set(130, []);
-      let expectedResult = new Map();
-      expectedResult.set(100, ["A"]);
-      expectedResult.set(110, ["A"]);
-      expectedResult.set(120, ["A"]);
-      expectedResult.set(130, ["A"]);
-      expect(Timeframe.fillEmptyWithLast(data, ["A"])).to.deep.equal(expectedResult);
-    });
-
     it('do not modify full data', function() {
       let data: Map<number, string[]> = new Map();
       data.set(100, ["test"]);
@@ -119,23 +105,33 @@ describe('Timeframe class', function() {
       expectedResult.set(110, ["foo", "bar"]);
       expectedResult.set(120, ["baz"]);
       expectedResult.set(130, ["woof"]);
-      expect(Timeframe.fillEmptyWithLast(data, ["A"])).to.deep.equal(expectedResult);
+      expect(Timeframe.fillArrayGapsWithLast(data)).to.deep.equal(expectedResult);
     });
 
     it('handle partial data', function() {
       let data: Map<number, string[]> = new Map();
       data.set(100, []);
       data.set(110, []);
-      data.set(120, ["baz"]);
+      data.set(120, ["foo"]);
       data.set(130, []);
       data.set(140, []);
+      data.set(150, ["bar"]);
+      data.set(160, []);
+      data.set(170, ["baz"]);
+      data.set(180, []);
+      data.set(190, []);
       let expectedResult = new Map();
-      expectedResult.set(100, ["def", "fault"]);
-      expectedResult.set(110, ["def", "fault"]);
-      expectedResult.set(120, ["baz"]);
-      expectedResult.set(130, ["baz"]);
-      expectedResult.set(140, ["baz"]);
-      expect(Timeframe.fillEmptyWithLast(data, ["def", "fault"])).to.deep.equal(expectedResult);
+      expectedResult.set(100, []);
+      expectedResult.set(110, []);
+      expectedResult.set(120, ["foo"]);
+      expectedResult.set(130, ["foo"]);
+      expectedResult.set(140, ["foo"]);
+      expectedResult.set(150, ["bar"]);
+      expectedResult.set(160, ["bar"]);
+      expectedResult.set(170, ["baz"]);
+      expectedResult.set(180, []);
+      expectedResult.set(190, []);
+      expect(Timeframe.fillArrayGapsWithLast(data)).to.deep.equal(expectedResult);
     });
   });
 });
