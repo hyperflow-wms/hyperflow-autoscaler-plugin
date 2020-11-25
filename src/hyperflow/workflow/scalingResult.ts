@@ -60,6 +60,8 @@ class ScalingResult
    */
   public addFrame(supply: ResourceRequirements, demand: ResourceRequirements): void {
 
+    //console.log("[FRAME] supply:", supply.toString(), "| demand:", demand.toString());
+
     /* We have to account missing supply from previous frames
      * to simulate workload being executed later due to missing
      * supply. */
@@ -68,7 +70,7 @@ class ScalingResult
       mem: (demand.getMemBytes() + this.workloadMemBuffer).toString()
     });
     /* Update missing workload buffer with new value. */
-    this.workloadCpuBuffer = Math.max(0, adjustedDemand.getCpuMillis() - supply.getCpuMillis());
+    this.workloadCpuBuffer = Math.max(0, adjustedDemand.getCpuMillis() - supply.getCpuMillis()); // ... does it mean if we provide less nodes, then we would get same result? Because higher adjustedDemand will compensate lower supply??
     this.workloadMemBuffer = Math.max(0, adjustedDemand.getMemBytes() - supply.getMemBytes());
 
     /* Increase total counters. */
@@ -105,18 +107,22 @@ class ScalingResult
     let cpuUnderWaste = 0; // percentage of missing demand
     if (this.totalCpuUnderprovisionDemand != 0) {
       cpuUnderWaste = (this.totalCpuUnderprovisionDemand - this.totalCpuUnderprovisionSupply) / this.totalCpuUnderprovisionDemand; // equivalent: (supply / demand) - 1) * -1
+      //console.log('cpuUnderWaste =', this.totalCpuUnderprovisionDemand, '-', this.totalCpuUnderprovisionSupply, '/', this.totalCpuUnderprovisionDemand, '=', cpuUnderWaste);
     }
     let cpuOverWaste = 0; // percentage of too much supply
     if (this.totalCpuOverprovisionDemand != 0 && skipOverProvision == false) {
       cpuOverWaste = (this.totalCpuOverprovisionSupply - this.totalCpuOverprovisionDemand) / this.totalCpuOverprovisionDemand; // equivalent: (supply / demand) - 1)
+      //console.log('cpuOverWaste =', this.totalCpuOverprovisionSupply, '-', this.totalCpuOverprovisionDemand, '/', this.totalCpuOverprovisionDemand, '=', cpuOverWaste);
     }
     let memUnderWaste = 0; // percentage of missing demand
     if (this.totalMemUnderprovisionDemand != 0) {
       memUnderWaste = (this.totalMemUnderprovisionDemand - this.totalMemUnderprovisionSupply) / this.totalMemUnderprovisionDemand; // equivalent: (supply / demand) - 1) * -1
+      //console.log('memUnderWaste =', this.totalMemUnderprovisionDemand, '-', this.totalMemUnderprovisionSupply, '/', this.totalMemUnderprovisionDemand, '=', memUnderWaste);
     }
     let memOverWaste = 0; // percentage of too much supply
     if (this.totalMemOverprovisionDemand != 0 && skipOverProvision == false) {
       memOverWaste = (this.totalMemOverprovisionSupply - this.totalMemOverprovisionDemand) / this.totalMemOverprovisionDemand; // equivalent: (supply / demand) - 1)
+      //console.log('memOverWaste =', this.totalMemOverprovisionSupply, '-', this.totalMemOverprovisionDemand, '/', this.totalMemOverprovisionDemand, '=', memOverWaste);
     }
 
     /* Temporary idea - aggresive minimization of underProvision: ignore
@@ -135,7 +141,9 @@ class ScalingResult
 
     /* Total score */
     let resourcesWaste = underWaste + overWaste;
+    //console.log('- sum of average wastes =', resourcesWaste);
     let score = 1 / resourcesWaste;
+    //console.log('==== score:', score);
     return score;
   }
 }

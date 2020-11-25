@@ -6,7 +6,7 @@ import { ScalingResult, ScoreOptions } from "./scalingResult";
 const Logger = getBaseLogger();
 
 const DEFAULT_SCALING_PROBE_TIME_MS = 10000; // 10 seconds scaling precision is completely enough
-const MAX_MACHINES = 8;
+const MAX_MACHINES = 4; // tmp for ellipsoids
 
 type timestamp = number;
 type milliseconds = number;
@@ -51,6 +51,8 @@ class ScalingOptimizer
   getDemandBaseline(demandFrames: Map<timestamp, ResourceRequirements[]>, startTime: timestamp, endTime: timestamp, interval: milliseconds): Map<timestamp, ResourceRequirements> {
     let equalizedData = Timeframe.packEqualIntervals(demandFrames, startTime, endTime, interval);
     let filledData: Map<timestamp, ResourceRequirements[]> = Timeframe.fillArrayGapsWithLast(equalizedData);
+    // @ts-ignore: Object is possibly 'undefined'.
+    //filledData?.get(Array.from(filledData.keys())[5])[0].add(999, 333);
     let baseLine: Map<timestamp, ResourceRequirements> = new Map();
     filledData.forEach((resArr, key) => {
       baseLine.set(key, ResourceRequirements.Utils.getAverage(resArr));
@@ -118,6 +120,16 @@ class ScalingOptimizer
     let maxTimeMs = startTimeMs + this.analyzedTimeMs;
     let demandBaseline = this.getDemandBaseline(demandFrames, startTimeMs, maxTimeMs, this.scalingProbeTime);
 
+    // DEBUG log of baseline
+    let baseLineKeys = Array.from(demandBaseline.keys()).sort();
+    let demandLine: [number, number][] = [];
+    for (let REF_baseLineKey of baseLineKeys) {
+      let demand = demandBaseline.get(REF_baseLineKey);
+      // @ts-ignore: Object is possibly 'undefined'.
+      demandLine.push([demand?.getCpuMillis(), demand?.getMemBytes()]);
+    }
+    Logger.error({"demandBaseline": demandLine});
+
     /* Get space of possible machines, there must at least 1 running,
      * and we cannot exceed our provider's quota. */
     let possbileLessMachines = this.runningMachines - 1;
@@ -130,6 +142,9 @@ class ScalingOptimizer
     let bestScalingScore = scalingRes.getScore(this.scoreOptions);
     //Logger.debug('Scaling res for no action at ' + startTimeMs.toString() + ': ' + scalingRes.getPrice().toString() + '$, score ' + scalingRes.getScore({}).toString());
 
+    let scalingResults: [number, number, number][] = [];
+    scalingResults.push([0, bestScalingScore, bestScalingPrice]);
+
     /* Try every possible scaling decision at given probe interval,
      * and find best option.
      * TODO: we should limit loop max time to reactInterval, further analysis is not necessary. */
@@ -139,6 +154,7 @@ class ScalingOptimizer
         if (n == 0) {
           continue;
         }
+
         /* Calculate result; update best one if we get higher score, or same with less price. */
         scalingRes = this.calculateScalingResult(demandBaseline, startTimeMs, maxTimeMs, n, t);
         let scalingPrice = scalingRes.getPrice(); // 'C' in math equation
@@ -147,6 +163,7 @@ class ScalingOptimizer
         /* Debug logging for scaling at first time frame. */
         if (t == startTimeMs) {
           Logger.debug('[ScalingOptimizer] Scaling result for ' + (n.toString().padStart(3, ' ') + ' machines at ' + t.toString() + ': ' + scalingRes.getPrice().toString().padStart(12, ' ') + ' $, score ' + scalingRes.getScore({}).toFixed(6).toString().padStart(8, ' ')));
+          scalingResults.push([n, scalingScore, scalingPrice]);
         }
 
         /* Ignore all solutions where we get strictly lower score. */
@@ -165,8 +182,9 @@ class ScalingOptimizer
         bestScalingScore = scalingScore;
       }
     }
-    Logger.debug("[ScalingOptimizer] Best descision found: " + bestScalingDecision.getMachinesDiff().toString()
-                + " at " + bestScalingDecision.getTime().toString() + " with score " + bestScalingScore.toString());
+    Logger.error("[ScalingOptimizer] Best descision found for " + this.runningMachines + " machines: " + bestScalingDecision.getMachinesDiff().toString()
+                + " after " + (bestScalingDecision.getTime()-startTimeMs).toString() + " ms., score = " + bestScalingScore.toString());
+    Logger.error({"scalingResults": scalingResults});
 
     return bestScalingDecision;
   }

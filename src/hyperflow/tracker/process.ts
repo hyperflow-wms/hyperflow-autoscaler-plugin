@@ -58,6 +58,21 @@ class Process {
     let executor = hfProcess.config.executor;
     this.cpuRequest = executor.cpuRequest || process.env.HF_VAR_CPU_REQUEST || "0.5";
     this.memRequest = executor.memRequest || process.env.HF_VAR_MEM_REQUEST || "50Mi";
+
+    this.cpuRequest = "2";
+    this.memRequest = "2Gi";
+    if (hfProcess.function == "alignment_to_reference") {
+      this.memRequest = "7Gi";
+    } else if (hfProcess.function == "haplotype_caller") {
+      this.memRequest = "6Gi";
+    } else if (hfProcess.function == "dedup") {
+      this.memRequest = "3Gi";
+    } else if (hfProcess.function == "sort_sam") {
+      this.memRequest = "0.5Gi";
+    } else if (hfProcess.function == "add_replace") {
+      this.memRequest = "0.5Gi";
+    }
+
     return;
   }
 

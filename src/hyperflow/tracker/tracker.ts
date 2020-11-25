@@ -145,7 +145,7 @@ class WorkflowTracker
     let notEmittedSignals = emitStates.filter(x => x == false).length;
     if (notEmittedSignals == 0) {
       Logger.debug("[WorkflowTracker] Firing process " + procId.toString() + " - all ins are ready");
-      process.markStart(time);
+      process.markStart(time); // Adding random time?
       this.runningProcesses.add(procId);
       return true;
     }

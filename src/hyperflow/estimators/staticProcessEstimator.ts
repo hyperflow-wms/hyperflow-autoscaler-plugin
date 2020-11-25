@@ -30,7 +30,7 @@ let lut = {
   */
 
   // Montage-2MASS (1.0)
-  /*
+  ///*
   "mProject": 14.3 * 1000,
   "mDiffFit": 0.2 * 1000,
   "mConcatFit": 15.5 * 1000,
@@ -39,10 +39,10 @@ let lut = {
   "mImgtbl": 1.8 * 1000,
   "mAdd": 6.6 * 1000,
   "mViewer": 10.5 * 1000,
-  */
+  //*/
 
   // Montage-SDSS (2.0)
-  ///*
+  /*
   "mProject": 246.1 * 1000,
   "mDiffFit": 0.2 * 1000,
   "mConcatFit": 17 * 1000,
@@ -51,7 +51,7 @@ let lut = {
   "mImgtbl": 2.7 * 1000,
   "mAdd": 50.6 * 1000,
   "mViewer": 41.6 * 1000,
-  //*/
+  */
 
   // SoyKB (104)
   ///*
@@ -96,10 +96,10 @@ class StaticProcessEstimator implements EstimatorInterface {
     }
 
 
-    if (! (p.name in lut) ) {
-      throw Error("No estimates known for process " + p.name);
+    if (! (name in lut) ) {
+      throw Error("No estimates known for process " + name);
     }
-    let estimation = lut[p.name];
+    let estimation = lut[name];
 
     /**
      * We want to make estimations more real,

@@ -46,7 +46,7 @@ class Plan
         intitialSigIds = intitialSigIds.concat(inputSigIds);
       }
       let timeNow = new Date().getTime();
-      this.tracker.notifyStart(timeNow);
+      this.tracker.notifyStart(timeNow); // what if 1000000000 instead?
       intitialSigIds.forEach(el => this.tracker.notifyInitialSignal(el, timeNow));
     }
 
