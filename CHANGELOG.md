@@ -1,7 +1,11 @@
 Autoscaler Change Log
 =====================
 
-0.12.0 under development
+0.13.0 under development
+------------------------
+
+
+0.12.0 November 25, 2020
 ------------------------
 
 - Fix logic of filling empty values in demand baseline
