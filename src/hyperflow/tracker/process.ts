@@ -69,6 +69,11 @@ class Process {
     return;
   }
 
+  public forceMarkStart(time: timestamp): void {
+    this.startTime = time;
+    return;
+  }
+
   public markEnd(time: timestamp): void {
     if (this.endTime !== undefined) {
       throw Error('Process ' + this.id.toString() + ' already marked as ended');

@@ -50,11 +50,16 @@ class Plan
       intitialSigIds.forEach(el => this.tracker.notifyInitialSignal(el, timeNow));
     }
 
+
     /* Get execution start. */
     let executionStartTime = this.tracker.getExecutionStartTime();
     if (executionStartTime === undefined) {
       throw Error("After notyfing start, the execution start should be already set!");
     }
+
+    /* TMP FIX: we do not know when process was really started, so we suppose all just started.
+     * To achieve thse, we reset all start times in 'process' + procHistory.... */
+    this.tracker.resetAllRunningProcesses();
 
     /* Cyclic: grab running processes and fast-forward them with estimations. */
     const BreakException = {};
@@ -68,7 +73,7 @@ class Plan
           if (process === undefined) {
             throw Error("Process " + processId.toString() + " not found");
           }
-          let processStartTime = process.getStartTime();
+          let processStartTime = process.getStartTime(); // hmm the problem is we don't get run time, but createJob request time...
           if (processStartTime === undefined) {
             throw Error("Running process must have 'start time'");
           }
@@ -79,11 +84,11 @@ class Plan
           if (executionStartTime == undefined) {
             throw Error("Fatal error - no execution start time defined");
           }
-          let totalPlanningTime = processStartTime - executionStartTime;
-          if (totalPlanningTime > this.timeForwardMs) {
-            Logger.debug("[Plan] Stopping analyze - we reached " + totalPlanningTime.toString() + " ms");
-            throw BreakException;
-          }
+          //let totalPlanningTime = processStartTime - executionStartTime;
+          //if (totalPlanningTime > this.timeForwardMs) {
+          //  Logger.debug("[Plan] Stopping analyze - we reached " + totalPlanningTime.toString() + " ms");
+          //  throw BreakException;
+          //}
 
           /* Calculate estimated end time and notify tracker
            * about finished process(es). We do not care about

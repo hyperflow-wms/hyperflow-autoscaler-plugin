@@ -152,6 +152,15 @@ class WorkflowTracker
     return false;
   }
 
+  public resetAllRunningProcesses() {
+    let runningProcesses = this.runningProcesses;
+    let newTime = (new Date()).getTime()
+    runningProcesses.forEach((procId) => {
+      this.processesMap.get(procId)?.forceMarkStart(newTime);
+    });
+    return;
+  }
+
   /**
    * Temporary debug function.
    * TODO: remove.

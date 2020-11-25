@@ -5,6 +5,7 @@ Autoscaler Change Log
 ------------------------
 
 - Fix logic of filling empty values in demand baseline
+- Add workaround for graph prediction: reset of running processes
 
 0.11.0 November 14, 2020
 ------------------------
