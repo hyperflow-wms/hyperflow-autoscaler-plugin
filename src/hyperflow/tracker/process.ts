@@ -1,16 +1,15 @@
-import { HFProcess } from "../types";
+import { HFProcess } from '../types';
 
 type timestamp = number;
 
 class Process {
-
   public readonly id: number;
   public readonly name: string;
   public readonly ins: number[];
   public readonly outs: number[];
 
-  private cpuRequest: string = "";
-  private memRequest: string = "";
+  private cpuRequest = '';
+  private memRequest = '';
 
   private startTime?: timestamp;
   private endTime?: timestamp;
@@ -26,11 +25,11 @@ class Process {
       this.outs = [...process.outs];
       this.cpuRequest = process.cpuRequest;
       this.memRequest = process.memRequest;
-      this.startTime = (process.startTime) ? process.startTime : undefined;
-      this.endTime = (process.endTime) ? process.endTime : undefined;
+      this.startTime = process.startTime ? process.startTime : undefined;
+      this.endTime = process.endTime ? process.endTime : undefined;
     } else {
       if (id === undefined) {
-        throw Error("ID is required for Process");
+        throw Error('ID is required for Process');
       }
       this.id = id;
       this.name = process.name;
@@ -49,15 +48,20 @@ class Process {
    */
   private assignRequests(hfProcess: HFProcess) {
     /* Use zeroes in case of last (exit) process without defined executor. */
-    if (hfProcess.function == "exit" && hfProcess?.config?.executor == undefined) {
-      this.cpuRequest = "0";
-      this.memRequest = "0";
+    if (
+      hfProcess.function == 'exit' &&
+      hfProcess?.config?.executor == undefined
+    ) {
+      this.cpuRequest = '0';
+      this.memRequest = '0';
       return;
     }
 
-    let executor = hfProcess.config.executor;
-    this.cpuRequest = executor.cpuRequest || process.env.HF_VAR_CPU_REQUEST || "0.5";
-    this.memRequest = executor.memRequest || process.env.HF_VAR_MEM_REQUEST || "50Mi";
+    const executor = hfProcess.config.executor;
+    this.cpuRequest =
+      executor.cpuRequest || process.env.HF_VAR_CPU_REQUEST || '0.5';
+    this.memRequest =
+      executor.memRequest || process.env.HF_VAR_MEM_REQUEST || '50Mi';
     return;
   }
 

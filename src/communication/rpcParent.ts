@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/ban-types */
 import RPC from './rpc';
 
 import { getBaseLogger } from '../utils/logger';
@@ -7,7 +10,6 @@ import * as child_process from 'child_process';
 const Logger = getBaseLogger();
 
 class ParentRPC extends RPC {
-
   private child_process: child_process.ChildProcess;
 
   constructor(child_process: child_process.ChildProcess, api_object: any) {
@@ -22,11 +24,11 @@ class ParentRPC extends RPC {
     return;
   }
 
-  public init(): void  {
+  public init(): void {
     super.init();
     this.child_process.on('message', (data) => {
       Logger.debug('[ParentRPC] Got message: ' + JSON.stringify(data));
-      if (typeof data != "object") {
+      if (typeof data != 'object') {
         Logger.error('[ParentRPC] Expected object as message!');
         throw Error('Unexpected message format');
       }

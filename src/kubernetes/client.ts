@@ -4,17 +4,15 @@ import k8s = require('@kubernetes/client-node');
 
 const Logger = getBaseLogger();
 
-class Client
-{
-  static readonly hfMasterLabel = 'node-role.hyperflow.local/master'
-  static readonly hfWorkerLabel = 'node-role.hyperflow.local/worker'
+class Client {
+  static readonly hfMasterLabel = 'node-role.hyperflow.local/master';
+  static readonly hfWorkerLabel = 'node-role.hyperflow.local/worker';
 
   private coreApi: k8s.CoreV1Api;
 
-  constructor()
-  {
+  constructor() {
     Logger.trace('[Client] Constructor');
-    let kubeConfig = new k8s.KubeConfig();
+    const kubeConfig = new k8s.KubeConfig();
     kubeConfig.loadFromDefault();
 
     this.coreApi = kubeConfig.makeApiClient(k8s.CoreV1Api);
@@ -25,8 +23,8 @@ class Client
    */
   public async fetchNodes(): Promise<k8s.V1Node[]> {
     Logger.verbose('[Client] Fetching nodes');
-    let response = await this.coreApi.listNode();
-    let nodeList = response.body.items;
+    const response = await this.coreApi.listNode();
+    const nodeList = response.body.items;
     Logger.debug('[Client] Fetched ' + nodeList.length.toString() + ' nodes');
     return nodeList;
   }
@@ -34,10 +32,10 @@ class Client
   /**
    * Fetch all pods in given namespace.
    */
-  public async fetchPods(namespace: string = 'default') {
+  public async fetchPods(namespace = 'default'): Promise<k8s.V1Pod[]> {
     Logger.verbose('[Client] Fetching pods for namespace ' + namespace);
-    let response = await this.coreApi.listNamespacedPod('default');
-    let podList = response.body.items;
+    const response = await this.coreApi.listNamespacedPod('default');
+    const podList = response.body.items;
     Logger.debug('[Client] Fetched ' + podList.length.toString() + ' pods');
 
     return podList;
@@ -48,22 +46,27 @@ class Client
    *  - nodes containing hyperflow-worker label
    *  - pods placed on nodes with hyperflow-worker label
    */
-  public filterHFWorkerNodes(nodes: Array<k8s.V1Node>, pods: Array<k8s.V1Pod>): [k8s.V1Node[], k8s.V1Pod[]] {
+  public filterHFWorkerNodes(
+    nodes: Array<k8s.V1Node>,
+    pods: Array<k8s.V1Pod>
+  ): [k8s.V1Node[], k8s.V1Pod[]] {
     /* Filtering nodes. */
-    let workerNodes: Array<k8s.V1Node> = [];
-    let workerNodesNames: Array<string> = [];
-    for (let node of nodes) {
-      let labels = node?.metadata?.labels;
+    const workerNodes: Array<k8s.V1Node> = [];
+    const workerNodesNames: Array<string> = [];
+    for (const node of nodes) {
+      const labels = node?.metadata?.labels;
       if (labels == undefined) {
-        throw Error("Node does not contain labels");
+        throw Error('Node does not contain labels');
       }
-      let nodeName = node?.metadata?.name;
+      const nodeName = node?.metadata?.name;
       if (nodeName == undefined) {
-        throw Error("Node does not contain name");
+        throw Error('Node does not contain name');
       }
-      let workerLabel = labels[Client.hfWorkerLabel];
+      const workerLabel = labels[Client.hfWorkerLabel];
       if (workerLabel === undefined) {
-        Logger.trace('[Client] Skipping node ' + nodeName + ' (no worker label)');
+        Logger.trace(
+          '[Client] Skipping node ' + nodeName + ' (no worker label)'
+        );
         continue;
       }
       workerNodes.push(node);
@@ -74,48 +77,69 @@ class Client
      * All pods on HF workers are included, plus pending pods.
      * Completed and failed pods are excluded.
      * Pending pods might be restricted with custom job label. */
-    let podsOnWorkers: Array<k8s.V1Pod> = [];
-    for (let pod of pods) {
-      let podName = pod?.metadata?.name;
+    const podsOnWorkers: Array<k8s.V1Pod> = [];
+    for (const pod of pods) {
+      const podName = pod?.metadata?.name;
       if (podName == undefined) {
-        throw Error("Pod does not contain name");
+        throw Error('Pod does not contain name');
       }
-      let nodeName = pod?.spec?.nodeName;
+      const nodeName = pod?.spec?.nodeName;
       if (nodeName !== undefined) {
         if (workerNodesNames.includes(nodeName) === false) {
-          Logger.trace("[Client] Skipping pod " + podName + " that is NOT placed on worker node");
+          Logger.trace(
+            '[Client] Skipping pod ' +
+              podName +
+              ' that is NOT placed on worker node'
+          );
           continue;
         }
       }
 
       /* Skip pods that don't have required label - if specified. */
       if (nodeName === undefined) {
-        let jobLabel = process.env['HF_VAR_autoscalerJobLabel'];
+        const jobLabel = process.env['HF_VAR_autoscalerJobLabel'];
         if (jobLabel !== undefined) {
-          let labels = pod?.metadata?.labels;
+          const labels = pod?.metadata?.labels;
           if (labels === undefined) {
-            Logger.trace("[Client] Skipping pod " + podName + " - it has no labels, neither required " + jobLabel);
+            Logger.trace(
+              '[Client] Skipping pod ' +
+                podName +
+                ' - it has no labels, neither required ' +
+                jobLabel
+            );
             continue;
           }
           if (labels[jobLabel] === undefined) {
-            Logger.trace("[Client] Skipping pod " + podName + " - it has NOT required label " + jobLabel);
+            Logger.trace(
+              '[Client] Skipping pod ' +
+                podName +
+                ' - it has NOT required label ' +
+                jobLabel
+            );
             continue;
           }
         }
       }
 
       /* Skip completed and failed pods. */
-      let phase = pod?.status?.phase;
-      if (phase === "Succeeded" || phase === "Failed") {
-        Logger.trace("[Client] Skipping pod " + podName + " - in phase " + phase);
+      const phase = pod?.status?.phase;
+      if (phase === 'Succeeded' || phase === 'Failed') {
+        Logger.trace(
+          '[Client] Skipping pod ' + podName + ' - in phase ' + phase
+        );
         continue;
       }
 
       podsOnWorkers.push(pod);
     }
 
-    Logger.debug('[Client] Filtered out ' + workerNodes.length.toString() + ' hyperflow worker nodes and '
-      + podsOnWorkers.length.toString() + ' total pods on them');
+    Logger.debug(
+      '[Client] Filtered out ' +
+        workerNodes.length.toString() +
+        ' hyperflow worker nodes and ' +
+        podsOnWorkers.length.toString() +
+        ' total pods on them'
+    );
     return [workerNodes, podsOnWorkers];
   }
 }

@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+
 import { getBaseLogger } from './logger';
 
 const Logger = getBaseLogger();
@@ -26,8 +29,13 @@ const Logger = getBaseLogger();
  * ### WARNING
  * You will lose 'this' context, so this helpers seems to be not useful at all...
  */
-const withTimeout = <R, P extends any, T extends (...args: P[]) => Promise<R>>(logic: T, ms: number) => {
-  Logger.trace('[Helpers] Running function with timeout ' + ms.toString() + 'ms');
+const withTimeout = <R, P extends any, T extends (...args: P[]) => Promise<R>>(
+  logic: T,
+  ms: number
+): ((...args: Parameters<T>) => Promise<R>) => {
+  Logger.trace(
+    '[Helpers] Running function with timeout ' + ms.toString() + 'ms'
+  );
   return (...args: Parameters<T>) => {
     // create a promise that rejects in <ms> milliseconds; https://italonascimento.github.io/applying-a-timeout-to-your-promises/
     const timeout = new Promise((resolve, reject) => {
@@ -40,7 +48,7 @@ const withTimeout = <R, P extends any, T extends (...args: P[]) => Promise<R>>(l
     // returns a "race" between our timeout and the function executed with the input params
     return Promise.race([
       logic(...args), // the wrapped fn, executed w/ the input params
-      timeout, // the timeout
+      timeout // the timeout
     ]) as Promise<R>;
   };
 };

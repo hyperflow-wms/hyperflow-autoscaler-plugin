@@ -1,4 +1,4 @@
-import Process from "../tracker/process";
+import Process from '../tracker/process';
 
 interface EstimatorInterface {
   getName(): string;

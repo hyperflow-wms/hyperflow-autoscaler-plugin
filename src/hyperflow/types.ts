@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-empty-interface */
 /**
  * Types for Hyperflow "classes".
  */
@@ -12,8 +14,8 @@ export interface HFWflib {
 }
 
 export enum StringBoolean {
-  True = "true",
-  False = "false",
+  True = 'true',
+  False = 'false'
 }
 
 export interface HFConfig {

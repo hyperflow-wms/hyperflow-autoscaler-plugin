@@ -1,27 +1,26 @@
 import { getBaseLogger } from '../../utils/logger';
-import Process from "./process";
-import Signal from "./signal";
-import Workflow from "./workflow";
+import Process from './process';
+import Signal from './signal';
+import Workflow from './workflow';
 
 const Logger = getBaseLogger();
 
 type timestamp = number;
 
-class WorkflowTracker
-{
+class WorkflowTracker {
   // CAUTION: this is shared across object copies
   private workflow: Workflow;
 
   private executionStartTime?: timestamp;
 
-  private processesMap: Map<number, Process> = new Map;
-  private signalsMap: Map<number, Signal> = new Map;
+  private processesMap: Map<number, Process> = new Map();
+  private signalsMap: Map<number, Signal> = new Map();
 
   // lookup between processes and signals edges
-  private processToPrevSignal: Map<number, number[]> = new Map;
-  private processToNextSignal: Map<number, number[]> = new Map;
-  private signalToPrevProcess: Map<number, number[]> = new Map;
-  private signalToNextProcess: Map<number, number[]> = new Map;
+  private processToPrevSignal: Map<number, number[]> = new Map();
+  private processToNextSignal: Map<number, number[]> = new Map();
+  private signalToPrevProcess: Map<number, number[]> = new Map();
+  private signalToNextProcess: Map<number, number[]> = new Map();
 
   private runningProcesses: Set<number>;
 
@@ -31,9 +30,11 @@ class WorkflowTracker
    */
   constructor(wfOrTracker: Workflow | WorkflowTracker) {
     if (wfOrTracker instanceof WorkflowTracker) {
-      Logger.trace("[WorkflowTracker] Copy constructor");
-      let oldWT = wfOrTracker;
-      this.executionStartTime = (oldWT.executionStartTime) ? oldWT.executionStartTime : undefined;
+      Logger.trace('[WorkflowTracker] Copy constructor');
+      const oldWT = wfOrTracker;
+      this.executionStartTime = oldWT.executionStartTime
+        ? oldWT.executionStartTime
+        : undefined;
       oldWT.processesMap.forEach((val, key) => {
         this.processesMap.set(key, new Process(val));
       });
@@ -47,8 +48,8 @@ class WorkflowTracker
       this.runningProcesses = new Set(oldWT.runningProcesses);
       this.workflow = oldWT.workflow; // CAUTION: this is shared reference (const)
     } else {
-      Logger.trace("[WorkflowTracker] Constructor");
-      let wf = wfOrTracker;
+      Logger.trace('[WorkflowTracker] Constructor');
+      const wf = wfOrTracker;
       this.runningProcesses = new Set();
       this.loadWorkflow(wf);
     }
@@ -58,7 +59,7 @@ class WorkflowTracker
    * Notifies tracker about execution start.
    * @param time event time
    */
-  public notifyStart(time: timestamp) {
+  public notifyStart(time: timestamp): void {
     this.executionStartTime = time;
   }
 
@@ -69,25 +70,29 @@ class WorkflowTracker
    * @return array of newly started processes
    */
   public notifyInitialSignal(sigId: number, time: timestamp): number[] {
-    Logger.debug("[WorkflowTracker] Notified about signal " + sigId.toString() + " emit");
-    let signal = this.signalsMap.get(sigId);
+    Logger.debug(
+      '[WorkflowTracker] Notified about signal ' + sigId.toString() + ' emit'
+    );
+    const signal = this.signalsMap.get(sigId);
     if (signal === undefined) {
-      throw Error("Signal " + sigId.toString() + " not found");
+      throw Error('Signal ' + sigId.toString() + ' not found');
     }
     if (signal.wasEmitted() == true) {
-      Logger.warn("[WorkflowTracker] Signal " + sigId.toString() + " was already emitted");
+      Logger.warn(
+        '[WorkflowTracker] Signal ' + sigId.toString() + ' was already emitted'
+      );
       return [];
     }
     signal.markEmit(time);
 
     /* Fire next processes. */
-    let nextProcessIds = this.signalToNextProcess.get(sigId);
+    const nextProcessIds = this.signalToNextProcess.get(sigId);
     if (nextProcessIds === undefined) {
-      throw Error("No mapping found - even empty array must be specified!");
+      throw Error('No mapping found - even empty array must be specified!');
     }
-    let startedProcessIds: number[] = [];
-    for (let processId of nextProcessIds) {
-      let started = this.startProcessIfReady(processId, time);
+    const startedProcessIds: number[] = [];
+    for (const processId of nextProcessIds) {
+      const started = this.startProcessIfReady(processId, time);
       if (started === true) {
         startedProcessIds.push(processId);
       }
@@ -103,23 +108,27 @@ class WorkflowTracker
    * @return array of newly started processes (consequence of passing signal)
    */
   public notifyProcessFinished(procId: number, time: timestamp): number[] {
-    Logger.debug("[WorkflowTracker] Notified about process " + procId.toString() + " finish");
-    let process = this.processesMap.get(procId);
+    Logger.debug(
+      '[WorkflowTracker] Notified about process ' +
+        procId.toString() +
+        ' finish'
+    );
+    const process = this.processesMap.get(procId);
     if (process === undefined) {
-      throw Error("Process " + procId.toString() + " not found");
+      throw Error('Process ' + procId.toString() + ' not found');
     }
     this.runningProcesses.delete(procId);
     process.markEnd(time);
 
     /* We have to fire next signals manually, because
      * without log provenance we can get only initial ones. */
-    let nextSignalIds = this.processToNextSignal.get(procId);
+    const nextSignalIds = this.processToNextSignal.get(procId);
     if (nextSignalIds === undefined) {
-      throw Error("No mapping found - even empty array must be specified!");
+      throw Error('No mapping found - even empty array must be specified!');
     }
     let startedProcessIds: number[] = [];
-    for (let signalId of nextSignalIds) {
-      let sigStartedProcessIds = this.notifyInitialSignal(signalId, time);
+    for (const signalId of nextSignalIds) {
+      const sigStartedProcessIds = this.notifyInitialSignal(signalId, time);
       startedProcessIds = startedProcessIds.concat(sigStartedProcessIds);
     }
 
@@ -133,18 +142,24 @@ class WorkflowTracker
    * @return whether process was started
    */
   private startProcessIfReady(procId: number, time: timestamp): boolean {
-    let process = this.processesMap.get(procId);
+    const process = this.processesMap.get(procId);
     if (process === undefined) {
-      throw Error("Process " + procId.toString() + " not found");
+      throw Error('Process ' + procId.toString() + ' not found');
     }
-    let prevSignalIds = this.processToPrevSignal.get(procId);
+    const prevSignalIds = this.processToPrevSignal.get(procId);
     if (prevSignalIds === undefined) {
-      throw Error("No mapping found - even empty array must be specified!");
+      throw Error('No mapping found - even empty array must be specified!');
     }
-    let emitStates = prevSignalIds.map((sigId) => this.signalsMap.get(sigId)?.wasEmitted());
-    let notEmittedSignals = emitStates.filter(x => x == false).length;
+    const emitStates = prevSignalIds.map((sigId) =>
+      this.signalsMap.get(sigId)?.wasEmitted()
+    );
+    const notEmittedSignals = emitStates.filter((x) => x == false).length;
     if (notEmittedSignals == 0) {
-      Logger.debug("[WorkflowTracker] Firing process " + procId.toString() + " - all ins are ready");
+      Logger.debug(
+        '[WorkflowTracker] Firing process ' +
+          procId.toString() +
+          ' - all ins are ready'
+      );
       process.markStart(time);
       this.runningProcesses.add(procId);
       return true;
@@ -152,9 +167,9 @@ class WorkflowTracker
     return false;
   }
 
-  public resetAllRunningProcesses() {
-    let runningProcesses = this.runningProcesses;
-    let newTime = (new Date()).getTime()
+  public resetAllRunningProcesses(): void {
+    const runningProcesses = this.runningProcesses;
+    const newTime = new Date().getTime();
     runningProcesses.forEach((procId) => {
       this.processesMap.get(procId)?.forceMarkStart(newTime);
     });
@@ -165,8 +180,11 @@ class WorkflowTracker
    * Temporary debug function.
    * TODO: remove.
    */
-  public printState() {
-    Logger.debug("[WorkflowTracker] Already running tasks: " + this.runningProcesses.size.toString());
+  public printState(): void {
+    Logger.debug(
+      '[WorkflowTracker] Already running tasks: ' +
+        this.runningProcesses.size.toString()
+    );
   }
 
   /**
@@ -176,14 +194,14 @@ class WorkflowTracker
   private loadWorkflow(wf: Workflow): void {
     /* Make sure workflow was not already loaded. */
     if (this.workflow !== undefined) {
-      throw Error("Workflow already loaded!");
+      throw Error('Workflow already loaded!');
     }
     this.workflow = wf;
 
-    Logger.debug("[WorkflowTracker] Parsing workflow into graph");
+    Logger.debug('[WorkflowTracker] Parsing workflow into graph');
 
-    let signals = wf.getSignals();
-    let processes = wf.getProcesses();
+    const signals = wf.getSignals();
+    const processes = wf.getProcesses();
 
     processes.forEach((proc) => {
       this.processesMap.set(proc.id, proc);
@@ -196,11 +214,11 @@ class WorkflowTracker
       this.signalToNextProcess.set(sig.id, []);
     });
     processes.forEach((proc) => {
-      (proc.ins||[]).forEach((insig) => {
+      (proc.ins || []).forEach((insig) => {
         this.processToPrevSignal.get(proc.id)?.push(insig);
         this.signalToNextProcess.get(insig)?.push(proc.id);
       });
-      (proc.outs||[]).forEach((outsig) => {
+      (proc.outs || []).forEach((outsig) => {
         this.processToNextSignal.get(proc.id)?.push(outsig);
         this.signalToPrevProcess.get(outsig)?.push(proc.id);
       });
@@ -224,7 +242,7 @@ class WorkflowTracker
   /**
    * Getter for workflow.
    */
-  public getWorkflow() {
+  public getWorkflow(): Workflow {
     return this.workflow;
   }
 }

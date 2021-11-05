@@ -1,5 +1,5 @@
 import Process from '../tracker/process';
-import EstimatorInterface from './estimatorInterface'
+import EstimatorInterface from './estimatorInterface';
 
 /**
  * Average time of process in given workflow.
@@ -7,22 +7,22 @@ import EstimatorInterface from './estimatorInterface'
  * on the critical path of the workflow, and L is the total
  * duration of the tasks on the critical path of the workflow.
  */
-let lut = {
-  "montage_0.25": 12000 / 50,
-  "montage_1.0": 632000 / 650,
-}
+const lut = {
+  'montage_0.25': 12000 / 50,
+  'montage_1.0': 632000 / 650
+};
 
 const DELAYS_OVERHEAD = 2000;
 const RANDOM_DISTRIBUTION = 0.02;
 
 class StaticWorkflowEstimator implements EstimatorInterface {
-  public getName() {
-    return "StaticWorkflow";
+  public getName(): string {
+    return 'StaticWorkflow';
   }
 
   public getEstimationMs(p: Process): number {
-    if (! (p.name in lut) ) {
-      throw Error("No estimates known for process " + p.name);
+    if (!(p.name in lut)) {
+      throw Error('No estimates known for process ' + p.name);
     }
     let estimation = lut[p.name];
 
@@ -30,7 +30,7 @@ class StaticWorkflowEstimator implements EstimatorInterface {
      * We want to make estimations more real,
      * by changing total time by a few percent.
      */
-    let notIdealFactor = 1 + (RANDOM_DISTRIBUTION * (Math.random()*2-1));
+    const notIdealFactor = 1 + RANDOM_DISTRIBUTION * (Math.random() * 2 - 1);
     estimation = estimation * notIdealFactor;
 
     /* There are multiple additional delays for each task:

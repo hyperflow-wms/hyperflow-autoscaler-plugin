@@ -5,18 +5,16 @@ import { getBaseLogger } from '../../utils/logger';
 const Logger = getBaseLogger();
 
 class DummyProvider extends BaseProvider {
-
-  constructor()
-  {
+  constructor() {
     super();
-    Logger.trace("[DummyProvider] Constructor");
+    Logger.trace('[DummyProvider] Constructor');
   }
 
   /**
    * Provider initialization.
    */
   public async initialize(): Promise<void> {
-    Logger.debug("[DummyProvider] Initialization mock");
+    Logger.debug('[DummyProvider] Initialization mock');
     return;
   }
 
@@ -24,10 +22,11 @@ class DummyProvider extends BaseProvider {
    * Resizes cluster to given amount of nodes.
    */
   public async resizeCluster(workersNum: number): Promise<void> {
-    Logger.debug("[DummyProvider] Resizing cluster mock " + workersNum.toString());
+    Logger.debug(
+      '[DummyProvider] Resizing cluster mock ' + workersNum.toString()
+    );
     return;
   }
 }
 
 export default DummyProvider;
-

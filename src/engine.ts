@@ -1,12 +1,11 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getBaseLogger } from './utils/logger';
 import BaseProvider from './kubernetes/providers/baseProvider';
-import CooldownTracker from './utils/cooldownTracker';
 import DummyProvider from './kubernetes/providers/dummyProvider';
 import KindProvider from './kubernetes/providers/kindProvider';
 import GCPProvider from './kubernetes/providers/gcpProvider';
-import RPCChild from "./communication/rpcChild";
-import withTimeout from './utils/withTimeout'
+import RPCChild from './communication/rpcChild';
 import WorkflowTracker from './hyperflow/tracker/tracker';
 import Workflow from './hyperflow/tracker/workflow';
 import BillingModel from './cloud/billingModel';
@@ -27,7 +26,6 @@ const REACT_INTERVAL = 30000; // milliseconds
 const POLICY_INIT_CHECK_INTERVAL = 1000;
 
 class Engine {
-
   private provider: BaseProvider;
   private billingModel: BillingModel;
   private rpc: RPCChild;
@@ -37,23 +35,25 @@ class Engine {
   private policy?: Policy;
 
   constructor(providerName: string) {
-    Logger.info("[Engine] Trying to create provider " + providerName);
-    if (providerName == "gcp") {
+    Logger.info('[Engine] Trying to create provider ' + providerName);
+    if (providerName == 'gcp') {
       this.provider = new GCPProvider();
-    } else if (providerName == "kind") {
+    } else if (providerName == 'kind') {
       this.provider = new KindProvider();
-    } else if (providerName == "dummy") {
+    } else if (providerName == 'dummy') {
       this.provider = new DummyProvider();
     }
     if (this.provider === undefined) {
-      throw Error("Provider " + providerName + " not found!");
+      throw Error('Provider ' + providerName + ' not found!');
     }
     this.billingModel = new GCPBillingModel();
     this.rpc = new RPCChild(this);
 
-    let machineTypeName = process.env['HF_VAR_autoscalerMachineType'];
+    const machineTypeName = process.env['HF_VAR_autoscalerMachineType'];
     if (machineTypeName == undefined) {
-      throw Error('No machine type specified. Hint: use env var HF_VAR_autoscalerMachineType');
+      throw Error(
+        'No machine type specified. Hint: use env var HF_VAR_autoscalerMachineType'
+      );
     }
     this.machineType = GCPMachines.makeObject(machineTypeName);
   }
@@ -61,7 +61,7 @@ class Engine {
   public async run(): Promise<void> {
     this.rpc.init();
     //this.rpc.call('addNumbers', [21, 15], (data) => { console.log('Got RPC response:', data); });
-    //let sum = await this.rpc.callAsync('addNumbers', [21, 15]);
+    //const sum = await this.rpc.callAsync('addNumbers', [21, 15]);
     await this.provider.initialize();
     await this.waitInitialDelay();
     this.reactLoop();
@@ -74,89 +74,129 @@ class Engine {
    */
   private async waitInitialDelay() {
     let engineInitialDelay = INITIAL_DELAY;
-    let engineInitialDelaySetting = process.env['HF_VAR_autoscalerInitialDelay'];
+    const engineInitialDelaySetting =
+      process.env['HF_VAR_autoscalerInitialDelay'];
     if (engineInitialDelaySetting != undefined) {
-      let val = parseInt(engineInitialDelaySetting);
+      const val = parseInt(engineInitialDelaySetting);
       if (isNaN(val) === true) {
-        throw Error("Invalid value of HF_VAR_autoscalerInitialDelay, must be number");
+        throw Error(
+          'Invalid value of HF_VAR_autoscalerInitialDelay, must be number'
+        );
       }
       engineInitialDelay = val;
     }
     if (engineInitialDelay > 0) {
-      Logger.verbose("[Engine] Waiting " + engineInitialDelay.toString() + " seconds (initial delay)");
-      await new Promise((res, rej) => setTimeout(res, engineInitialDelay * 1000));
+      Logger.verbose(
+        '[Engine] Waiting ' +
+          engineInitialDelay.toString() +
+          ' seconds (initial delay)'
+      );
+      await new Promise((res) => setTimeout(res, engineInitialDelay * 1000));
     }
     return;
   }
 
   private async reactLoop(): Promise<void> {
-    Logger.verbose("[Engine] React loop started");
+    Logger.verbose('[Engine] React loop started');
 
     if (this.policy === undefined) {
-      Logger.verbose("[Engine] Policy still not ready");
-      setTimeout(() => { this.reactLoop(); }, POLICY_INIT_CHECK_INTERVAL);
+      Logger.verbose('[Engine] Policy still not ready');
+      setTimeout(() => {
+        this.reactLoop();
+      }, POLICY_INIT_CHECK_INTERVAL);
       return;
     }
 
     await this.provider.updateClusterState();
-    Logger.verbose("[Engine] Cluster state updated");
+    Logger.verbose('[Engine] Cluster state updated');
 
     let numWorkers: number;
     try {
       numWorkers = this.provider.getNumNodeWorkers();
     } catch (err) {
-      throw Error("Unable to get number of workers: " + err.message);
+      throw Error('Unable to get number of workers: ' + err.message);
     }
-    let supply = this.provider.getSupply();
-    let demand = this.provider.getDemand();
+    const supply = this.provider.getSupply();
+    const demand = this.provider.getDemand();
 
     Logger.verbose('[Engine] Number of HyperFlow workers: ' + numWorkers);
     Logger.verbose('[Engine] Demand: ' + demand);
     Logger.verbose('[Engine] Supply: ' + supply);
 
-    let scalingDecision = this.policy.getDecision(demand, supply, numWorkers);
-    let machinesDiff = scalingDecision.getMachinesDiff();
-    let delayMs = Math.max(0, scalingDecision.getTime() - (new Date()).getTime()); // Cap delay at 0ms.
-    Logger.debug("[Engine] Recomended action: " + scalingDecision.getMachinesDiff().toString() + " after " + delayMs.toString() + " ms.");
+    const scalingDecision = this.policy.getDecision(demand, supply, numWorkers);
+    const machinesDiff = scalingDecision.getMachinesDiff();
+    const delayMs = Math.max(
+      0,
+      scalingDecision.getTime() - new Date().getTime()
+    ); // Cap delay at 0ms.
+    Logger.debug(
+      '[Engine] Recomended action: ' +
+        scalingDecision.getMachinesDiff().toString() +
+        ' after ' +
+        delayMs.toString() +
+        ' ms.'
+    );
     if (machinesDiff == 0) {
-      Logger.info("[Engine] No action necessary");
-      setTimeout(() => { this.reactLoop(); }, REACT_INTERVAL);
+      Logger.info('[Engine] No action necessary');
+      setTimeout(() => {
+        this.reactLoop();
+      }, REACT_INTERVAL);
       return;
     }
 
     /* During MAPE loop we can only "schedule" soon scaling decisions. */
     if (delayMs > REACT_INTERVAL) {
-      Logger.info("[Engine] Action is too far from now, skipping execution");
-      setTimeout(() => { this.reactLoop(); }, REACT_INTERVAL);
+      Logger.info('[Engine] Action is too far from now, skipping execution');
+      setTimeout(() => {
+        this.reactLoop();
+      }, REACT_INTERVAL);
       return;
     }
 
     /* Wait some time, if there we get delayed decision. */
     if (delayMs > 0) {
-      Logger.info("[Engine] Waiting " + delayMs + " ms. before performing action");
-      await new Promise((res, rej) => { setTimeout(res, delayMs); });
+      Logger.info(
+        '[Engine] Waiting ' + delayMs + ' ms. before performing action'
+      );
+      await new Promise((res) => {
+        setTimeout(res, delayMs);
+      });
     }
 
     /* Perform scaling action. */
     if (this.policy.isReady(scalingDecision) === false) {
-      Logger.info("[Engine] No action, due to policy condition: not_ready");
+      Logger.info('[Engine] No action, due to policy condition: not_ready');
     } else {
-      let targetPoolSize = numWorkers + machinesDiff;
+      const targetPoolSize = numWorkers + machinesDiff;
       if (machinesDiff > 0) {
-        Logger.info("[Engine] Scaling up from " + numWorkers.toString() + " to " + targetPoolSize.toString() + " machines");
+        Logger.info(
+          '[Engine] Scaling up from ' +
+            numWorkers.toString() +
+            ' to ' +
+            targetPoolSize.toString() +
+            ' machines'
+        );
       } else {
-        Logger.info("[Engine] Scaling down from " + numWorkers.toString() + " to " + targetPoolSize.toString() + " machines");
+        Logger.info(
+          '[Engine] Scaling down from ' +
+            numWorkers.toString() +
+            ' to ' +
+            targetPoolSize.toString() +
+            ' machines'
+        );
       }
       try {
         await this.provider.resizeCluster(targetPoolSize);
         this.policy.actionTaken(scalingDecision);
       } catch (err) {
-        Logger.error("[Engine] Unable to resize cluster: " + err);
+        Logger.error('[Engine] Unable to resize cluster: ' + err);
       }
     }
 
     /* Schedule next loop. */
-    setTimeout(() => { this.reactLoop(); }, REACT_INTERVAL);
+    setTimeout(() => {
+      this.reactLoop();
+    }, REACT_INTERVAL);
 
     return;
   }
@@ -170,21 +210,30 @@ class Engine {
    */
   private wfInstanceStarted(wfDir: string, eventTime: timestamp): void {
     if (this.workflowTracker !== undefined) {
-      throw Error("Tracker cannot be re-initialized: only one running workflow is supported");
+      throw Error(
+        'Tracker cannot be re-initialized: only one running workflow is supported'
+      );
     }
     this.workflow = Workflow.createFromFile(wfDir);
     this.workflowTracker = new WorkflowTracker(this.workflow);
-    let printInterval = setInterval(() => {
-      this.workflowTracker.printState();
-    }, 100);
-    let policyName = process.env['HF_VAR_autoscalerPolicy'];
+    const policyName = process.env['HF_VAR_autoscalerPolicy'];
     Logger.info("[Engine] Trying to create policy '" + policyName + "'");
-    if (policyName == "react") {
-      this.policy = new ReactPolicy(this.workflowTracker, this.billingModel, this.machineType);
-    } else if (policyName == "predict") {
-      this.policy = new PredictPolicy(this.workflowTracker, this.billingModel, this.machineType);
+    if (policyName == 'react') {
+      this.policy = new ReactPolicy(
+        this.workflowTracker,
+        this.billingModel,
+        this.machineType
+      );
+    } else if (policyName == 'predict') {
+      this.policy = new PredictPolicy(
+        this.workflowTracker,
+        this.billingModel,
+        this.machineType
+      );
     } else {
-      throw Error('No valid policy specified. Hint: use env var HF_VAR_autoscalerPolicy');
+      throw Error(
+        'No valid policy specified. Hint: use env var HF_VAR_autoscalerPolicy'
+      );
     }
     this.workflowTracker.notifyStart(eventTime);
   }
@@ -194,40 +243,50 @@ class Engine {
    * @param name event name
    * @param values event values
    */
-  private onHFEngineEvent(name: String, values: any[]): void {
-    Logger.debug("[Engine] Received HyperFlow's engine event " + name + ': ' + JSON.stringify(values));
-    if (name != "persist") {
-      Logger.warn("[Engine] Unknown event type: " + name);
+  private onHFEngineEvent(name: string, values: any[]): void {
+    Logger.debug(
+      "[Engine] Received HyperFlow's engine event " +
+        name +
+        ': ' +
+        JSON.stringify(values)
+    );
+    if (name != 'persist') {
+      Logger.warn('[Engine] Unknown event type: ' + name);
       return;
     }
     if (values.length != 2) {
       Logger.warn("[Engine] Incorrect event's values length: " + name);
       return;
     }
-    let eventTime: timestamp = values[0];
-    let details = values[1];
+    const eventTime: timestamp = values[0];
+    const details = values[1];
 
     // A. Event send just before running WF
-    if (details[0] == "info") {
-      let wfDir = details[1];
+    if (details[0] == 'info') {
+      const wfDir = details[1];
       this.wfInstanceStarted(wfDir, eventTime);
     }
     // B. Event sent on execution beginning (initial signals)
-    else if (details[0] == "input") {
+    else if (details[0] == 'input') {
       let signalId = details[2]._id;
       // signals coming from -s option (those all ins from workflow.json),
       // are sent with ID as strings
       signalId = parseInt(signalId);
       if (isNaN(signalId)) {
-        throw Error("Received invalid input event, with signal " + details[1]._id.toString());
+        throw Error(
+          'Received invalid input event, with signal ' +
+            details[1]._id.toString()
+        );
       }
       this.workflowTracker.notifyInitialSignal(signalId, eventTime);
     }
     // C. Event sent when process execution was finished
-    else if (details[0] == "fired") {
-      let processId = details[2];
-      if (typeof processId !== "number") {
-        throw Error("Received invalid fired event, with process " + processId.toString());
+    else if (details[0] == 'fired') {
+      const processId = details[2];
+      if (typeof processId !== 'number') {
+        throw Error(
+          'Received invalid fired event, with process ' + processId.toString()
+        );
       }
       this.workflowTracker.notifyProcessFinished(processId, eventTime);
     } else {
@@ -238,10 +297,10 @@ class Engine {
   }
 }
 
-var args = process.argv.slice(2);
+const args = process.argv.slice(2);
 if (args.length != 1) {
-  throw Error("ERROR: 1 argument expected, got " + args.length.toString());
+  throw Error('ERROR: 1 argument expected, got ' + args.length.toString());
 }
-let providerName = args[0];
-let engine = new Engine(providerName);
+const providerName = args[0];
+const engine = new Engine(providerName);
 engine.run();

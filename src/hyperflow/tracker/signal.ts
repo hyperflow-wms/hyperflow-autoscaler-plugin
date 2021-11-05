@@ -1,9 +1,8 @@
-import { HFSignal } from "../types";
+import { HFSignal } from '../types';
 
 type timestamp = number;
 
 class Signal {
-
   public readonly id: number;
   public readonly initial: boolean;
 
@@ -19,10 +18,10 @@ class Signal {
       this.id = signal.id;
       this.initial = signal.initial;
       this.name = signal.name;
-      this.emitTime = (signal.emitTime) ? signal.emitTime : undefined;
+      this.emitTime = signal.emitTime ? signal.emitTime : undefined;
     } else {
       if (id === undefined) {
-        throw Error("ID is required for Signal");
+        throw Error('ID is required for Signal');
       }
       this.id = id;
       this.name = signal.name;

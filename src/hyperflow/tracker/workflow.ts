@@ -1,15 +1,14 @@
 import { getBaseLogger } from '../../utils/logger';
-import { HFWorkflow } from "../types";
-import Process from "./process";
-import Signal from "./signal";
+import { HFWorkflow } from '../types';
+import Process from './process';
+import Signal from './signal';
 
-import * as fs from "fs";
-import * as pathtool from "path";
+import * as fs from 'fs';
+import * as pathtool from 'path';
 
 const Logger = getBaseLogger();
 
 class Workflow {
-
   private name: string;
   private data?: Signal[];
   private signals?: Signal[];
@@ -25,17 +24,19 @@ class Workflow {
     this.outs = workflow.outs;
 
     // NOTE: HyperFlow uses 1-based indexing, so we use the same format
-    this.data = workflow.data?.map((sig, idx) => new Signal(sig, idx+1));
-    this.signals = workflow.signals?.map((sig, idx) => new Signal(sig, idx+1));
+    this.data = workflow.data?.map((sig, idx) => new Signal(sig, idx + 1));
+    this.signals = workflow.signals?.map(
+      (sig, idx) => new Signal(sig, idx + 1)
+    );
     this.processes = workflow.processes?.map((proc, idx) => {
-      proc.ins = proc.ins.map(x => x+1);
-      proc.outs = proc.outs.map(x => x+1);
-      return new Process(proc, idx+1)
+      proc.ins = proc.ins.map((x) => x + 1);
+      proc.outs = proc.outs.map((x) => x + 1);
+      return new Process(proc, idx + 1);
     });
     this.tasks = workflow.tasks?.map((proc, idx) => {
-      proc.ins = proc.ins.map(x => x+1);
-      proc.outs = proc.outs.map(x => x+1);
-      return new Process(proc, idx+1)
+      proc.ins = proc.ins.map((x) => x + 1);
+      proc.outs = proc.outs.map((x) => x + 1);
+      return new Process(proc, idx + 1);
     });
   }
 
@@ -63,9 +64,9 @@ class Workflow {
    * Gets all initial signals - those with defined
    * 'data' property.
    */
-  public getInitialSigIds() {
-    let intitialSigs = this.getSignals().filter(sig => (sig.initial == true));
-    let sigIds = intitialSigs.map(x => x.id);
+  public getInitialSigIds(): number[] {
+    const intitialSigs = this.getSignals().filter((sig) => sig.initial == true);
+    const sigIds = intitialSigs.map((x) => x.id);
     return sigIds;
   }
 
@@ -73,7 +74,7 @@ class Workflow {
    * Get all WF's input signals - those that are fired
    * with '-s' option.
    */
-  public getWfInsSigIds() {
+  public getWfInsSigIds(): number[] {
     return this.ins;
   }
 
@@ -82,15 +83,14 @@ class Workflow {
    * @param directory Workflow root directory
    */
   public static createFromFile(directory: string): Workflow {
-    Logger.debug("[WorkflowTracker] Reading HF workflow from " + directory);
-    let wfFile = pathtool.join(directory, "workflow.json");
-    let wfFileContent = fs.readFileSync(wfFile, 'utf8');
-    let rawWf = JSON.parse(wfFileContent);
-    let wf = new Workflow(rawWf);
+    Logger.debug('[WorkflowTracker] Reading HF workflow from ' + directory);
+    const wfFile = pathtool.join(directory, 'workflow.json');
+    const wfFileContent = fs.readFileSync(wfFile, 'utf8');
+    const rawWf = JSON.parse(wfFileContent);
+    const wf = new Workflow(rawWf);
 
     return wf;
   }
-
 }
 
 export default Workflow;

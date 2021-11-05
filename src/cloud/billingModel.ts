@@ -1,16 +1,18 @@
-import MachineType from "./machine";
+import MachineType from './machine';
 
 type timestamp = number;
 type milliseconds = number;
 
-abstract class BillingModel
-{
+abstract class BillingModel {
   /**
    * Gets total price for running given machine type.
    * @param machine MachineType
    * @param time milliseconds
    */
-  public abstract getPriceForTime(machine: MachineType, time: milliseconds): number;
+  public abstract getPriceForTime(
+    machine: MachineType,
+    time: milliseconds
+  ): number;
 
   /**
    * Wrapper of getPriceForTime.
@@ -18,8 +20,12 @@ abstract class BillingModel
    * @param timeStart
    * @param timeEnd
    */
-  public getPriceForInterval(machine: MachineType, timeStart: timestamp, timeEnd: timestamp): number {
-    let time = timeEnd - timeStart;
+  public getPriceForInterval(
+    machine: MachineType,
+    timeStart: timestamp,
+    timeEnd: timestamp
+  ): number {
+    const time = timeEnd - timeStart;
     return this.getPriceForTime(machine, time);
   }
 
@@ -32,7 +38,14 @@ abstract class BillingModel
   /**
    * Get total price of machines with resize between time.
    */
-  public abstract getPriceForDynamicInterval(machine: MachineType, timeStart: timestamp, numBefore: number, resizeTime: timestamp, numAfter: number, timeEnd: timestamp): number;
+  public abstract getPriceForDynamicInterval(
+    machine: MachineType,
+    timeStart: timestamp,
+    numBefore: number,
+    resizeTime: timestamp,
+    numAfter: number,
+    timeEnd: timestamp
+  ): number;
 }
 
 export default BillingModel;

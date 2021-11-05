@@ -1,5 +1,5 @@
 import { getBaseLogger } from '../utils/logger';
-import { HFWflib, HFEngine } from "./types";
+import { HFWflib, HFEngine } from './types';
 import { RedisClient } from 'redis';
 import RPC from '../communication/rpc';
 
@@ -34,7 +34,7 @@ class API {
    */
   public assignRPC(rpc: RPC): void {
     if (this.rpc !== undefined) {
-      throw Error("RPC is already assigned");
+      throw Error('RPC is already assigned');
     }
     this.rpc = rpc;
 
@@ -44,27 +44,31 @@ class API {
   /**
    * Binds to eventServer in engine to capture relevant data.
    */
-  public listenForEvents() {
+  public listenForEvents(): void {
     /* Below hacky-line could be uncommented to get more events. */
     //this.engine.logProvenance = true;
 
     /* Listen for engine events and pass them autoscaler. */
     const cbBuilder = (name) => {
       return (...values) => {
-        Logger.debug('[API] Captured event from engine ' + name.toString() + ': ' + JSON.stringify(values));
+        Logger.debug(
+          '[API] Captured event from engine ' +
+            name.toString() +
+            ': ' +
+            JSON.stringify(values)
+        );
         if (this.rpc === undefined) {
-          throw Error("No RPC assigned to API");
+          throw Error('No RPC assigned to API');
         }
-        this.rpc.callAsync("onHFEngineEvent", [name, values]);
+        this.rpc.callAsync('onHFEngineEvent', [name, values]);
       };
     };
-    for (let name of ["persist", "input", "read", "prov"]) {
+    for (const name of ['persist', 'input', 'read', 'prov']) {
       this.engine.eventServer.on(name, cbBuilder(name));
     }
 
     return;
   }
-
 }
 
 export default API;

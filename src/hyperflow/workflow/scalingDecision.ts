@@ -1,7 +1,6 @@
 type timestamp = number;
 
-class ScalingDecision
-{
+class ScalingDecision {
   private machinesDiff: number;
   private time: timestamp;
 

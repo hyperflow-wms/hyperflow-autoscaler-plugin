@@ -1,4 +1,4 @@
-import ResourceRequirements from "../kubernetes/resourceRequirements";
+import ResourceRequirements from '../kubernetes/resourceRequirements';
 
 interface IMachineType {
   name: string;
@@ -6,13 +6,12 @@ interface IMachineType {
   memory: string;
 }
 
-class MachineType
-{
+class MachineType {
   public readonly name: string;
   private cpuMillis: number;
   private memBytes: number;
 
-  public constructor({name, cpu, memory}: IMachineType) {
+  public constructor({ name, cpu, memory }: IMachineType) {
     this.name = name;
     this.cpuMillis = ResourceRequirements.Utils.parseCpuString(cpu);
     this.memBytes = ResourceRequirements.Utils.parseMemString(memory);
@@ -21,21 +20,21 @@ class MachineType
   /**
    * Getter for name.
    */
-  public getName() {
+  public getName(): string {
     return this.name;
   }
 
   /**
    * Getter for cpuMillis.
    */
-  public getCpuMillis() {
+  public getCpuMillis(): number {
     return this.cpuMillis;
   }
 
   /**
    * Getter for memBytes.
    */
-  public getMemBytes() {
+  public getMemBytes(): number {
     return this.memBytes;
   }
 }

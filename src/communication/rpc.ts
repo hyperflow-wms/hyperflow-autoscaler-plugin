@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getBaseLogger } from '../utils/logger';
 
 const Logger = getBaseLogger();
@@ -6,20 +9,19 @@ const MESSAGE_TYPE_REQUEST = 1;
 const MESSAGE_TYPE_REPLY = 2;
 
 interface RPCRequest {
-  id: string,
-  type: number,
-  fn: string,
-  args: any[],
+  id: string;
+  type: number;
+  fn: string;
+  args: any[];
 }
 
 interface RPCReply {
-  id: string,
-  type: number,
-  content: any,
+  id: string;
+  type: number;
+  content: any;
 }
 
 abstract class RPC {
-
   private callback_map: object;
   private api_object: any;
 
@@ -33,37 +35,48 @@ abstract class RPC {
 
   private handleRequest(req: RPCRequest): void {
     Logger.debug('[RPC] Handling request: ' + JSON.stringify(req));
-    let fn = this.api_object[req.fn];
+    const fn = this.api_object[req.fn];
     if (fn === undefined) {
       Logger.error('[RPC] No "' + req.fn + '" function registred');
       process.exit(1);
     }
-    let args = req.args;
+    const args = req.args;
     if (args.length > fn.length) {
-      Logger.error('[RPC] Too much args for "' + req.fn + '" - only ' + fn.length.toString() + " expected");
+      Logger.error(
+        '[RPC] Too much args for "' +
+          req.fn +
+          '" - only ' +
+          fn.length.toString() +
+          ' expected'
+      );
       process.exit(1);
     }
-    let result = fn.apply(this.api_object, req.args);
-    let callId = req.id;
-    Logger.trace('[RPC] Sending result with callId ' + callId + ': ' + JSON.stringify(result));
+    const result = fn.apply(this.api_object, req.args);
+    const callId = req.id;
+    Logger.trace(
+      '[RPC] Sending result with callId ' +
+        callId +
+        ': ' +
+        JSON.stringify(result)
+    );
     this.sendRemote({
       id: callId,
       type: MESSAGE_TYPE_REPLY,
-      content: result,
+      content: result
     });
     return;
   }
 
   private handleReply(rep: RPCReply): void {
     Logger.trace('[RPC] Handling reply: ' + JSON.stringify(rep));
-    let callId = rep.id;
+    const callId = rep.id;
     if (this.callback_map[callId] === undefined) {
       Logger.error('[RPC] Callback for call-' + callId + ' is not set');
       process.exit(1);
     }
-    let cb_copy = this.callback_map[callId];
+    const cb_copy = this.callback_map[callId];
     delete this.callback_map[callId];
-    let content = rep.content;
+    const content = rep.content;
     Logger.trace('[RPC] Running callback');
     cb_copy(content);
   }
@@ -86,16 +99,16 @@ abstract class RPC {
   }
 
   public call(fn_name: string, args: Array<any>, cb: (data: any) => any): void {
-    let randomId = Math.random().toString(36).substr(2, 9);
+    const randomId = Math.random().toString(36).substr(2, 9);
     Logger.debug('[RPC] Calling ' + fn_name + ' (id: ' + randomId + ')');
     this.sendRemote({
       id: randomId,
       type: MESSAGE_TYPE_REQUEST,
       fn: fn_name,
-      args: args,
+      args: args
     });
     if (this.callback_map[randomId] !== undefined) {
-      throw Error("Callback is already set!");
+      throw Error('Callback is already set!');
     }
     Logger.trace('[RPC] Saving callback for ' + randomId);
     this.callback_map[randomId] = cb;
@@ -106,7 +119,7 @@ abstract class RPC {
    * Promisified version of 'call'.
    */
   public async callAsync(fn_name: string, args: Array<any>): Promise<any> {
-    let promise = new Promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       try {
         this.call(fn_name, args, (data) => {
           resolve(data);

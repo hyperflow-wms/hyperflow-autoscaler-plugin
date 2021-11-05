@@ -1,12 +1,26 @@
-import BillingModel from "./billingModel";
-import { N1_HIGHCPU_2, N1_HIGHCPU_4, N1_HIGHCPU_8, N1_HIGHCPU_16, N1_HIGHCPU_32, N1_HIGHCPU_64, N1_HIGHCPU_96, N1_HIGHMEM_2, N1_HIGHMEM_4, N1_HIGHMEM_8, N1_HIGHMEM_16, N1_HIGHMEM_32, N1_HIGHMEM_64, N1_HIGHMEM_96 } from './gcpMachines';
-import MachineType from "./machine";
+import BillingModel from './billingModel';
+import {
+  N1_HIGHCPU_2,
+  N1_HIGHCPU_4,
+  N1_HIGHCPU_8,
+  N1_HIGHCPU_16,
+  N1_HIGHCPU_32,
+  N1_HIGHCPU_64,
+  N1_HIGHCPU_96,
+  N1_HIGHMEM_2,
+  N1_HIGHMEM_4,
+  N1_HIGHMEM_8,
+  N1_HIGHMEM_16,
+  N1_HIGHMEM_32,
+  N1_HIGHMEM_64,
+  N1_HIGHMEM_96
+} from './gcpMachines';
+import MachineType from './machine';
 
 type timestamp = number;
 type milliseconds = number;
 
-class GCPBillingModel extends BillingModel
-{
+class GCPBillingModel extends BillingModel {
   /**
    * @inheritdoc
    */
@@ -14,15 +28,15 @@ class GCPBillingModel extends BillingModel
     /* VM instances are billed at least for 1 minute,
      * then billed secondly (rounding up). */
     let workingTime = time;
-    if (workingTime < (60*1000)) {
-      workingTime = 60*1000;
+    if (workingTime < 60 * 1000) {
+      workingTime = 60 * 1000;
     }
-    let workingSeconds = Math.ceil(workingTime / 1000);
+    const workingSeconds = Math.ceil(workingTime / 1000);
 
     /* Calculate price. */
-    let workingHours = workingSeconds / 3600;
-    let machineHourlyPrice = this.getHourlyPrice(machine)
-    let runningPrice = workingHours * machineHourlyPrice;
+    const workingHours = workingSeconds / 3600;
+    const machineHourlyPrice = this.getHourlyPrice(machine);
+    const runningPrice = workingHours * machineHourlyPrice;
 
     return runningPrice;
   }
@@ -31,7 +45,7 @@ class GCPBillingModel extends BillingModel
    * @inheritdoc
    */
   public getHourlyPrice(machine: MachineType): number {
-    let name = machine.getName();
+    const name = machine.getName();
     /* Note: this are prices for us-central-1 zone. */
     switch (name) {
       case N1_HIGHCPU_2:
@@ -64,17 +78,25 @@ class GCPBillingModel extends BillingModel
         return 5.678544;
       default:
     }
-    throw Error("Unknown price for machine " + name);
+    throw Error('Unknown price for machine ' + name);
   }
 
   /**
    * @inheritdoc
    */
-  public getPriceForDynamicInterval(machine: MachineType, timeStart: timestamp, numBefore: number, resizeTime: timestamp, numAfter: number, timeEnd: timestamp): number {
+  public getPriceForDynamicInterval(
+    machine: MachineType,
+    timeStart: timestamp,
+    numBefore: number,
+    resizeTime: timestamp,
+    numAfter: number,
+    timeEnd: timestamp
+  ): number {
     /* Calulate price for machines that are before and after resize. */
-    let numCommonMachines = Math.min(numBefore, numAfter);
-    let offset = Math.abs(numBefore - numAfter);
-    let commonMachinesPrice = numCommonMachines * this.getPriceForInterval(machine, timeStart, timeEnd);
+    const numCommonMachines = Math.min(numBefore, numAfter);
+    const offset = Math.abs(numBefore - numAfter);
+    const commonMachinesPrice =
+      numCommonMachines * this.getPriceForInterval(machine, timeStart, timeEnd);
     if (offset == 0) {
       return commonMachinesPrice;
     }
@@ -82,15 +104,17 @@ class GCPBillingModel extends BillingModel
     /* Resize-down case. */
     let restMachinesPrice = 0;
     if (numBefore > numAfter) {
-      restMachinesPrice = offset * this.getPriceForInterval(machine, timeStart, resizeTime);
+      restMachinesPrice =
+        offset * this.getPriceForInterval(machine, timeStart, resizeTime);
     }
 
     /* Resize-up case. */
     if (numBefore < numAfter) {
-      restMachinesPrice = offset * this.getPriceForInterval(machine, resizeTime, timeEnd);
+      restMachinesPrice =
+        offset * this.getPriceForInterval(machine, resizeTime, timeEnd);
     }
 
-    let totalPrice = commonMachinesPrice + restMachinesPrice;
+    const totalPrice = commonMachinesPrice + restMachinesPrice;
     return totalPrice;
   }
 }

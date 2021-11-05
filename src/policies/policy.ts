@@ -1,16 +1,19 @@
-import BillingModel from "../cloud/billingModel";
-import MachineType from "../cloud/machine";
-import WorkflowTracker from "../hyperflow/tracker/tracker";
-import ScalingDecision from "../hyperflow/workflow/scalingDecision";
-import ResourceRequirements from "../kubernetes/resourceRequirements";
+import BillingModel from '../cloud/billingModel';
+import MachineType from '../cloud/machine';
+import WorkflowTracker from '../hyperflow/tracker/tracker';
+import ScalingDecision from '../hyperflow/workflow/scalingDecision';
+import ResourceRequirements from '../kubernetes/resourceRequirements';
 
-abstract class Policy
-{
+abstract class Policy {
   protected wfTracker: WorkflowTracker;
   protected billingModel: BillingModel;
   protected machineType: MachineType;
 
-  public constructor(wfTracker: WorkflowTracker, billingModel: BillingModel, machineType: MachineType) {
+  public constructor(
+    wfTracker: WorkflowTracker,
+    billingModel: BillingModel,
+    machineType: MachineType
+  ) {
     this.wfTracker = wfTracker;
     this.billingModel = billingModel;
     this.machineType = machineType;
@@ -23,7 +26,11 @@ abstract class Policy
    * @param supply total cluster supply
    * @param workers number of worker nodes
    */
-  public abstract getDecision(demand: ResourceRequirements, supply: ResourceRequirements, workers: number): ScalingDecision;
+  public abstract getDecision(
+    demand: ResourceRequirements,
+    supply: ResourceRequirements,
+    workers: number
+  ): ScalingDecision;
 
   /**
    * Whether scaling action is valid with current policy terms.

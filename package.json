@@ -6,7 +6,9 @@
   "scripts": {
     "test": "mocha -r ts-node/register --timeout 999999 --colors './src/**/*-spec.ts'",
     "coverage": "nyc -r lcov -e .ts -x \"**/*-spec.ts\" npm run test",
-    "compile": "tsc"
+    "compile": "tsc",
+    "lint": "eslint . --ext .ts",
+    "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write"
   },
   "repository": {
     "type": "git",
@@ -27,7 +29,8 @@
     "@google-cloud/container": "^2.1.1",
     "@kubernetes/client-node": "^0.12.2",
     "pino": "^6.7.0",
-    "redis": "^3.0.2"
+    "redis": "^3.0.2",
+    "util": "^0.12.4"
   },
   "devDependencies": {
     "@types/chai": "^4.2.14",
@@ -36,12 +39,16 @@
     "@types/redis": "^2.8.28",
     "@types/sinon": "^9.0.8",
     "@types/stack-trace": "^0.0.29",
+    "@typescript-eslint/eslint-plugin": "^4.29.1",
+    "@typescript-eslint/parser": "^4.29.1",
     "chai": "^4.2.0",
+    "eslint": "^7.32.0",
     "mocha": "^8.2.0",
     "nyc": "^15.1.0",
+    "prettier": "^2.3.2",
     "sinon": "^9.2.0",
     "ts-node": "^9.0.0",
-    "typescript": "^4.0.3"
+    "typescript": "^4.3.5"
   },
   "files": [
     "src/*",

@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+
 import { getBaseLogger } from './logger';
 
 const Logger = getBaseLogger();
@@ -5,8 +8,7 @@ const Logger = getBaseLogger();
 type timestamp = number;
 type milliseconds = number;
 
-class Timeframe
-{
+class Timeframe {
   /**
    * Places data wit correponding equal-sized time intervals.
    * @param data data to pack, map with timestamp as key and value with array
@@ -16,15 +18,21 @@ class Timeframe
    *
    * CAUTION: data must be sorted by key (time).
    */
-  public static packEqualIntervals<T>(data: Map<timestamp, T[]>, start: timestamp, end: timestamp, interval: milliseconds): Map<timestamp, T[]> {
+  public static packEqualIntervals<T>(
+    data: Map<timestamp, T[]>,
+    start: timestamp,
+    end: timestamp,
+    interval: milliseconds
+  ): Map<timestamp, T[]> {
     /* Base equal frames - but not propagated and not averaged. */
-    let dataIterator = data.entries();
+    const dataIterator = data.entries();
     let currentResult: IteratorResult<[timestamp, T[]], any> | undefined;
-    let intervals = new Map<number, T[]>();
+    const intervals = new Map<number, T[]>();
     for (let currentTime = start; currentTime < end; currentTime += interval) {
       intervals.set(currentTime, []);
       // @ts-ignore: Object is possibly 'undefined'.
-      let currentInterval: T[] = intervals.get(currentTime);
+      const currentInterval: T[] = intervals.get(currentTime);
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         if (currentResult === undefined) {
           currentResult = dataIterator.next();
@@ -34,20 +42,22 @@ class Timeframe
           }
           /* Handle case where given data is before start interval.
            * This is fast-forward for data iterator. */
-          let time = currentResult.value[0];
+          const time = currentResult.value[0];
           if (time < currentTime) {
-            Logger.warn("[Timeframe] There is data before packing start timestamp");
+            Logger.warn(
+              '[Timeframe] There is data before packing start timestamp'
+            );
             currentResult = undefined;
             continue;
           }
         }
-        let element: [number, T[]] = currentResult.value;
-        let time = element[0];
-        let elementValues = element[1];
-        if (time < currentTime || time >= (currentTime + interval)) {
+        const element: [number, T[]] = currentResult.value;
+        const time = element[0];
+        const elementValues = element[1];
+        if (time < currentTime || time >= currentTime + interval) {
           break;
         }
-        for (let val of elementValues) {
+        for (const val of elementValues) {
           currentInterval.push(val);
         }
         currentResult = undefined;
@@ -56,7 +66,7 @@ class Timeframe
 
     /* Warn about data left-overs, outside packing time range. */
     if (currentResult?.done !== undefined && currentResult.done == false) {
-      Logger.warn("[Timeframe] There is data after packing end timestamp");
+      Logger.warn('[Timeframe] There is data after packing end timestamp');
     }
 
     return intervals;
@@ -68,14 +78,16 @@ class Timeframe
    *
    * CAUTION: gap is something between two non-empty positions
    */
-  public static fillArrayGapsWithLast<T>(data: Map<timestamp, T[]>): Map<timestamp, T[]> {
-    let filledData = new Map<timestamp, T[]>();
-    let sortedKeys = Array.from(data.keys()).sort();
+  public static fillArrayGapsWithLast<T>(
+    data: Map<timestamp, T[]>
+  ): Map<timestamp, T[]> {
+    const filledData = new Map<timestamp, T[]>();
+    const sortedKeys = Array.from(data.keys()).sort();
 
     /* Find first non-empty key. */
     let firstNonEmptyKey: number | null = null;
-    for (let key of sortedKeys) {
-      let REF_value = data.get(key);
+    for (const key of sortedKeys) {
+      const REF_value = data.get(key);
       // @ts-ignore: Object is possibly 'undefined'.
       if (REF_value.length != 0) {
         firstNonEmptyKey = key;
@@ -85,8 +97,8 @@ class Timeframe
 
     /* Find last non-empty key. */
     let lastNonEmptyKey: number | null = null;
-    for (let key of sortedKeys) {
-      let REF_value = data.get(key);
+    for (const key of sortedKeys) {
+      const REF_value = data.get(key);
       // @ts-ignore: Object is possibly 'undefined'.
       if (REF_value.length != 0) {
         lastNonEmptyKey = key;
@@ -100,8 +112,8 @@ class Timeframe
 
     /* Fill gaps. */
     let lastValue: T[] | null = null;
-    for (let key of sortedKeys) {
-      let REF_value = data.get(key);
+    for (const key of sortedKeys) {
+      const REF_value = data.get(key);
       // @ts-ignore: Object is possibly 'undefined'.
       if (REF_value.length != 0) {
         // @ts-ignore: Object is possibly 'undefined'.

@@ -1,6 +1,4 @@
-import { getBaseLogger } from '../utils/logger';
-
-const Logger = getBaseLogger();
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 
 interface IResourceRequirements {
   cpu: string;
@@ -8,14 +6,13 @@ interface IResourceRequirements {
 }
 
 class ResourceRequirements {
-
   private cpuMillis: number;
   private memBytes: number;
 
   /**
    * Constructor.
    */
-  constructor({cpu, mem}: IResourceRequirements) {
+  constructor({ cpu, mem }: IResourceRequirements) {
     this.cpuMillis = ResourceRequirements.parseCpuString(cpu);
     this.memBytes = ResourceRequirements.parseMemString(mem);
   }
@@ -23,14 +20,14 @@ class ResourceRequirements {
   /**
    * Getter for cpuMillis.
    */
-  getCpuMillis() {
+  getCpuMillis(): number {
     return this.cpuMillis;
   }
 
   /**
    * Getter for memBytes.
    */
-  getMemBytes() {
+  getMemBytes(): number {
     return this.memBytes;
   }
 
@@ -39,96 +36,104 @@ class ResourceRequirements {
    * @param mem string, eg. "10 Gi"
    * @return number of bytes
    */
-  private static parseMemString(mem: string): number  {
+  private static parseMemString(mem: string): number {
     //Logger.trace('[Resources] memoryStringToBytes(' + mem + ')');
-    let format1 = mem.match(/^(?<num>\d+)$/);
+    const format1 = mem.match(/^(?<num>\d+)$/);
     if (format1 != null) {
       // @ts-ignore: Object is possibly 'undefined'.
-      let numPart: string = format1.groups.num;
-      let val: number = parseInt(numPart, 10);
+      const numPart: string = format1.groups.num;
+      const val: number = parseInt(numPart, 10);
       return val;
     }
 
-    let format2 = mem.match(/^(?<base>\d+)e(?<exponent>\d+)$/);
+    const format2 = mem.match(/^(?<base>\d+)e(?<exponent>\d+)$/);
     if (format2 != null) {
       // @ts-ignore: Object is possibly 'undefined'.
-      let basePart: string = format2.groups.base;
+      const basePart: string = format2.groups.base;
       // @ts-ignore: Object is possibly 'undefined'.
-      let exponentPart: string = format2.groups.exponent;
-      let baseVal: number = parseInt(basePart, 10);
-      let exponentVal: number = parseInt(exponentPart, 10);
-      return baseVal * Math.pow(10, exponentVal);;
+      const exponentPart: string = format2.groups.exponent;
+      const baseVal: number = parseInt(basePart, 10);
+      const exponentVal: number = parseInt(exponentPart, 10);
+      return baseVal * Math.pow(10, exponentVal);
     }
 
-    let format3 = mem.match(/^(?<num>\d+)(\.(?<fraction>\d+))?(?<unit>[EPTGMK])$/);
+    const format3 = mem.match(
+      /^(?<num>\d+)(\.(?<fraction>\d+))?(?<unit>[EPTGMK])$/
+    );
     if (format3 != null) {
       // @ts-ignore: Object is possibly 'undefined'.
-      let numPart = format3.groups.num;
-      let fractionPart = format3?.groups?.fraction;
+      const numPart = format3.groups.num;
+      const fractionPart = format3?.groups?.fraction;
       // @ts-ignore: Object is possibly 'undefined'.
-      let unitPart = format3.groups.unit;
+      const unitPart = format3.groups.unit;
       let baseVal: number = parseInt(numPart, 10);
       if (fractionPart != undefined) {
-        baseVal += parseInt(fractionPart.substr(0, 3).padEnd(3, '0'), 10) / 1000;
+        baseVal +=
+          parseInt(fractionPart.substr(0, 3).padEnd(3, '0'), 10) / 1000;
       }
       let power: number;
       switch (unitPart) {
-        case "E":
+        case 'E':
           power = 18;
           break;
-        case "P":
+        case 'P':
           power = 15;
           break;
-        case "T":
+        case 'T':
           power = 12;
           break;
-        case "G":
+        case 'G':
           power = 9;
           break;
-        case "M":
+        case 'M':
           power = 6;
           break;
-        default: // "Ki":
+        default:
+          // "Ki":
           power = 3;
       }
-      return baseVal * Math.pow(10, power);;
+      return baseVal * Math.pow(10, power);
     }
 
-    let format4 = mem.match(/^(?<num>\d+)(\.(?<fraction>\d+))?(?<unit>[EPTGMK]i)$/);
+    const format4 = mem.match(
+      /^(?<num>\d+)(\.(?<fraction>\d+))?(?<unit>[EPTGMK]i)$/
+    );
     if (format4 != null) {
       // @ts-ignore: Object is possibly 'undefined'.
-      let numPart = format4.groups.num;
-      let fractionPart = format4?.groups?.fraction;
+      const numPart = format4.groups.num;
+      const fractionPart = format4?.groups?.fraction;
       // @ts-ignore: Object is possibly 'undefined'.
-      let unitPart = format4.groups.unit;
+      const unitPart = format4.groups.unit;
       let baseVal: number = parseInt(numPart, 10);
       if (fractionPart != undefined) {
-        baseVal += parseInt(fractionPart.substr(0, 3).padEnd(3, '0'), 10) / 1000;
+        baseVal +=
+          parseInt(fractionPart.substr(0, 3).padEnd(3, '0'), 10) / 1000;
       }
       let power: number;
       switch (unitPart) {
-        case "Ei":
+        case 'Ei':
           power = 60;
           break;
-        case "Pi":
+        case 'Pi':
           power = 50;
           break;
-        case "Ti":
+        case 'Ti':
           power = 40;
           break;
-        case "Gi":
+        case 'Gi':
           power = 30;
           break;
-        case "Mi":
+        case 'Mi':
           power = 20;
           break;
-        default: // "Ki":
+        default:
+          // "Ki":
           power = 10;
       }
-      return baseVal * Math.pow(2, power);;
+      return baseVal * Math.pow(2, power);
     }
 
-    throw Error("[Resources] Unknown format");
+    throw Error('[Resources] Unknown format');
   }
 
   /**
@@ -142,7 +147,7 @@ class ResourceRequirements {
     this.cpuMillis += cpuMillis;
     this.memBytes += memBytes;
     if (this.cpuMillis < 0 || this.memBytes < 0) {
-      throw Error("ResourceRequirements' values must not fall below zero")
+      throw Error("ResourceRequirements' values must not fall below zero");
     }
     return;
   }
@@ -152,7 +157,7 @@ class ResourceRequirements {
    * @return copied object
    */
   public clone(): ResourceRequirements {
-    let res = new ResourceRequirements({cpu: "0", mem: "0"});
+    const res = new ResourceRequirements({ cpu: '0', mem: '0' });
     res.cpuMillis = this.cpuMillis;
     res.memBytes = this.memBytes;
     return res;
@@ -165,20 +170,20 @@ class ResourceRequirements {
    */
   private static parseCpuString(cpu: string): number {
     //Logger.trace('[Resources] parseCpuString(' + cpu + ')');
-    let format1 = cpu.match(/^(?<num>\d+)m$/);
+    const format1 = cpu.match(/^(?<num>\d+)m$/);
     if (format1 != null) {
       // @ts-ignore: Object is possibly 'undefined'.
-      let numPart = format1.groups.num;
-      let val: number = parseInt(numPart, 10);
+      const numPart = format1.groups.num;
+      const val: number = parseInt(numPart, 10);
       return val;
     }
 
-    let format2 = cpu.match(/^(?<base>\d+)(\.(?<fraction>\d+))?$/);
+    const format2 = cpu.match(/^(?<base>\d+)(\.(?<fraction>\d+))?$/);
     if (format2 != null) {
       // @ts-ignore: Object is possibly 'undefined'.
-      let basePart = format2.groups.base;
-      let fractionPart = format2?.groups?.fraction;
-      let totalMillis: number = 0;
+      const basePart = format2.groups.base;
+      const fractionPart = format2?.groups?.fraction;
+      let totalMillis = 0;
       totalMillis += parseInt(basePart, 10) * 1000;
       if (fractionPart != undefined) {
         totalMillis += parseInt(fractionPart.substr(0, 3).padEnd(3, '0'), 10);
@@ -187,12 +192,12 @@ class ResourceRequirements {
       return totalMillis;
     }
 
-    throw Error("[Resources] Unknown format");
+    throw Error('[Resources] Unknown format');
   }
 
   public static Utils = class {
     /** Proxied method */
-    public static parseMemString(mem: string): number  {
+    public static parseMemString(mem: string): number {
       return ResourceRequirements.parseMemString(mem);
     }
 
@@ -205,21 +210,23 @@ class ResourceRequirements {
      * Calculates average of multiple ResourceRequirements.
      * @param resArr
      */
-    public static getAverage(resArr: ResourceRequirements[]): ResourceRequirements {
+    public static getAverage(
+      resArr: ResourceRequirements[]
+    ): ResourceRequirements {
       /* Case when no requests are specified. */
       if (resArr.length == 0) {
-        return new ResourceRequirements({cpu: "0", mem: "0"});
+        return new ResourceRequirements({ cpu: '0', mem: '0' });
       }
       /* Sum all properties and return average. */
       let totalCpu = 0;
       let totalMem = 0;
-      for (let res of resArr) {
+      for (const res of resArr) {
         totalCpu += res.cpuMillis;
         totalMem += res.memBytes;
       }
-      let result = new ResourceRequirements({
-        cpu: Math.round(totalCpu / resArr.length).toString() + "m",
-        mem: Math.round(totalMem / resArr.length).toString(),
+      const result = new ResourceRequirements({
+        cpu: Math.round(totalCpu / resArr.length).toString() + 'm',
+        mem: Math.round(totalMem / resArr.length).toString()
       });
       return result;
     }
@@ -231,26 +238,26 @@ class ResourceRequirements {
     public static getSum(resArr: ResourceRequirements[]): ResourceRequirements {
       let totalCpu = 0;
       let totalMem = 0;
-      for (let res of resArr) {
+      for (const res of resArr) {
         totalCpu += res.cpuMillis;
         totalMem += res.memBytes;
       }
-      let result = new ResourceRequirements({
-        cpu: Math.round(totalCpu).toString() + "m",
-        mem: Math.round(totalMem).toString(),
+      const result = new ResourceRequirements({
+        cpu: Math.round(totalCpu).toString() + 'm',
+        mem: Math.round(totalMem).toString()
       });
       return result;
     }
-  }
+  };
 
   /**
    * @inheritdoc
    */
-  public toString = () : string => {
-    let string = "{CPU: " + this.cpuMillis.toString() + "m;";
-    string += " MEM: " + this.memBytes.toString() + "B}";
+  public toString = (): string => {
+    let string = '{CPU: ' + this.cpuMillis.toString() + 'm;';
+    string += ' MEM: ' + this.memBytes.toString() + 'B}';
     return string;
-  }
+  };
 }
 
 export default ResourceRequirements;

@@ -1,9 +1,8 @@
 export interface MachineSpec {
-  cpu: string,
-  memory: string,
-
+  cpu: string;
+  memory: string;
 }
 
 export interface MachinesSpecsMap {
-  [specName: string]: MachineSpec
+  [specName: string]: MachineSpec;
 }
