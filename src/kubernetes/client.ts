@@ -7,6 +7,8 @@ const Logger = getBaseLogger();
 class Client {
   static readonly hfMasterLabel = 'node-role.hyperflow.local/master';
   static readonly hfWorkerLabel = 'node-role.hyperflow.local/worker';
+  static readonly hfNodeTypeLabel = 'nodetype';
+  static readonly hfNodeTypeWorkerLabel = 'worker';
 
   private coreApi: k8s.CoreV1Api;
 
@@ -41,18 +43,8 @@ class Client {
     return podList;
   }
 
-  /**
-   * Returns worker view of nodes and pods:
-   *  - nodes containing hyperflow-worker label
-   *  - pods placed on nodes with hyperflow-worker label
-   */
-  public filterHFWorkerNodes(
-    nodes: Array<k8s.V1Node>,
-    pods: Array<k8s.V1Pod>
-  ): [k8s.V1Node[], k8s.V1Pod[]] {
-    /* Filtering nodes. */
+  public filterHFWorkerNodes(nodes: Array<k8s.V1Node>): Array<k8s.V1Node> {
     const workerNodes: Array<k8s.V1Node> = [];
-    const workerNodesNames: Array<string> = [];
     for (const node of nodes) {
       const labels = node?.metadata?.labels;
       if (labels == undefined) {
@@ -62,16 +54,37 @@ class Client {
       if (nodeName == undefined) {
         throw Error('Node does not contain name');
       }
-      const workerLabel = labels[Client.hfWorkerLabel];
-      if (workerLabel === undefined) {
-        Logger.trace(
+      // const workerLabel = labels[Client.hfWorkerLabel];
+      const workerLabel = labels[Client.hfNodeTypeLabel];
+      if (
+        workerLabel === undefined ||
+        workerLabel !== Client.hfNodeTypeWorkerLabel
+      ) {
+        Logger.info(
           '[Client] Skipping node ' + nodeName + ' (no worker label)'
         );
         continue;
       }
       workerNodes.push(node);
-      workerNodesNames.push(nodeName);
     }
+    return workerNodes;
+  }
+
+  /**
+   * Returns worker view of nodes and pods:
+   *  - nodes containing hyperflow-worker label
+   *  - pods placed on nodes with hyperflow-worker label
+   */
+  public filterHFWorkerNodesAndPods(
+    nodes: Array<k8s.V1Node>,
+    pods: Array<k8s.V1Pod>
+  ): [k8s.V1Node[], k8s.V1Pod[]] {
+    /* Filtering nodes. */
+    const workerNodes: Array<k8s.V1Node> = this.filterHFWorkerNodes(nodes);
+    const workerNodesNames: Array<string> = workerNodes.map((node) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return node.metadata!.name!;
+    });
 
     /* Filtering pods.
      * All pods on HF workers are included, plus pending pods.
@@ -132,6 +145,8 @@ class Client {
 
       podsOnWorkers.push(pod);
     }
+
+    Logger.info(`Worker nodes ${workerNodes.map(node => node.metadata?.name)}`);
 
     Logger.debug(
       '[Client] Filtered out ' +

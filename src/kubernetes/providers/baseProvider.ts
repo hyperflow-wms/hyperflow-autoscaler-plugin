@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { getBaseLogger } from '../../utils/logger';
 import Client from '../../kubernetes/client';
 import ResourceRequirements from '../../kubernetes/resourceRequirements';
@@ -30,7 +31,7 @@ abstract class BaseProvider {
     nodes: Array<k8s.V1Node>,
     pods: Array<k8s.V1Pod>
   ): [k8s.V1Node[], k8s.V1Pod[]] {
-    return this.client.filterHFWorkerNodes(nodes, pods);
+    return this.client.filterHFWorkerNodesAndPods(nodes, pods);
   }
 
   /**
@@ -67,8 +68,7 @@ abstract class BaseProvider {
     }
 
     const nodes = this.clusterState.workerNodes;
-    const resArr: ResourceRequirements[] = [];
-    for (const node of nodes) {
+    const resArr = nodes.map((node) => {
       const cpu = this.getNodeCpu(node);
       const memory = this.getNodeMemory(node);
       const nodeName = node?.metadata?.name;
@@ -83,8 +83,8 @@ abstract class BaseProvider {
           ', RAM=' +
           memory
       );
-      resArr.push(new ResourceRequirements({ cpu: cpu, mem: memory }));
-    }
+      return new ResourceRequirements({ cpu: cpu, mem: memory });
+    });
 
     const resSum = ResourceRequirements.Utils.getSum(resArr);
     Logger.debug(
@@ -109,27 +109,38 @@ abstract class BaseProvider {
     }
 
     const pods = this.clusterState.pods;
-    const resArr: ResourceRequirements[] = [];
-    for (const pod of pods) {
-      // nodeName does not have to be defined - pod might be pending
-      const containers = pod?.spec?.containers;
-      if (containers == undefined) {
-        throw Error('Unable to get spec.containers from pod');
-      }
-      for (const container of containers) {
-        //const limits = container.resources.limits;
+    const resArr = pods
+      .flatMap((pod) => {
+        const containers = pod?.spec?.containers;
+        if (containers === undefined) {
+          throw Error('Unable to get spec.containers from pod');
+        }
+        return containers;
+      })
+      .filter((container) => {
         const requests = container?.resources?.requests;
+        const containerName = container.name;
         if (requests === undefined) {
-          throw Error('Unable to get resources.requests from container');
-        }
-        if (requests.cpu === undefined) {
-          throw Error('Requests does not have cpu details');
-        }
-        if (requests.memory === undefined) {
-          throw Error('Requests does not have memory details');
-        }
-        const cpu = requests.cpu;
-        const memory = requests.memory;
+          Logger.warn(
+            `Unable to get resources.requests from container ${containerName}`
+          );
+          return false;
+        } else if (requests?.cpu === undefined) {
+          Logger.warn(
+            `Container ${containerName} requests does not have cpu details`
+          );
+          return false;
+        } else if (requests?.memory === undefined) {
+          Logger.warn(
+            `Container ${containerName} requests does not have memory details`
+          );
+          return false;
+        } else return true;
+      })
+      .map((container) => {
+        const requests = container.resources!.requests!;
+        const cpu = requests.cpu!;
+        const memory = requests.memory!;
         Logger.debug(
           '[BaseProvider] Extracted details of container demand: vCPU=' +
             cpu +
@@ -137,9 +148,8 @@ abstract class BaseProvider {
             memory
         );
 
-        resArr.push(new ResourceRequirements({ cpu: cpu, mem: memory }));
-      }
-    }
+        return new ResourceRequirements({ cpu: cpu, mem: memory });
+      });
 
     const resSum = ResourceRequirements.Utils.getSum(resArr);
     Logger.debug(
@@ -188,15 +198,14 @@ abstract class BaseProvider {
     if (this.clusterState === undefined) {
       throw Error('You have to fetch cluster state at first');
     }
-    const nodesNames: string[] = [];
     const workerNodes = this.clusterState.workerNodes;
-    for (const node of workerNodes) {
+    const nodesNames = workerNodes.map((node) => {
       const nodeName = node?.metadata?.name;
       if (nodeName == undefined) {
         throw Error('Node does not contain name');
       }
-      nodesNames.push(nodeName);
-    }
+      return nodeName;
+    });
     Logger.trace(
       '[BaseProvider] Found ' +
         nodesNames.length.toString() +

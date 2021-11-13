@@ -218,12 +218,12 @@ class ResourceRequirements {
         return new ResourceRequirements({ cpu: '0', mem: '0' });
       }
       /* Sum all properties and return average. */
-      let totalCpu = 0;
-      let totalMem = 0;
-      for (const res of resArr) {
-        totalCpu += res.cpuMillis;
-        totalMem += res.memBytes;
-      }
+      const [totalCpu, totalMem] = resArr.reduce(
+        ([totalCpu, totalMem], res) => {
+          return [totalCpu + res.cpuMillis, totalMem + res.memBytes];
+        },
+        [0, 0]
+      );
       const result = new ResourceRequirements({
         cpu: Math.round(totalCpu / resArr.length).toString() + 'm',
         mem: Math.round(totalMem / resArr.length).toString()
@@ -236,12 +236,12 @@ class ResourceRequirements {
      * @param resArr
      */
     public static getSum(resArr: ResourceRequirements[]): ResourceRequirements {
-      let totalCpu = 0;
-      let totalMem = 0;
-      for (const res of resArr) {
-        totalCpu += res.cpuMillis;
-        totalMem += res.memBytes;
-      }
+      const [totalCpu, totalMem] = resArr.reduce(
+        ([totalCpu, totalMem], res) => {
+          return [totalCpu + res.cpuMillis, totalMem + res.memBytes];
+        },
+        [0, 0]
+      );
       const result = new ResourceRequirements({
         cpu: Math.round(totalCpu).toString() + 'm',
         mem: Math.round(totalMem).toString()

@@ -4,7 +4,19 @@ import pino = require('pino');
  * BASE LOGS *
  *************/
 
-const baseLogger = pino({ customLevels: { verbose: 25, silly: 5 } });
+const parseLogLevel = (): pino.Level => {
+  const logLevelEnv = process.env.LOG_LEVEL;
+  if (logLevelEnv) {
+    return logLevelEnv as pino.Level;
+  } else {
+    return 'info';
+  }
+};
+
+const baseLogger = pino({
+  level: parseLogLevel(),
+  customLevels: { verbose: 25, silly: 5 }
+});
 
 function getBaseLogger(): pino.Logger {
   return baseLogger;

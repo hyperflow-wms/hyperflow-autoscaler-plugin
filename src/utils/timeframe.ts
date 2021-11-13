@@ -30,8 +30,6 @@ class Timeframe {
     const intervals = new Map<number, T[]>();
     for (let currentTime = start; currentTime < end; currentTime += interval) {
       intervals.set(currentTime, []);
-      // @ts-ignore: Object is possibly 'undefined'.
-      const currentInterval: T[] = intervals.get(currentTime);
       // eslint-disable-next-line no-constant-condition
       while (true) {
         if (currentResult === undefined) {
@@ -57,9 +55,7 @@ class Timeframe {
         if (time < currentTime || time >= currentTime + interval) {
           break;
         }
-        for (const val of elementValues) {
-          currentInterval.push(val);
-        }
+        const currentInterval = [...elementValues];
         currentResult = undefined;
       }
     }

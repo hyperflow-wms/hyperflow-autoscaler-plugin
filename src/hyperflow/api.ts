@@ -63,9 +63,9 @@ class API {
         this.rpc.callAsync('onHFEngineEvent', [name, values]);
       };
     };
-    for (const name of ['persist', 'input', 'read', 'prov']) {
+    ['persist', 'input', 'read', 'prov'].forEach(name => {
       this.engine.eventServer.on(name, cbBuilder(name));
-    }
+    });
 
     return;
   }

@@ -90,13 +90,14 @@ class WorkflowTracker {
     if (nextProcessIds === undefined) {
       throw Error('No mapping found - even empty array must be specified!');
     }
-    const startedProcessIds: number[] = [];
-    for (const processId of nextProcessIds) {
+    const startedProcessIds: number[] = nextProcessIds.flatMap((processId) => {
       const started = this.startProcessIfReady(processId, time);
       if (started === true) {
-        startedProcessIds.push(processId);
+        return [processId];
+      } else {
+        return [];
       }
-    }
+    });
 
     return startedProcessIds;
   }
@@ -126,11 +127,10 @@ class WorkflowTracker {
     if (nextSignalIds === undefined) {
       throw Error('No mapping found - even empty array must be specified!');
     }
-    let startedProcessIds: number[] = [];
-    for (const signalId of nextSignalIds) {
+    const startedProcessIds = nextSignalIds.flatMap((signalId) => {
       const sigStartedProcessIds = this.notifyInitialSignal(signalId, time);
-      startedProcessIds = startedProcessIds.concat(sigStartedProcessIds);
-    }
+      return sigStartedProcessIds;
+    });
 
     return startedProcessIds;
   }

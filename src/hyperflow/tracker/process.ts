@@ -57,11 +57,11 @@ class Process {
       return;
     }
 
-    const executor = hfProcess.config.executor;
+    const executor = hfProcess?.config?.executor;
     this.cpuRequest =
-      executor.cpuRequest || process.env.HF_VAR_CPU_REQUEST || '0.5';
+      executor?.cpuRequest || process.env.HF_VAR_CPU_REQUEST || '0.5';
     this.memRequest =
-      executor.memRequest || process.env.HF_VAR_MEM_REQUEST || '50Mi';
+      executor?.memRequest || process.env.HF_VAR_MEM_REQUEST || '50Mi';
     return;
   }
 

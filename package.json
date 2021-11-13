@@ -7,8 +7,10 @@
     "test": "mocha -r ts-node/register --timeout 999999 --colors './src/**/*-spec.ts'",
     "coverage": "nyc -r lcov -e .ts -x \"**/*-spec.ts\" npm run test",
     "compile": "tsc",
+    "build": "tsc --build",
     "lint": "eslint . --ext .ts",
-    "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write"
+    "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
+    "clean": "rimraf dist"
   },
   "repository": {
     "type": "git",

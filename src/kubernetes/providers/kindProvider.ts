@@ -24,6 +24,28 @@ class KindProvider extends BaseProvider {
    */
   public async initialize(): Promise<void> {
     Logger.debug('[KindProvider] Initialization');
+    const nodes = await this.client.fetchNodes();
+    this.client
+      .filterHFWorkerNodes(nodes)
+      .flatMap((node) => {
+        const nodeName = node?.metadata?.name;
+        if (nodeName == undefined) {
+          return [];
+        }
+        const nodeSpec = node?.spec;
+        if (nodeSpec == undefined) {
+          return [];
+        }
+        const unschedulableProp = nodeSpec.unschedulable;
+        if (unschedulableProp === true) {
+          return [nodeName];
+        } else {
+          return [];
+        }
+      })
+      .forEach((cordonedNodeName) => {
+        this.drainedNodeNames.add(cordonedNodeName);
+      });
     return;
   }
 
@@ -37,23 +59,23 @@ class KindProvider extends BaseProvider {
     /* Filter unschedulable nodes. */
     Logger.debug('[KindProvider] Custom nodes filtering');
     const uncordonedNodes: Array<k8s.V1Node> = [];
-    for (const node of nodes) {
+    nodes.forEach((node) => {
       const nodeName = node?.metadata?.name;
       if (nodeName == undefined) {
         throw Error('Unable to get metadata.name from node');
       }
       const nodeSpec = node?.spec;
-      if (nodeSpec == undefined) {
+      if (nodeSpec === undefined) {
         throw Error('Unable to get spec from node');
       }
       const unschedulableProp = nodeSpec.unschedulable;
       if (unschedulableProp == true) {
         Logger.debug('[KindProvider] Unschedulable node ' + nodeName);
         this.drainedNodeNames.add(nodeName);
-        continue;
+      } else {
+        uncordonedNodes.push(node);
       }
-      uncordonedNodes.push(node);
-    }
+    });
     return super.filterClusterState(uncordonedNodes, pods);
   }
 
@@ -108,12 +130,10 @@ class KindProvider extends BaseProvider {
       }
     } else {
       // remove nodes
-      const drainPromises: Promise<void>[] = [];
       const overNodes = workerNodesNames.slice(workersNum - currentSize);
-      for (const nodeName of overNodes) {
-        const drainPromise = this.drainNode(nodeName);
-        drainPromises.push(drainPromise);
-      }
+      const drainPromises = overNodes.map((nodeName) =>
+        this.drainNode(nodeName)
+      );
       try {
         await Promise.all(drainPromises).catch((err) => {
           throw Error('Unable to drain: ' + err.toString());
@@ -164,7 +184,7 @@ class KindProvider extends BaseProvider {
     }
 
     const cmd = 'kubectl';
-    const args = ['drain', '--ignore-daemonsets', nodeName];
+    const args = ['drain', '--ignore-daemonsets', '--delete-local-data', nodeName];
     Logger.debug(
       '[KindProvider] Executing ' +
         cmd +
