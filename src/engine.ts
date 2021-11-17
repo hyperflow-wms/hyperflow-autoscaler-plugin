@@ -1,11 +1,12 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getBaseLogger } from './utils/logger';
 import BaseProvider from './kubernetes/providers/baseProvider';
 import DummyProvider from './kubernetes/providers/dummyProvider';
 import KindProvider from './kubernetes/providers/kindProvider';
 import GCPProvider from './kubernetes/providers/gcpProvider';
-import RPCChild from './communication/rpcChild';
 import WorkflowTracker from './hyperflow/tracker/tracker';
 import Workflow from './hyperflow/tracker/workflow';
 import BillingModel from './cloud/billingModel';
@@ -15,6 +16,7 @@ import ReactPolicy from './policies/reactPolicy';
 import { GCPMachines } from './cloud/gcpMachines';
 import MachineType from './cloud/machine';
 import PredictPolicy from './policies/predictPolicy';
+import HttpApi from './http/httpApi';
 
 type timestamp = number;
 
@@ -28,13 +30,16 @@ const POLICY_INIT_CHECK_INTERVAL = 1000;
 class Engine {
   private provider: BaseProvider;
   private billingModel: BillingModel;
-  private rpc: RPCChild;
-  private workflow: Workflow;
-  private workflowTracker: WorkflowTracker;
+  private api: HttpApi;
   private machineType: MachineType;
-  private policy?: Policy;
+  private policy: Policy;
 
-  constructor(providerName: string) {
+  constructor() {
+    const providerName = process.env['HF_VAR_autoscalerProvider'];
+    if (providerName === undefined) {
+      Logger.error('Provider name is empty, exiting...');
+      process.exit(1);
+    }
     Logger.info('[Engine] Trying to create provider ' + providerName);
     if (providerName == 'gcp') {
       this.provider = new GCPProvider();
@@ -47,8 +52,7 @@ class Engine {
       throw Error('Provider ' + providerName + ' not found!');
     }
     this.billingModel = new GCPBillingModel();
-    this.rpc = new RPCChild(this);
-
+    this.api = new HttpApi(this, this);
     const machineTypeName = process.env['HF_VAR_autoscalerMachineType'];
     if (machineTypeName == undefined) {
       throw Error(
@@ -56,12 +60,22 @@ class Engine {
       );
     }
     this.machineType = GCPMachines.makeObject(machineTypeName);
+    const policyName = process.env['HF_VAR_autoscalerPolicy'];
+    Logger.info("[Engine] Trying to create policy '" + policyName + "'");
+    if (policyName == 'react') {
+      this.policy = new ReactPolicy(this.billingModel, this.machineType);
+    } else if (policyName == 'predict') {
+      this.policy = new PredictPolicy(this.billingModel, this.machineType);
+    } else {
+      throw Error(
+        'No valid policy specified. Hint: use env var HF_VAR_autoscalerPolicy'
+      );
+    }
   }
 
   public async run(): Promise<void> {
-    this.rpc.init();
-    //this.rpc.call('addNumbers', [21, 15], (data) => { console.log('Got RPC response:', data); });
-    //const sum = await this.rpc.callAsync('addNumbers', [21, 15]);
+    this.api.init();
+    this.api.listen();
     await this.provider.initialize();
     await this.waitInitialDelay();
     this.reactLoop();
@@ -110,87 +124,95 @@ class Engine {
     await this.provider.updateClusterState();
     Logger.verbose('[Engine] Cluster state updated');
 
-    let numWorkers: number;
-    try {
-      numWorkers = this.provider.getNumNodeWorkers();
-    } catch (err) {
-      throw Error('Unable to get number of workers: ' + err.message);
-    }
-    const supply = this.provider.getSupply();
-    const demand = this.provider.getDemand();
-
-    Logger.verbose('[Engine] Number of HyperFlow workers: ' + numWorkers);
-    Logger.verbose('[Engine] Demand: ' + demand);
-    Logger.verbose('[Engine] Supply: ' + supply);
-
-    const scalingDecision = this.policy.getDecision(demand, supply, numWorkers);
-    const machinesDiff = scalingDecision.getMachinesDiff();
-    const delayMs = Math.max(
-      0,
-      scalingDecision.getTime() - new Date().getTime()
-    ); // Cap delay at 0ms.
-    Logger.debug(
-      '[Engine] Recomended action: ' +
-        scalingDecision.getMachinesDiff().toString() +
-        ' after ' +
-        delayMs.toString() +
-        ' ms.'
-    );
-    if (machinesDiff == 0) {
-      Logger.info('[Engine] No action necessary');
-      setTimeout(() => {
-        this.reactLoop();
-      }, REACT_INTERVAL);
-      return;
-    }
-
-    /* During MAPE loop we can only "schedule" soon scaling decisions. */
-    if (delayMs > REACT_INTERVAL) {
-      Logger.info('[Engine] Action is too far from now, skipping execution');
-      setTimeout(() => {
-        this.reactLoop();
-      }, REACT_INTERVAL);
-      return;
-    }
-
-    /* Wait some time, if there we get delayed decision. */
-    if (delayMs > 0) {
-      Logger.info(
-        '[Engine] Waiting ' + delayMs + ' ms. before performing action'
-      );
-      await new Promise((res) => {
-        setTimeout(res, delayMs);
-      });
-    }
-
-    /* Perform scaling action. */
-    if (this.policy.isReady(scalingDecision) === false) {
-      Logger.info('[Engine] No action, due to policy condition: not_ready');
-    } else {
-      const targetPoolSize = numWorkers + machinesDiff;
-      if (machinesDiff > 0) {
-        Logger.info(
-          '[Engine] Scaling up from ' +
-            numWorkers.toString() +
-            ' to ' +
-            targetPoolSize.toString() +
-            ' machines'
-        );
-      } else {
-        Logger.info(
-          '[Engine] Scaling down from ' +
-            numWorkers.toString() +
-            ' to ' +
-            targetPoolSize.toString() +
-            ' machines'
-        );
-      }
+    if (this.policy.areThereAnyWfs()) {
+      let numWorkers: number;
       try {
-        await this.provider.resizeCluster(targetPoolSize);
-        this.policy.actionTaken(scalingDecision);
+        numWorkers = this.provider.getNumNodeWorkers();
       } catch (err) {
-        Logger.error('[Engine] Unable to resize cluster: ' + err);
+        throw Error('Unable to get number of workers: ' + err.message);
       }
+      const supply = this.provider.getSupply();
+      const demand = this.provider.getDemand();
+
+      Logger.verbose('[Engine] Number of HyperFlow workers: ' + numWorkers);
+      Logger.verbose('[Engine] Demand: ' + demand);
+      Logger.verbose('[Engine] Supply: ' + supply);
+
+      const scalingDecision = this.policy.getDecision(
+        demand,
+        supply,
+        numWorkers
+      );
+      const machinesDiff = scalingDecision.getMachinesDiff();
+      const delayMs = Math.max(
+        0,
+        scalingDecision.getTime() - new Date().getTime()
+      ); // Cap delay at 0ms.
+      Logger.debug(
+        '[Engine] Recomended action: ' +
+          scalingDecision.getMachinesDiff().toString() +
+          ' after ' +
+          delayMs.toString() +
+          ' ms.'
+      );
+      if (machinesDiff == 0) {
+        Logger.info('[Engine] No action necessary');
+        setTimeout(() => {
+          this.reactLoop();
+        }, REACT_INTERVAL);
+        return;
+      }
+
+      /* During MAPE loop we can only "schedule" soon scaling decisions. */
+      if (delayMs > REACT_INTERVAL) {
+        Logger.info('[Engine] Action is too far from now, skipping execution');
+        setTimeout(() => {
+          this.reactLoop();
+        }, REACT_INTERVAL);
+        return;
+      }
+
+      /* Wait some time, if there we get delayed decision. */
+      if (delayMs > 0) {
+        Logger.info(
+          '[Engine] Waiting ' + delayMs + ' ms. before performing action'
+        );
+        await new Promise((res) => {
+          setTimeout(res, delayMs);
+        });
+      }
+
+      /* Perform scaling action. */
+      if (this.policy.isReady(scalingDecision) === false) {
+        Logger.info('[Engine] No action, due to policy condition: not_ready');
+      } else {
+        const targetPoolSize = numWorkers + machinesDiff;
+        if (machinesDiff > 0) {
+          Logger.info(
+            '[Engine] Scaling up from ' +
+              numWorkers.toString() +
+              ' to ' +
+              targetPoolSize.toString() +
+              ' machines'
+          );
+        } else {
+          Logger.info(
+            '[Engine] Scaling down from ' +
+              numWorkers.toString() +
+              ' to ' +
+              targetPoolSize.toString() +
+              ' machines'
+          );
+        }
+        try {
+          await this.provider.resizeCluster(targetPoolSize);
+          this.policy.actionTaken(scalingDecision);
+        } catch (err) {
+          Logger.error('[Engine] Unable to resize cluster: ' + err);
+        }
+      }
+    } else {
+      Logger.info('There are no wfs currently, sleeping...');
     }
 
     /* Schedule next loop. */
@@ -208,34 +230,29 @@ class Engine {
    * @param wfDir workflow directory
    * @param eventTime when workflow was started
    */
-  private wfInstanceStarted(wfDir: string, eventTime: timestamp): void {
-    if (this.workflowTracker !== undefined) {
+  public startWfInstance(
+    wfId: string,
+    wfJson: any,
+    eventTime: timestamp
+  ): void {
+    if (this.policy.getWfTracker(wfId)) {
       throw Error(
-        'Tracker cannot be re-initialized: only one running workflow is supported'
+        `Tracker cannot be re-initialized: only one tracker per workflow is possible`
       );
     }
-    this.workflow = Workflow.createFromFile(wfDir);
-    this.workflowTracker = new WorkflowTracker(this.workflow);
-    const policyName = process.env['HF_VAR_autoscalerPolicy'];
-    Logger.info("[Engine] Trying to create policy '" + policyName + "'");
-    if (policyName == 'react') {
-      this.policy = new ReactPolicy(
-        this.workflowTracker,
-        this.billingModel,
-        this.machineType
-      );
-    } else if (policyName == 'predict') {
-      this.policy = new PredictPolicy(
-        this.workflowTracker,
-        this.billingModel,
-        this.machineType
-      );
-    } else {
-      throw Error(
-        'No valid policy specified. Hint: use env var HF_VAR_autoscalerPolicy'
-      );
+    const workflow = Workflow.createFromJson(wfId, wfJson);
+    Logger.info(`Creating workflow tracker for workflow with id ${wfId}`);
+    const workflowTracker = new WorkflowTracker(workflow);
+    this.policy.addWfTracker(workflowTracker);
+    workflowTracker.notifyStart(eventTime);
+  }
+
+  public finishWf(wfId: string): void {
+    if (this.policy.getWfTracker(wfId) === undefined) {
+      throw Error(`Workflow with if ${wfId} does not exist`);
     }
-    this.workflowTracker.notifyStart(eventTime);
+    Logger.info(`Workflow with ${wfId} has ended`);
+    this.policy.removeWfTracker(wfId);
   }
 
   /**
@@ -243,7 +260,7 @@ class Engine {
    * @param name event name
    * @param values event values
    */
-  private onHFEngineEvent(name: string, values: any[]): void {
+  private onHFEngineEvent(wfId: string, name: string, values: any[]): void {
     Logger.debug(
       "[Engine] Received HyperFlow's engine event " +
         name +
@@ -263,8 +280,8 @@ class Engine {
 
     // A. Event send just before running WF
     if (details[0] == 'info') {
-      const wfDir = details[1];
-      this.wfInstanceStarted(wfDir, eventTime);
+      // not used anymore
+      Logger.info('Workflow started');
     }
     // B. Event sent on execution beginning (initial signals)
     else if (details[0] == 'input') {
@@ -278,7 +295,7 @@ class Engine {
             details[1]._id.toString()
         );
       }
-      this.workflowTracker.notifyInitialSignal(signalId, eventTime);
+      this.policy.getWfTracker(wfId)?.notifyInitialSignal(signalId, eventTime);
     }
     // C. Event sent when process execution was finished
     else if (details[0] == 'fired') {
@@ -288,7 +305,9 @@ class Engine {
           'Received invalid fired event, with process ' + processId.toString()
         );
       }
-      this.workflowTracker.notifyProcessFinished(processId, eventTime);
+      this.policy
+        .getWfTracker(wfId)
+        ?.notifyProcessFinished(processId, eventTime);
     } else {
       Logger.warn("[Engine] Unknown event details' type: " + details[0]);
     }
@@ -297,10 +316,4 @@ class Engine {
   }
 }
 
-const args = process.argv.slice(2);
-if (args.length != 1) {
-  throw Error('ERROR: 1 argument expected, got ' + args.length.toString());
-}
-const providerName = args[0];
-const engine = new Engine(providerName);
-engine.run();
+export default Engine;

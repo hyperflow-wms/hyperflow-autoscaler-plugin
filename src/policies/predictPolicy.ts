@@ -25,12 +25,8 @@ class PredictPolicy extends Policy {
 
   private planTimeMs: number;
 
-  public constructor(
-    wfTracker: WorkflowTracker,
-    billingModel: BillingModel,
-    machineType: MachineType
-  ) {
-    super(wfTracker, billingModel, machineType);
+  public constructor(billingModel: BillingModel, machineType: MachineType) {
+    super(billingModel, machineType);
     Logger.trace('[PredictPolicy] Constructor');
     this.scaleCooldown = new CooldownTracker();
     const estimatorName = process.env['HF_VAR_autoscalerEstimator'];
@@ -66,13 +62,10 @@ class PredictPolicy extends Policy {
      * Current time must be saved BEFORE running plan, to make sure all
      * events are analyzed by optimizer. */
     const getDecisionTime: timestamp = new Date().getTime();
-    const wfTrackerCopy = new WorkflowTracker(this.wfTracker);
-    const plan = new Plan(
-      this.wfTracker.getWorkflow(),
-      wfTrackerCopy,
-      this.planTimeMs,
-      this.estimator
+    const wfTrackersCopy = Array.from(this.wfTrackers).map(
+      ([_key, value]) => new WorkflowTracker(value)
     );
+    const plan = new Plan(wfTrackersCopy, this.planTimeMs, this.estimator);
     plan.run();
     const demandFrames = plan.getDemandFrames();
     Logger.debug(
@@ -121,6 +114,19 @@ class PredictPolicy extends Policy {
     }
 
     return;
+  }
+
+  public addWfTracker(wfTracker: WorkflowTracker): void {
+    const wfId = wfTracker.getWorkflow().getId();
+    if (this.wfTrackers.has(wfId)) {
+      Logger.info(`[PredictPolicy] Workflow ${wfId} already exists`);
+    } else {
+      this.wfTrackers.set(wfId, wfTracker);
+    }
+  }
+
+  public removeWfTracker(wfId: string): void {
+    this.wfTrackers.delete(wfId);
   }
 }
 

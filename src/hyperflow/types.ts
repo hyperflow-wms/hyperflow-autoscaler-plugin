@@ -23,6 +23,11 @@ export interface HFConfig {
   workdir: string;
 }
 
+export interface WFConfig {
+  wfJson: JSON;
+  wfId: string;
+}
+
 export interface HFEngine {
   config: HFConfig;
   eventServer: HFEventServer;

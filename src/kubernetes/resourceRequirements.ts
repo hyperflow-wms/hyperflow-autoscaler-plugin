@@ -152,6 +152,15 @@ class ResourceRequirements {
     return;
   }
 
+  public addRR(rr: ResourceRequirements): void {
+    this.cpuMillis += rr.getCpuMillis();
+    this.memBytes += rr.getMemBytes();
+    if (this.cpuMillis < 0 || this.memBytes < 0) {
+      throw Error("ResourceRequirements' values must not fall below zero");
+    }
+    return;
+  }
+
   /**
    * Clones current object.
    * @return copied object

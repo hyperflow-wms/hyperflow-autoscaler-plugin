@@ -1,22 +1,22 @@
-import ReactPolicy from './reactPolicy';
-
-import { GCPMachines, N1_HIGHCPU_4 } from '../cloud/gcpMachines';
+import { expect } from 'chai';
 import GCPBillingModel from '../cloud/gcpBillingModel';
-import Workflow from '../hyperflow/tracker/workflow';
+import { GCPMachines, N1_HIGHCPU_4 } from '../cloud/gcpMachines';
 import WorkflowTracker from '../hyperflow/tracker/tracker';
 import RR from '../kubernetes/resourceRequirements';
-import { expect } from 'chai';
+import { createWorkflowFromFile } from '../utils/testUtils';
+import ReactPolicy from './reactPolicy';
 
 describe('ReactPolicy object', function () {
   const wfDir = './assets/wf_montage_0.25';
-  const workflow = Workflow.createFromFile(wfDir);
+  const workflow = createWorkflowFromFile(wfDir);
   const wfTracker = new WorkflowTracker(workflow);
   const startTime = new Date().getTime();
   wfTracker.notifyStart(startTime);
 
   const billingModel = new GCPBillingModel();
   const machineType = GCPMachines.makeObject(N1_HIGHCPU_4);
-  const policy = new ReactPolicy(wfTracker, billingModel, machineType);
+  const policy = new ReactPolicy(billingModel, machineType);
+  policy.addWfTracker(wfTracker);
 
   context('HEAVY INTEGRATION TEST - scaling descision', function () {
     it('know when to scale up', function () {

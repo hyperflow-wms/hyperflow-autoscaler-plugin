@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
@@ -34,7 +35,7 @@ class Timeframe {
       while (true) {
         if (currentResult === undefined) {
           currentResult = dataIterator.next();
-          if (currentResult.done == true) {
+          if (currentResult.done === true) {
             currentResult = undefined;
             break;
           }
@@ -55,7 +56,8 @@ class Timeframe {
         if (time < currentTime || time >= currentTime + interval) {
           break;
         }
-        const currentInterval = [...elementValues];
+
+        intervals.set(currentTime, (intervals.get(currentTime) || []).concat(elementValues));
         currentResult = undefined;
       }
     }

@@ -1,6 +1,6 @@
 TAG = $(shell git describe --tags --always)
-PREFIX = hyperflowwms
-REPO_NAME = hyperflow-autoscaler-plugin
+PREFIX = mbszarek
+REPO_NAME = hyperflow-standalone-autoscaler
 
 all: push
 

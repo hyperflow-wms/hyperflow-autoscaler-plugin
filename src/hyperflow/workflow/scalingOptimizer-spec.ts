@@ -1,17 +1,17 @@
+import { expect } from 'chai';
 import GCPBillingModel from '../../cloud/gcpBillingModel';
 import { GCPMachines, N1_HIGHCPU_4 } from '../../cloud/gcpMachines';
 import ResourceRequirements from '../../kubernetes/resourceRequirements';
+import { createWorkflowFromFile } from '../../utils/testUtils';
 import StaticProcessEstimator from '../estimators/staticProcessEstimator';
 import WorkflowTracker from '../tracker/tracker';
-import Workflow from '../tracker/workflow';
 import Plan from './plan';
 import ScalingOptimizer from './scalingOptimizer';
-import { expect } from 'chai';
 
 type timestamp = number;
 
 const wfDir = './assets/wf_montage-2mass_2.0';
-const workflow = Workflow.createFromFile(wfDir);
+const workflow = createWorkflowFromFile(wfDir);
 
 const wfTracker = new WorkflowTracker(workflow);
 const maxPlanTimeMs = 300000;
@@ -53,7 +53,7 @@ describe('ScalingOptimizer class', function () {
     it('find optimal action for very heavy and long workload', function () {
       // prepare plan
       const beforePlanTime: timestamp = new Date().getTime();
-      const plan = new Plan(workflow, wfTracker, maxPlanTimeMs, estimator);
+      const plan = new Plan([wfTracker], maxPlanTimeMs, estimator);
       plan.run();
       const demandFrames = plan.getDemandFrames();
 

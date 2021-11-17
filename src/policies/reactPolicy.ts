@@ -3,7 +3,6 @@ import { getBaseLogger } from '../utils/logger';
 import Policy from './policy';
 import ResourceRequirements from '../kubernetes/resourceRequirements';
 import ScalingDecision from '../hyperflow/workflow/scalingDecision';
-import WorkflowTracker from '../hyperflow/tracker/tracker';
 import ScalingOptimizer from '../hyperflow/workflow/scalingOptimizer';
 import BillingModel from '../cloud/billingModel';
 import MachineType from '../cloud/machine';
@@ -23,12 +22,8 @@ class ReactPolicy extends Policy {
   private scaleUpCooldown: CooldownTracker;
   private scaleDownCooldown: CooldownTracker;
 
-  public constructor(
-    wfTracker: WorkflowTracker,
-    billingModel: BillingModel,
-    machineType: MachineType
-  ) {
-    super(wfTracker, billingModel, machineType);
+  public constructor(billingModel: BillingModel, machineType: MachineType) {
+    super(billingModel, machineType);
     Logger.trace('[ReactPolicy] Constructor');
     this.scaleUpCooldown = new CooldownTracker();
     this.scaleDownCooldown = new CooldownTracker();

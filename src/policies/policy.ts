@@ -3,18 +3,17 @@ import MachineType from '../cloud/machine';
 import WorkflowTracker from '../hyperflow/tracker/tracker';
 import ScalingDecision from '../hyperflow/workflow/scalingDecision';
 import ResourceRequirements from '../kubernetes/resourceRequirements';
+import { getBaseLogger } from '../utils/logger';
+
+const Logger = getBaseLogger();
 
 abstract class Policy {
-  protected wfTracker: WorkflowTracker;
+  protected wfTrackers: Map<string, WorkflowTracker>;
   protected billingModel: BillingModel;
   protected machineType: MachineType;
 
-  public constructor(
-    wfTracker: WorkflowTracker,
-    billingModel: BillingModel,
-    machineType: MachineType
-  ) {
-    this.wfTracker = wfTracker;
+  public constructor(billingModel: BillingModel, machineType: MachineType) {
+    this.wfTrackers = new Map();
     this.billingModel = billingModel;
     this.machineType = machineType;
   }
@@ -47,6 +46,28 @@ abstract class Policy {
    * @param action
    */
   public abstract actionTaken(action: ScalingDecision): void;
+
+  public addWfTracker(wfTracker: WorkflowTracker): void {
+    const wfId = wfTracker.getWorkflow().getId();
+    if (this.wfTrackers.has(wfId)) {
+      Logger.info(`[Policy] Workflow ${wfId} already exists`);
+    } else {
+      this.wfTrackers.set(wfId, wfTracker);
+    }
+  }
+
+  public removeWfTracker(wfId: string): void {
+    this.wfTrackers.delete(wfId);
+  }
+
+  public getWfTracker(wfId: string): WorkflowTracker | undefined {
+    return this.wfTrackers.get(wfId);
+  }
+
+  public areThereAnyWfs(): boolean {
+    const amount = this.wfTrackers.size;
+    return amount > 0;
+  }
 }
 
 export default Policy;

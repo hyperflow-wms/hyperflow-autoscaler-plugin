@@ -1,4 +1,4 @@
-import pino = require('pino');
+import pino from 'pino';
 
 /*************
  * BASE LOGS *

@@ -1,14 +1,14 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getBaseLogger } from '../../utils/logger';
 import { HFWorkflow } from '../types';
 import Process from './process';
 import Signal from './signal';
 
-import * as fs from 'fs';
-import * as pathtool from 'path';
-
 const Logger = getBaseLogger();
 
 class Workflow {
+  private id: string;
   private name: string;
   private data?: Signal[];
   private signals?: Signal[];
@@ -17,7 +17,8 @@ class Workflow {
   private ins: number[];
   private outs: number[];
 
-  public constructor(workflow: HFWorkflow) {
+  public constructor(wfId: string, workflow: HFWorkflow) {
+    this.id = wfId;
     this.name = workflow.name;
 
     this.ins = workflow.ins;
@@ -38,6 +39,10 @@ class Workflow {
       proc.outs = proc.outs.map((x) => x + 1);
       return new Process(proc, idx + 1);
     });
+  }
+
+  public getId(): string {
+    return this.id;
   }
 
   public getSignals(): Signal[] {
@@ -78,17 +83,13 @@ class Workflow {
     return this.ins;
   }
 
-  /**
-   * Reads HyperFlow's workflow.json.
-   * @param directory Workflow root directory
-   */
-  public static createFromFile(directory: string): Workflow {
-    Logger.debug('[WorkflowTracker] Reading HF workflow from ' + directory);
-    const wfFile = pathtool.join(directory, 'workflow.json');
-    const wfFileContent = fs.readFileSync(wfFile, 'utf8');
-    const rawWf = JSON.parse(wfFileContent);
-    const wf = new Workflow(rawWf);
-
+  public static createFromJson(wfId: string, wfJson: any): Workflow {
+    Logger.debug(
+      `[WorkflowTracker] Reading HF workflow from JSON ${JSON.stringify(
+        wfJson
+      )}`
+    );
+    const wf = new Workflow(wfId, wfJson);
     return wf;
   }
 }
