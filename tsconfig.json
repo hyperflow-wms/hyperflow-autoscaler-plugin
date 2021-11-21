@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
+    "strict": true,
     "strictNullChecks": true,
     "sourceMap": true,
-    "esModuleInterop": false,
-    "outDir": "./dist",
+    "esModuleInterop": true,
     "target": "es5",
-    "lib": [
-      "es2019"
-    ]
+    "module": "commonjs",
+    "noImplicitAny": false,
+    "strictPropertyInitialization": false,
+    "experimentalDecorators": true,
+    "lib": ["es2019"]
   }
 }
