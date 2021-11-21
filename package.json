@@ -8,7 +8,7 @@
     "clean": "lerna run clean",
     "build": "lerna run build",
     "pub": "lerna publish",
-    "boot": "yarn global add lerna && lerna bootstrap --hoist",
+    "boot": "yarn global add lerna && lerna bootstrap",
     "test": "lerna run test --parallel",
     "prettier-format": "prettier --config .prettierrc 'packages/**/*.ts' --write"
   },

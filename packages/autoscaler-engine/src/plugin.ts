@@ -11,6 +11,7 @@ class AutoscalerPlugin {
   private providerName: string;
   private constructorSuccess = false;
   private wfId!: string;
+  private rpc: RPCParent;
 
   public readonly pgType = 'scheduler';
 
@@ -32,7 +33,12 @@ class AutoscalerPlugin {
   /**
    * Entry point for launching autoscaler.
    */
-  async init(rcl: RedisClient, wflib: HFWflib, engine: HFEngine, config: WFConfig): Promise<void> {
+  async init(
+    rcl: RedisClient,
+    wflib: HFWflib,
+    engine: HFEngine,
+    config: WFConfig
+  ): Promise<void> {
     /* Stop if constructor has failed. */
     if (this.constructorSuccess == false) {
       Logger.error('[main] Constructor has failed, so we reject init() call');
@@ -60,15 +66,20 @@ class AutoscalerPlugin {
     process.on('exit', function () {
       engineProcess.kill();
     });
-    const rpc = new RPCParent(engineProcess, api);
-    rpc.init();
+    this.rpc = new RPCParent(engineProcess, api);
+    this.rpc.init();
 
     /* Assign RPC to API and listen to all HyperFlow's
      * engine events. */
-    api.assignRPC(rpc);
+    api.assignRPC(this.rpc);
     api.listenForEvents();
 
     return;
+  }
+
+  async markWorkflowFinished(wfId: string): Promise<void> {
+    Logger.warn(`[AutoscalerPlugin] Marking workflow (${wfId}) as finished`);
+    await this.rpc.callAsync('finishWf', [wfId]);
   }
 }
 

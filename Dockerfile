@@ -1,4 +1,4 @@
-FROM node:12-alpine
+FROM node:17-alpine
 
 EXPOSE 8080
 
@@ -11,4 +11,4 @@ RUN mkdir -p /tmp/kubectl && cd /tmp/kubectl && apk add curl && \
     install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
 
 
-RUN npm --prefix /hyperflow-autoscaler-plugin run build && npm install -g /hyperflow-standalone-autoscaler
+RUN yarn boot && lerna link convert && npm install -g /hyperflow-autoscaler-plugin/packages/autoscaler-engine
