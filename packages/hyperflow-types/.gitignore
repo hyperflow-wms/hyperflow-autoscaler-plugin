@@ -8,5 +8,3 @@
 # testing output
 /.nyc_output
 /coverage
-
-tsconfig.tsbuildinfo

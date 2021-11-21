@@ -1,0 +1,21 @@
+{
+  "extends": "../tsconfig.api-base.json",
+  "compilerOptions": {
+    "strict": false,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "outDir": "lib",
+    "rootDir": "src",
+    "baseUrl": "./",
+    "paths": {
+      "@hyperflow/types": ["../hyperflow-types/src"],
+      "@hyperflow/logger": ["../hyperflow-logger/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"],
+  "references": [
+    { "path": "../hyperflow-types" },
+    { "path": "../hyperflow-logger" }
+  ]
+}

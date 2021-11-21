@@ -1,51 +1,27 @@
 {
-  "name": "hyperflow-autoscaler-plugin",
-  "version": "0.12.0",
-  "description": "Autoscaler plugin for HyperFlow",
-  "main": "./dist/main.js",
+  "name": "hyperflow-autoscaler-lerna",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Root project for hyperflow-autoscaler plugins",
   "scripts": {
-    "test": "mocha -r ts-node/register --timeout 999999 --colors './src/**/*-spec.ts'",
-    "coverage": "nyc -r lcov -e .ts -x \"**/*-spec.ts\" npm run test",
-    "compile": "tsc"
+    "lint": "eslint . --ext .ts",
+    "clean": "lerna run clean",
+    "build": "lerna run build",
+    "pub": "lerna publish",
+    "boot": "yarn global add lerna && lerna bootstrap",
+    "test": "lerna run test --parallel",
+    "prettier-format": "prettier --config .prettierrc 'packages/**/*.ts' --write"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://gitlab.com/andrzej1_1/hyperflow-autoscaler-plugin.git"
-  },
-  "keywords": [
-    "hyperflow",
-    "wms",
-    "workflow"
+  "workspaces": [
+    "packages/*"
   ],
-  "author": "Andrzej Broński <andrzej1_1@o2.pl>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://gitlab.com/andrzej1_1/hyperflow-autoscaler-plugin/issues"
-  },
-  "homepage": "https://gitlab.com/andrzej1_1/hyperflow-autoscaler-plugin#readme",
-  "dependencies": {
-    "@google-cloud/container": "^2.1.1",
-    "@kubernetes/client-node": "^0.12.2",
-    "pino": "^6.7.0",
-    "redis": "^3.0.2"
-  },
   "devDependencies": {
-    "@types/chai": "^4.2.14",
-    "@types/mocha": "^8.0.3",
-    "@types/pino": "^6.3.3",
-    "@types/redis": "^2.8.28",
-    "@types/sinon": "^9.0.8",
-    "@types/stack-trace": "^0.0.29",
-    "chai": "^4.2.0",
-    "mocha": "^8.2.0",
-    "nyc": "^15.1.0",
-    "sinon": "^9.2.0",
-    "ts-node": "^9.0.0",
-    "typescript": "^4.0.3"
-  },
-  "files": [
-    "src/*",
-    "dist/**/*.js",
-    "dist/**/*.js.map"
-  ]
+    "npm-run-all": "^4.1.5",
+    "typescript": "^4.5.2",
+    "lerna": "^4.0.0",
+    "prettier": "^2.3.2",
+    "eslint": "^8.2.0",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0"
+  }
 }
