@@ -1636,9 +1636,9 @@ istanbul-reports@^3.0.2:
     istanbul-lib-report "^3.0.0"
 
 jose@^2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/jose/-/jose-2.0.2.tgz#fb22385b80c658cc7a0cae05b7086c04c6be49f4"
-  integrity sha512-yD93lsiMA1go/qxSY/vXWBodmIZJIxeB7QhFi8z1yQ3KUwKENqI9UA8VCHlQ5h3x1zWuWZjoY87ByQzkQbIrQg==
+  version "2.0.6"
+  resolved "https://registry.yarnpkg.com/jose/-/jose-2.0.6.tgz#894ba19169af339d3911be933f913dd02fc57c7c"
+  integrity sha512-FVoPY7SflDodE4lknJmbAHSUjLCzE2H1F6MS0RYKMQ8SR+lNccpMf8R4eqkNYyyUjR5qZReOzZo5C5YiHOCjjg==
   dependencies:
     "@panva/asn1.js" "^1.0.0"
 
